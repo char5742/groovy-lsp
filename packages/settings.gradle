@@ -1,0 +1,8 @@
+rootProject.name = 'groovy-lsp-packages'
+
+include 'lsp-protocol'
+include 'groovy-core'
+include 'jdt-adapter'
+include 'codenarc-lint'
+include 'workspace-index'
+include 'formatting'
