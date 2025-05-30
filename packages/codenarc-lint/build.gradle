@@ -1,36 +1,35 @@
 plugins {
-    id 'groovy'
     id 'java-library'
 }
 
-group = 'com.groovy.lsp'
-version = '0.1.0'
-
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    // Groovy
-    implementation 'org.apache.groovy:groovy:4.0.15'
+    // CodeNarc dependencies
+    implementation 'org.codenarc:CodeNarc:3.5.0'
     
-    // CodeNarc
-    implementation 'org.codenarc:CodeNarc:3.3.0'
-    
-    // Project dependencies
-    implementation project(':lsp-protocol')
+    // Internal module dependencies
     implementation project(':groovy-core')
+    implementation project(':lsp-protocol')
     
-    // Testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'junit:junit:4.13.2'
+    // Groovy dependency (required by CodeNarc)
+    implementation 'org.apache.groovy:groovy:4.0.27'
+    implementation 'org.apache.groovy:groovy-json:4.0.27'
+    implementation 'org.apache.groovy:groovy-xml:4.0.27'
+    implementation 'org.apache.groovy:groovy-nio:4.0.27'
+    implementation 'org.apache.groovy:groovy-templates:4.0.27'
+    
+    // SLF4J for logging
+    implementation 'org.slf4j:slf4j-api:2.0.16'
 }
 
 test {
     useJUnitPlatform()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version
+        )
+    }
 }

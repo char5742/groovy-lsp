@@ -1,15 +1,11 @@
 plugins {
-    id 'java'
-    id 'groovy'
+    id 'com.github.ben-manes.versions' version '0.51.0' apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
 allprojects {
     group = 'com.groovy.lsp'
     version = '0.1.0-SNAPSHOT'
-    
-    repositories {
-        mavenCentral()
-    }
 }
 
 subprojects {
@@ -18,17 +14,38 @@ subprojects {
     
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(23)
         }
+        modularity.inferModulePath = true
     }
     
     dependencies {
-        implementation 'org.apache.groovy:groovy-all:4.0.27'
-        testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+        implementation 'org.apache.groovy:groovy:4.0.27'
+        implementation 'org.apache.groovy:groovy-json:4.0.27'
+        implementation 'org.apache.groovy:groovy-xml:4.0.27'
+        implementation 'org.apache.groovy:groovy-nio:4.0.27'
+        implementation 'org.apache.groovy:groovy-templates:4.0.27'
+        implementation 'org.slf4j:slf4j-api:2.0.16'
+        implementation 'ch.qos.logback:logback-classic:1.5.16'
+        
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+        testImplementation 'org.junit.jupiter:junit-jupiter-params:5.11.4'
+        testImplementation 'io.mockk:mockk:1.13.14'
+        testImplementation 'org.assertj:assertj-core:3.27.3'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
     
     test {
         useJUnitPlatform()
+    }
+    
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-parameters']
+    }
+    
+    tasks.withType(GroovyCompile) {
+        options.encoding = 'UTF-8'
+        groovyOptions.parameters = true
     }
 }

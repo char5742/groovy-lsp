@@ -1,0 +1,381 @@
+package com.groovy.lsp.jdt.adapter.type;
+
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.dom.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Converts between Groovy types and Eclipse JDT types.
+ * This class handles type resolution and mapping between the two type systems.
+ */
+public class TypeConverter {
+    private static final Logger logger = LoggerFactory.getLogger(TypeConverter.class);
+    
+    // Cache for frequently used type conversions
+    private final Map<String, ITypeBinding> typeBindingCache = new HashMap<>();
+    private final Map<String, ClassNode> classNodeCache = new HashMap<>();
+    
+    // Primitive type mappings
+    private static final Map<String, String> PRIMITIVE_TYPE_MAP = new HashMap<>();
+    static {
+        PRIMITIVE_TYPE_MAP.put("boolean", "Z");
+        PRIMITIVE_TYPE_MAP.put("byte", "B");
+        PRIMITIVE_TYPE_MAP.put("char", "C");
+        PRIMITIVE_TYPE_MAP.put("double", "D");
+        PRIMITIVE_TYPE_MAP.put("float", "F");
+        PRIMITIVE_TYPE_MAP.put("int", "I");
+        PRIMITIVE_TYPE_MAP.put("long", "J");
+        PRIMITIVE_TYPE_MAP.put("short", "S");
+        PRIMITIVE_TYPE_MAP.put("void", "V");
+    }
+    
+    /**
+     * Converts a Groovy ClassNode to a JDT type signature.
+     *
+     * @param classNode the Groovy class node
+     * @return the JDT type signature
+     */
+    public String toJdtSignature(ClassNode classNode) {
+        if (classNode == null) {
+            return Signature.SIG_VOID;
+        }
+        
+        // Handle primitive types
+        if (classNode.isPrimaryClassNode()) {
+            String primitiveSig = PRIMITIVE_TYPE_MAP.get(classNode.getName());
+            if (primitiveSig != null) {
+                return primitiveSig;
+            }
+        }
+        
+        // Handle array types
+        if (classNode.isArray()) {
+            return "[" + toJdtSignature(classNode.getComponentType());
+        }
+        
+        // Handle parameterized types
+        if (classNode.isUsingGenerics() && classNode.getGenericsTypes() != null) {
+            return createParameterizedSignature(classNode);
+        }
+        
+        // Regular object type
+        return "L" + classNode.getName().replace('.', '/') + ";";
+    }
+    
+    /**
+     * Converts a JDT type signature to a Groovy ClassNode.
+     *
+     * @param signature the JDT type signature
+     * @return the Groovy class node
+     */
+    public ClassNode fromJdtSignature(String signature) {
+        if (signature == null || signature.isEmpty()) {
+            return ClassNode.OBJECT_TYPE;
+        }
+        
+        // Check cache first
+        ClassNode cached = classNodeCache.get(signature);
+        if (cached != null) {
+            return cached;
+        }
+        
+        ClassNode result = parseJdtSignature(signature);
+        classNodeCache.put(signature, result);
+        return result;
+    }
+    
+    /**
+     * Converts a JDT Type to a Groovy ClassNode.
+     *
+     * @param type the JDT type
+     * @return the Groovy class node
+     */
+    public ClassNode fromJdtType(Type type) {
+        if (type == null) {
+            return ClassNode.OBJECT_TYPE;
+        }
+        
+        if (type.isPrimitiveType()) {
+            PrimitiveType primitiveType = (PrimitiveType) type;
+            return fromPrimitiveType(primitiveType.getPrimitiveTypeCode());
+        }
+        
+        if (type.isArrayType()) {
+            ArrayType arrayType = (ArrayType) type;
+            ClassNode componentType = fromJdtType(arrayType.getElementType());
+            return componentType.makeArray();
+        }
+        
+        if (type.isParameterizedType()) {
+            ParameterizedType paramType = (ParameterizedType) type;
+            return fromParameterizedType(paramType);
+        }
+        
+        if (type.isSimpleType()) {
+            SimpleType simpleType = (SimpleType) type;
+            String typeName = simpleType.getName().getFullyQualifiedName();
+            return ClassNode.make(typeName);
+        }
+        
+        if (type.isQualifiedType()) {
+            QualifiedType qualifiedType = (QualifiedType) type;
+            return ClassNode.make(qualifiedType.getName().getFullyQualifiedName());
+        }
+        
+        if (type.isWildcardType()) {
+            // Wildcards are represented as Object in Groovy
+            return ClassNode.OBJECT_TYPE;
+        }
+        
+        logger.warn("Unknown JDT type: {}", type.getClass());
+        return ClassNode.OBJECT_TYPE;
+    }
+    
+    /**
+     * Converts a JDT IType to a Groovy ClassNode.
+     *
+     * @param iType the JDT IType
+     * @return the Groovy class node
+     * @throws JavaModelException if type information cannot be accessed
+     */
+    public ClassNode fromJdtIType(IType iType) throws JavaModelException {
+        if (iType == null) {
+            return ClassNode.OBJECT_TYPE;
+        }
+        
+        String fullyQualifiedName = iType.getFullyQualifiedName();
+        
+        // Check cache
+        ClassNode cached = classNodeCache.get(fullyQualifiedName);
+        if (cached != null) {
+            return cached;
+        }
+        
+        // Create new ClassNode
+        ClassNode classNode = ClassNode.make(fullyQualifiedName);
+        
+        // Set interface flag
+        if (iType.isInterface()) {
+            classNode.setModifiers(classNode.getModifiers() | org.objectweb.asm.Opcodes.ACC_INTERFACE);
+        }
+        
+        // Cache and return
+        classNodeCache.put(fullyQualifiedName, classNode);
+        return classNode;
+    }
+    
+    /**
+     * Converts a Groovy ClassNode to a JDT Type AST node.
+     *
+     * @param ast the AST to create nodes in
+     * @param classNode the Groovy class node
+     * @return the JDT type
+     */
+    public Type toJdtType(AST ast, ClassNode classNode) {
+        if (classNode == null) {
+            return ast.newSimpleType(ast.newSimpleName("Object"));
+        }
+        
+        // Handle primitive types
+        if (classNode.isPrimaryClassNode()) {
+            PrimitiveType.Code code = getPrimitiveCode(classNode.getName());
+            if (code != null) {
+                return ast.newPrimitiveType(code);
+            }
+        }
+        
+        // Handle array types
+        if (classNode.isArray()) {
+            Type componentType = toJdtType(ast, classNode.getComponentType());
+            return ast.newArrayType(componentType);
+        }
+        
+        // Handle parameterized types
+        if (classNode.isUsingGenerics() && classNode.getGenericsTypes() != null) {
+            return createParameterizedType(ast, classNode);
+        }
+        
+        // Regular type
+        return ast.newSimpleType(createTypeName(ast, classNode.getName()));
+    }
+    
+    /**
+     * Resolves type parameters for a generic type.
+     *
+     * @param classNode the generic class node
+     * @param typeArguments the type arguments
+     * @return resolved class node with type arguments applied
+     */
+    public ClassNode resolveGenerics(ClassNode classNode, ClassNode[] typeArguments) {
+        if (!classNode.isUsingGenerics() || typeArguments == null || typeArguments.length == 0) {
+            return classNode;
+        }
+        
+        ClassNode resolvedNode = classNode.getPlainNodeReference();
+        GenericsType[] genericsTypes = classNode.getGenericsTypes();
+        
+        if (genericsTypes != null && typeArguments.length == genericsTypes.length) {
+            GenericsType[] resolvedGenerics = new GenericsType[genericsTypes.length];
+            for (int i = 0; i < genericsTypes.length; i++) {
+                resolvedGenerics[i] = new GenericsType(typeArguments[i]);
+            }
+            resolvedNode.setGenericsTypes(resolvedGenerics);
+        }
+        
+        return resolvedNode;
+    }
+    
+    // Helper methods
+    
+    private String createParameterizedSignature(ClassNode classNode) {
+        StringBuilder sig = new StringBuilder();
+        sig.append("L").append(classNode.getName().replace('.', '/'));
+        
+        GenericsType[] genericsTypes = classNode.getGenericsTypes();
+        if (genericsTypes != null && genericsTypes.length > 0) {
+            sig.append("<");
+            for (GenericsType gt : genericsTypes) {
+                if (gt.isWildcard()) {
+                    if (gt.getUpperBounds() != null && gt.getUpperBounds().length > 0) {
+                        sig.append("+").append(toJdtSignature(gt.getUpperBounds()[0]));
+                    } else if (gt.getLowerBound() != null) {
+                        sig.append("-").append(toJdtSignature(gt.getLowerBound()));
+                    } else {
+                        sig.append("*");
+                    }
+                } else {
+                    sig.append(toJdtSignature(gt.getType()));
+                }
+            }
+            sig.append(">");
+        }
+        
+        sig.append(";");
+        return sig.toString();
+    }
+    
+    private ClassNode parseJdtSignature(String signature) {
+        if (signature.length() == 1) {
+            // Primitive type
+            for (Map.Entry<String, String> entry : PRIMITIVE_TYPE_MAP.entrySet()) {
+                if (entry.getValue().equals(signature)) {
+                    return ClassNode.make(entry.getKey());
+                }
+            }
+        }
+        
+        if (signature.startsWith("[")) {
+            // Array type
+            ClassNode componentType = parseJdtSignature(signature.substring(1));
+            return componentType.makeArray();
+        }
+        
+        if (signature.startsWith("L") && signature.endsWith(";")) {
+            // Object type
+            String className = signature.substring(1, signature.length() - 1).replace('/', '.');
+            
+            // Check for generics
+            int genericStart = className.indexOf('<');
+            if (genericStart > 0) {
+                String baseClass = className.substring(0, genericStart);
+                // TODO: Parse generic type arguments
+                return ClassNode.make(baseClass);
+            }
+            
+            return ClassNode.make(className);
+        }
+        
+        logger.warn("Unable to parse JDT signature: {}", signature);
+        return ClassNode.OBJECT_TYPE;
+    }
+    
+    private ClassNode fromPrimitiveType(PrimitiveType.Code code) {
+        switch (code) {
+            case BOOLEAN: return ClassNode.boolean_TYPE;
+            case BYTE: return ClassNode.byte_TYPE;
+            case CHAR: return ClassNode.char_TYPE;
+            case DOUBLE: return ClassNode.double_TYPE;
+            case FLOAT: return ClassNode.float_TYPE;
+            case INT: return ClassNode.int_TYPE;
+            case LONG: return ClassNode.long_TYPE;
+            case SHORT: return ClassNode.short_TYPE;
+            case VOID: return ClassNode.VOID_TYPE;
+            default: return ClassNode.OBJECT_TYPE;
+        }
+    }
+    
+    private ClassNode fromParameterizedType(ParameterizedType paramType) {
+        Type rawType = paramType.getType();
+        ClassNode baseType = fromJdtType(rawType);
+        
+        // TODO: Handle type arguments
+        
+        return baseType;
+    }
+    
+    private PrimitiveType.Code getPrimitiveCode(String typeName) {
+        switch (typeName) {
+            case "boolean": return PrimitiveType.BOOLEAN;
+            case "byte": return PrimitiveType.BYTE;
+            case "char": return PrimitiveType.CHAR;
+            case "double": return PrimitiveType.DOUBLE;
+            case "float": return PrimitiveType.FLOAT;
+            case "int": return PrimitiveType.INT;
+            case "long": return PrimitiveType.LONG;
+            case "short": return PrimitiveType.SHORT;
+            case "void": return PrimitiveType.VOID;
+            default: return null;
+        }
+    }
+    
+    private Type createParameterizedType(AST ast, ClassNode classNode) {
+        SimpleType rawType = ast.newSimpleType(createTypeName(ast, classNode.getName()));
+        ParameterizedType paramType = ast.newParameterizedType(rawType);
+        
+        GenericsType[] genericsTypes = classNode.getGenericsTypes();
+        if (genericsTypes != null) {
+            for (GenericsType gt : genericsTypes) {
+                if (gt.isWildcard()) {
+                    WildcardType wildcard = ast.newWildcardType();
+                    // TODO: Set bounds
+                    paramType.typeArguments().add(wildcard);
+                } else {
+                    Type typeArg = toJdtType(ast, gt.getType());
+                    paramType.typeArguments().add(typeArg);
+                }
+            }
+        }
+        
+        return paramType;
+    }
+    
+    private Name createTypeName(AST ast, String typeName) {
+        String[] parts = typeName.split("\\.");
+        if (parts.length == 1) {
+            return ast.newSimpleName(parts[0]);
+        }
+        
+        Name name = ast.newSimpleName(parts[0]);
+        for (int i = 1; i < parts.length; i++) {
+            SimpleName simpleName = ast.newSimpleName(parts[i]);
+            name = ast.newQualifiedName(name, simpleName);
+        }
+        return name;
+    }
+    
+    /**
+     * Clears the type conversion caches.
+     */
+    public void clearCache() {
+        typeBindingCache.clear();
+        classNodeCache.clear();
+    }
+}

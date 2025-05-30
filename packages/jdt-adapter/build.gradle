@@ -1,36 +1,53 @@
 plugins {
-    id 'groovy'
     id 'java-library'
 }
 
-group = 'com.groovy.lsp'
-version = '0.1.0'
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
 
 repositories {
-    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
 dependencies {
-    // Groovy
-    implementation 'org.apache.groovy:groovy:4.0.15'
+    // JDT Core dependencies
+    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:5.7.0'
+    implementation 'org.eclipse.platform:org.eclipse.core.runtime:3.29.0'
+    implementation 'org.eclipse.platform:org.eclipse.core.resources:3.19.0'
+    implementation 'org.eclipse.platform:org.eclipse.text:3.13.0'
     
-    // Eclipse JDT Core
-    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.36.0'
+    // Groovy-Eclipse batch for enhanced Groovy support
+    implementation 'org.codehaus.groovy:groovy-eclipse-batch:4.0.27-05'
     
-    // Project dependencies
-    implementation project(':lsp-protocol')
+    // Internal module dependencies
     implementation project(':groovy-core')
+    implementation project(':lsp-protocol')
     
-    // Testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'junit:junit:4.13.2'
+    // Groovy dependencies
+    implementation 'org.apache.groovy:groovy:4.0.27'
+    implementation 'org.apache.groovy:groovy-json:4.0.27'
+    implementation 'org.apache.groovy:groovy-xml:4.0.27'
+    implementation 'org.apache.groovy:groovy-nio:4.0.27'
+    implementation 'org.apache.groovy:groovy-templates:4.0.27'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.16'
 }
 
 test {
     useJUnitPlatform()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Groovy JDT Adapter',
+            'Implementation-Version': project.version,
+            'Automatic-Module-Name': 'com.groovy.lsp.jdt.adapter'
+        )
+    }
 }
