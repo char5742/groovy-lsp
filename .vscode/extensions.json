@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-gradle",
+    "marlon407.code-groovy",
+    "vadimcn.vscode-lldb",
+    "ms-vscode.cpptools",
+    "esbenp.prettier-vscode"
+  ]
+}

@@ -1,0 +1,17 @@
+rootProject.name = 'groovy-lsp'
+
+include ':server-launcher'
+include ':lsp-protocol'
+include ':groovy-core'
+include ':jdt-adapter'
+include ':codenarc-lint'
+include ':workspace-index'
+include ':formatting'
+
+project(':server-launcher').projectDir = file('packages/server-launcher')
+project(':lsp-protocol').projectDir = file('packages/lsp-protocol')
+project(':groovy-core').projectDir = file('packages/groovy-core')
+project(':jdt-adapter').projectDir = file('packages/jdt-adapter')
+project(':codenarc-lint').projectDir = file('packages/codenarc-lint')
+project(':workspace-index').projectDir = file('packages/workspace-index')
+project(':formatting').projectDir = file('packages/formatting')

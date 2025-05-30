@@ -1,0 +1,33 @@
+plugins {
+    id 'application'
+    id 'groovy'
+}
+
+dependencies {
+    implementation project(':lsp-protocol')
+    implementation project(':groovy-core')
+    implementation project(':jdt-adapter')
+    implementation project(':codenarc-lint')
+    implementation project(':workspace-index')
+    implementation project(':formatting')
+    
+    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1'
+    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.23.1'
+    implementation 'com.google.inject:guice:5.1.0'
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
+}
+
+application {
+    mainClass = 'com.groovy.lsp.launcher.Main'
+    applicationDefaultJvmArgs = [
+        '-Xmx2g',
+        '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'
+    ]
+}
+
+run {
+    standardInput = System.in
+    if (project.hasProperty('stdin')) {
+        standardInput = System.in
+    }
+}

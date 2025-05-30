@@ -1,0 +1,36 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+}
+
+group = 'com.groovy.lsp'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Groovy
+    implementation 'org.apache.groovy:groovy:4.0.15'
+    
+    // Eclipse JDT Core
+    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.36.0'
+    
+    // Project dependencies
+    implementation project(':lsp-protocol')
+    implementation project(':groovy-core')
+    
+    // Testing
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}

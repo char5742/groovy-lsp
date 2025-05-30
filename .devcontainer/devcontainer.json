@@ -1,0 +1,23 @@
+{
+  "name": "Groovy LSP Development",
+  "dockerFile": "Dockerfile",
+  "postCreateCommand": "if [ ! -f gradlew ]; then gradle wrapper --gradle-version=8.11.1; fi",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle",
+        "marlon407.code-groovy",
+        "vadimcn.vscode-lldb"
+      ],
+      "settings": {
+        "java.home": "/opt/java/openjdk",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "forwardPorts": [5005],
+  "remoteEnv": {
+    "JAVA_HOME": "/opt/java/openjdk"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug LSP Server",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5005,
+      "sourcePaths": [
+        "${workspaceFolder}/server-launcher/src/main/java",
+        "${workspaceFolder}/lsp-protocol/src/main/java",
+        "${workspaceFolder}/groovy-core/src/main/java",
+        "${workspaceFolder}/jdt-adapter/src/main/java",
+        "${workspaceFolder}/codenarc-lint/src/main/java",
+        "${workspaceFolder}/workspace-index/src/main/java",
+        "${workspaceFolder}/formatting/src/main/java"
+      ]
+    },
+    {
+      "type": "groovy",
+      "request": "launch",
+      "name": "debug:lsp",
+      "program": "${workspaceFolder}/server-launcher/src/main/groovy/Main.groovy",
+      "cwd": "${workspaceFolder}",
+      "args": ["--stdin"],
+      "jvmArgs": ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"],
+      "env": {
+        "JAVA_HOME": "${env:JAVA_HOME}"
+      }
+    }
+  ]
+}

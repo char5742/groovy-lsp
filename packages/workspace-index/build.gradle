@@ -1,0 +1,38 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+}
+
+group = 'com.groovy.lsp'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Groovy
+    implementation 'org.apache.groovy:groovy:4.0.15'
+    
+    // Apache Lucene for indexing
+    implementation 'org.apache.lucene:lucene-core:9.8.0'
+    implementation 'org.apache.lucene:lucene-queryparser:9.8.0'
+    implementation 'org.apache.lucene:lucene-analyzers-common:8.11.2'
+    
+    // Project dependencies
+    implementation project(':lsp-protocol')
+    implementation project(':groovy-core')
+    
+    // Testing
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
