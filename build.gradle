@@ -38,25 +38,14 @@ subprojects {
             languageVersion = JavaLanguageVersion.of(23)
         }
         
-        // 段階的なJPMS有効化設定
-        // Phase 1: すべてのモジュールでJPMSを無効化（現在）
-        // Phase 2: 外部依存の少ないモジュールで有効化
-        // Phase 3: すべてのモジュールで有効化
-        def jpmsPhase = project.findProperty('jpms.phase') ?: '1'
-        def enableJpms = false
-        
-        if (jpmsPhase == '2') {
-            // Phase 2: 選択的有効化
-            enableJpms = project.name in ['shared', 'groovy-core', 'jdt-adapter']
-        } else if (jpmsPhase == '3') {
-            // Phase 3: 全モジュール有効化
-            enableJpms = true
-        }
+        // JPMS有効化設定
+        // 現状では外部ライブラリの制約により、sharedとgroovy-coreのみJPMS対応可能
+        def enableJpms = project.name in ['shared', 'groovy-core']
         
         modularity.inferModulePath = enableJpms
         
         if (!enableJpms) {
-            logger.info("JPMS disabled for module: ${project.name} (Phase: ${jpmsPhase})")
+            logger.debug("JPMS disabled for module: ${project.name} (auto-module dependencies)")
         }
     }
     
@@ -94,6 +83,7 @@ subprojects {
             option("NullAway:TreatGeneratedAsUnannotated", "true")
             option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
         }
+        
     }
     
     tasks.withType(GroovyCompile) {
