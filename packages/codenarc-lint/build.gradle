@@ -3,8 +3,10 @@ plugins {
 }
 
 dependencies {
-    // CodeNarc dependencies
-    implementation libs.codenarc
+    // CodeNarc dependencies - exclude old Groovy dependencies
+    implementation(libs.codenarc) {
+        exclude group: 'org.codehaus.groovy'
+    }
     
     // Internal module dependencies
     implementation project(':shared')

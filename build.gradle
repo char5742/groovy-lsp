@@ -103,47 +103,19 @@ subprojects {
     
     configurations.all {
         resolutionStrategy {
-            // Groovyバージョンの統一
-            def groovyVersion = '4.0.25'
+            // Apache Groovyバージョンの統一
+            def groovyVersion = libs.versions.groovy.get()
             
-            // Capability competition resolution
-            capabilitiesResolution {
-                // Groovy本体の競合解決
-                withCapability('org.codehaus.groovy:groovy') {
-                    selectHighestVersion()
-                }
-                withCapability('org.apache.groovy:groovy') {
-                    select(candidates.find { it.version == groovyVersion })
-                }
-                
-                // Groovyモジュールの競合解決
-                ['groovy-json', 'groovy-xml', 'groovy-nio', 'groovy-templates', 'groovy-sql'].each { module ->
-                    withCapability("org.codehaus.groovy:${module}") {
-                        selectHighestVersion()
-                    }
-                    withCapability("org.apache.groovy:${module}") {
-                        select(candidates.find { it.version == groovyVersion })
-                    }
-                }
-            }
-            
-            // 強制的にバージョンを統一
-            eachDependency { DependencyResolveDetails details ->
-                if (details.requested.group == 'org.codehaus.groovy') {
-                    details.useTarget("org.apache.groovy:${details.requested.name}:${groovyVersion}")
-                    details.because('Standardizing on Apache Groovy')
-                }
-            }
-            
-            // 明示的なバージョン強制
+            // Apache Groovyモジュールのバージョンを統一
             force "org.apache.groovy:groovy:${groovyVersion}"
             force "org.apache.groovy:groovy-json:${groovyVersion}"
             force "org.apache.groovy:groovy-xml:${groovyVersion}"
             force "org.apache.groovy:groovy-nio:${groovyVersion}"
             force "org.apache.groovy:groovy-templates:${groovyVersion}"
-            
-            // CodeNarc互換性のためのGroovy-all
             force "org.apache.groovy:groovy-all:${groovyVersion}"
+            force "org.apache.groovy:groovy-ant:${groovyVersion}"
+            force "org.apache.groovy:groovy-groovydoc:${groovyVersion}"
+            force "org.apache.groovy:groovy-docgenerator:${groovyVersion}"
         }
     }
 }

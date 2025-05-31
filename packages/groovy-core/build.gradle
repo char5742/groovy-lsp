@@ -3,6 +3,12 @@ plugins {
 }
 
 dependencies {
+    // Groovy Core dependencies (required for compilation)
+    implementation libs.groovy
+    implementation libs.groovy.json
+    implementation libs.groovy.xml
+    implementation libs.groovy.templates
+    
     // Module dependencies
     implementation project(':shared')  // Includes jMolecules transitively
     implementation project(':lsp-protocol')

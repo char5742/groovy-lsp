@@ -9,6 +9,9 @@ java {
 
 
 dependencies {
+    // Groovy dependencies (required for AST classes)
+    implementation libs.groovy
+    
     // JDT Core dependencies - using stable version
     implementation libs.jdt.core
     implementation libs.eclipse.core.runtime

@@ -6,7 +6,7 @@ jdt-core = "3.41.0"
 eclipse-core-runtime = "3.33.0"
 eclipse-core-resources = "3.21.0"
 eclipse-text = "3.14.100"
-codenarc = "3.6.0"
+codenarc = "3.1.0-groovy-4.0"
 google-java-format = "1.27.0"
 junit = "5.13.0"
 mockk = "1.14.2"
@@ -52,7 +52,6 @@ lsp4j-debug = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j.debug", version.re
 
 # JDT Core (Groovy-Eclipse)
 jdt-core = { module = "org.eclipse.jdt:org.eclipse.jdt.core", version.ref = "jdt-core" }
-groovy-eclipse-batch = { module = "org.codehaus.groovy:groovy-eclipse-batch", version = "4.0.25-01" }
 
 # Eclipse Platform
 eclipse-core-runtime = { module = "org.eclipse.platform:org.eclipse.core.runtime", version.ref = "eclipse-core-runtime" }
