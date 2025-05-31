@@ -1,0 +1,69 @@
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
+// 統合テスト専用のモジュールのため、JARは作成しない
+jar {
+    enabled = false
+}
+
+dependencies {
+    // すべてのモジュールに依存（統合テストのため）
+    testImplementation project(':shared')
+    testImplementation project(':server-launcher')
+    testImplementation project(':lsp-protocol')
+    testImplementation project(':groovy-core')
+    testImplementation project(':jdt-adapter')
+    testImplementation project(':codenarc-lint')
+    testImplementation project(':workspace-index')
+    testImplementation project(':formatting')
+    
+    // テストフレームワーク
+    testImplementation libs.bundles.testing
+    testImplementation libs.bundles.logging
+    testImplementation libs.archunit
+    
+    // 統合テスト用の追加ライブラリ
+    testImplementation libs.lsp4j
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
+    
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+test {
+    useJUnitPlatform()
+    
+    // 統合テストの設定
+    systemProperty 'integration.test', 'true'
+    
+    // テストのタイムアウト設定
+    timeout = Duration.ofMinutes(10)
+    
+    // 並列実行を無効化（統合テストのため）
+    maxParallelForks = 1
+    
+    testLogging {
+        events 'started', 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+        showStandardStreams = false
+    }
+}
+
+// 統合テストを別タスクとして定義
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+    
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    
+    shouldRunAfter test
+    
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+}
+
+check.dependsOn integrationTest

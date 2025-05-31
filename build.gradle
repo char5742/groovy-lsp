@@ -19,7 +19,10 @@ allprojects {
             url 'https://groovy.jfrog.io/artifactory/libs-release-local'
         }
         maven {
-            url 'https://repo.eclipse.org/releases/latest'
+            url 'https://download.eclipse.org/releases/latest/'
+        }
+        maven {
+            url 'https://repo.eclipse.org/content/repositories/groovy-releases/'
         }
     }
 }
@@ -34,8 +37,27 @@ subprojects {
         toolchain {
             languageVersion = JavaLanguageVersion.of(23)
         }
-        // Temporarily disable module path to fix build issues
-        modularity.inferModulePath = false
+        
+        // 段階的なJPMS有効化設定
+        // Phase 1: すべてのモジュールでJPMSを無効化（現在）
+        // Phase 2: 外部依存の少ないモジュールで有効化
+        // Phase 3: すべてのモジュールで有効化
+        def jpmsPhase = project.findProperty('jpms.phase') ?: '1'
+        def enableJpms = false
+        
+        if (jpmsPhase == '2') {
+            // Phase 2: 選択的有効化
+            enableJpms = project.name in ['shared', 'groovy-core', 'jdt-adapter']
+        } else if (jpmsPhase == '3') {
+            // Phase 3: 全モジュール有効化
+            enableJpms = true
+        }
+        
+        modularity.inferModulePath = enableJpms
+        
+        if (!enableJpms) {
+            logger.info("JPMS disabled for module: ${project.name} (Phase: ${jpmsPhase})")
+        }
     }
     
     dependencies {
@@ -55,6 +77,7 @@ subprojects {
         testImplementation libs.junit.jupiter.params
         testImplementation libs.mockk
         testImplementation libs.assertj.core
+        testImplementation libs.archunit
         testRuntimeOnly libs.junit.platform.launcher
     }
     
@@ -82,25 +105,47 @@ subprojects {
     
     configurations.all {
         resolutionStrategy {
+            // Groovyバージョンの統一
+            def groovyVersion = '4.0.25'
+            
+            // Capability competition resolution
             capabilitiesResolution {
+                // Groovy本体の競合解決
                 withCapability('org.codehaus.groovy:groovy') {
                     selectHighestVersion()
                 }
-                withCapability('org.codehaus.groovy:groovy-json') {
-                    selectHighestVersion()
+                withCapability('org.apache.groovy:groovy') {
+                    select(candidates.find { it.version == groovyVersion })
                 }
-                withCapability('org.codehaus.groovy:groovy-xml') {
-                    selectHighestVersion()
-                }
-                withCapability('org.codehaus.groovy:groovy-templates') {
-                    selectHighestVersion()
+                
+                // Groovyモジュールの競合解決
+                ['groovy-json', 'groovy-xml', 'groovy-nio', 'groovy-templates', 'groovy-sql'].each { module ->
+                    withCapability("org.codehaus.groovy:${module}") {
+                        selectHighestVersion()
+                    }
+                    withCapability("org.apache.groovy:${module}") {
+                        select(candidates.find { it.version == groovyVersion })
+                    }
                 }
             }
-            force 'org.apache.groovy:groovy:4.0.25'
-            force 'org.apache.groovy:groovy-json:4.0.25'
-            force 'org.apache.groovy:groovy-xml:4.0.25'
-            force 'org.apache.groovy:groovy-nio:4.0.25'
-            force 'org.apache.groovy:groovy-templates:4.0.25'
+            
+            // 強制的にバージョンを統一
+            eachDependency { DependencyResolveDetails details ->
+                if (details.requested.group == 'org.codehaus.groovy') {
+                    details.useTarget("org.apache.groovy:${details.requested.name}:${groovyVersion}")
+                    details.because('Standardizing on Apache Groovy')
+                }
+            }
+            
+            // 明示的なバージョン強制
+            force "org.apache.groovy:groovy:${groovyVersion}"
+            force "org.apache.groovy:groovy-json:${groovyVersion}"
+            force "org.apache.groovy:groovy-xml:${groovyVersion}"
+            force "org.apache.groovy:groovy-nio:${groovyVersion}"
+            force "org.apache.groovy:groovy-templates:${groovyVersion}"
+            
+            // CodeNarc互換性のためのGroovy-all
+            force "org.apache.groovy:groovy-all:${groovyVersion}"
         }
     }
 }
