@@ -1,6 +1,8 @@
 plugins {
-    id 'com.github.ben-manes.versions' version '0.51.0' apply false
-    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    alias(libs.plugins.versions) apply false
+    alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.errorprone) apply false
+    alias(libs.plugins.nullaway) apply false
 }
 
 allprojects {
@@ -25,6 +27,8 @@ allprojects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'
+    apply plugin: 'net.ltgt.errorprone'
+    apply plugin: 'net.ltgt.nullaway'
     
     java {
         toolchain {
@@ -43,6 +47,10 @@ subprojects {
         implementation 'org.slf4j:slf4j-api:2.0.16'
         implementation 'ch.qos.logback:logback-classic:1.5.16'
         
+        // Error Prone and NullAway
+        errorprone libs.errorprone.core
+        errorprone libs.nullaway
+        
         testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
         testImplementation 'org.junit.jupiter:junit-jupiter-params:5.11.4'
         testImplementation 'io.mockk:mockk:1.13.14'
@@ -57,6 +65,31 @@ subprojects {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
         options.compilerArgs += ['-parameters']
+        
+        // Conditionally apply Error Prone based on Java version
+        def javaVersion = JavaVersion.current()
+        if (javaVersion <= JavaVersion.VERSION_21) {
+            // Error Prone configuration for Java 21 and below
+            options.errorprone {
+                enabled = true
+                disableWarningsInGeneratedCode = true
+                
+                // NullAway configuration
+                check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+                option("NullAway:AnnotatedPackages", "com.groovy.lsp")
+                option("NullAway:TreatGeneratedAsUnannotated", "true")
+                option("NullAway:OnlyNullMarked", "true") // Use with jSpecify @NullMarked
+                option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
+                
+                // Disable specific Error Prone checks that may conflict with Groovy
+                disable("UnusedVariable") // Groovy's dynamic nature can trigger false positives
+                disable("StringSplitter") // Groovy has its own string handling
+            }
+        } else {
+            // Disable Error Prone for Java 22+ due to compatibility issues
+            options.errorprone.enabled = false
+            logger.warn("Error Prone is disabled for Java ${javaVersion} due to compatibility issues. Consider using Java 21 for full static analysis support.")
+        }
     }
     
     tasks.withType(GroovyCompile) {

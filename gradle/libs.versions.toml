@@ -11,7 +11,7 @@ google-java-format = "1.25.2"
 junit = "5.11.4"
 mockk = "1.13.14"
 mockito = "5.14.2"
-gradle-shadow = "8.3.5"
+gradle-shadow = "8.1.1"
 gradle-versions = "0.51.0"
 slf4j = "2.0.16"
 logback = "1.5.16"
@@ -29,6 +29,10 @@ jmolecules-ddd = "1.9.0"
 jmolecules-events = "1.9.0"
 jmolecules-architecture = "1.9.0"
 jspecify = "1.0.0"
+errorprone-core = "2.26.1"
+nullaway = "0.11.3"
+errorprone-plugin = "4.2.0"
+nullaway-plugin = "2.2.0"
 
 [libraries]
 # Groovy
@@ -105,6 +109,10 @@ jmolecules-architecture = { module = "org.jmolecules:jmolecules-architecture", v
 # Null Safety
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 
+# Static Analysis
+errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone-core" }
+nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+
 [bundles]
 groovy = ["groovy", "groovy-json", "groovy-xml", "groovy-nio", "groovy-templates"]
 lsp4j = ["lsp4j", "lsp4j-jsonrpc"]
@@ -116,3 +124,5 @@ jmolecules = ["jmolecules-ddd", "jmolecules-events", "jmolecules-architecture"]
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "gradle-shadow" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions" }
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-plugin" }
+nullaway = { id = "net.ltgt.nullaway", version.ref = "nullaway-plugin" }
