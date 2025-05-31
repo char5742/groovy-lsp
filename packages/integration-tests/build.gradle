@@ -22,8 +22,8 @@ dependencies {
     // 統合テスト用の追加ライブラリ
     testImplementation libs.lsp4j
     testImplementation libs.google.java.format // For FormatterException
-    testImplementation 'org.awaitility:awaitility:4.2.0'
-    testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
+    testImplementation libs.awaitility
+    testImplementation libs.wiremock.jre8
 }
 
 test {

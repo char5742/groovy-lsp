@@ -6,9 +6,6 @@ plugins {
 }
 
 allprojects {
-    group = 'com.groovy.lsp'
-    version = '0.1.0-SNAPSHOT'
-    
     repositories {
         mavenCentral()
         gradlePluginPortal()
@@ -29,7 +26,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'groovy'
+    apply plugin: 'groovy-lsp.groovy-conventions'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'net.ltgt.nullaway'
     
@@ -84,28 +81,5 @@ subprojects {
             option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
         }
         
-    }
-    
-    tasks.withType(GroovyCompile) {
-        options.encoding = 'UTF-8'
-        groovyOptions.parameters = true
-    }
-    
-    configurations.all {
-        resolutionStrategy {
-            // Apache Groovyバージョンの統一
-            def groovyVersion = libs.versions.groovy.get()
-            
-            // Apache Groovyモジュールのバージョンを統一
-            force "org.apache.groovy:groovy:${groovyVersion}"
-            force "org.apache.groovy:groovy-json:${groovyVersion}"
-            force "org.apache.groovy:groovy-xml:${groovyVersion}"
-            force "org.apache.groovy:groovy-nio:${groovyVersion}"
-            force "org.apache.groovy:groovy-templates:${groovyVersion}"
-            force "org.apache.groovy:groovy-all:${groovyVersion}"
-            force "org.apache.groovy:groovy-ant:${groovyVersion}"
-            force "org.apache.groovy:groovy-groovydoc:${groovyVersion}"
-            force "org.apache.groovy:groovy-docgenerator:${groovyVersion}"
-        }
     }
 }

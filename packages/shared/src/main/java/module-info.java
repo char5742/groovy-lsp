@@ -5,7 +5,6 @@
 module com.groovy.lsp.shared {
     // Required dependencies
     requires transitive org.jmolecules.ddd;
-    requires transitive org.jmolecules.architecture.onion;
     requires transitive org.jmolecules.event;
     requires transitive org.jspecify;
     requires com.google.common;

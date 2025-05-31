@@ -34,6 +34,9 @@ errorprone-core = "2.38.0"
 nullaway = "0.11.1"
 errorprone-plugin = "4.2.0"
 nullaway-plugin = "2.2.0"
+jmh-plugin = "0.7.2"
+awaitility = "4.2.0"
+wiremock = "3.0.1"
 
 [libraries]
 # Groovy
@@ -114,6 +117,10 @@ jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone-core" }
 nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 
+# Integration Testing
+awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
+wiremock-jre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
+
 [bundles]
 groovy = ["groovy", "groovy-json", "groovy-xml", "groovy-nio", "groovy-templates"]
 lsp4j = ["lsp4j", "lsp4j-jsonrpc"]
@@ -127,3 +134,4 @@ shadow = { id = "com.github.johnrengelman.shadow", version.ref = "gradle-shadow"
 versions = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions" }
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-plugin" }
 nullaway = { id = "net.ltgt.nullaway", version.ref = "nullaway-plugin" }
+jmh = { id = "me.champeau.jmh", version.ref = "jmh-plugin" }
