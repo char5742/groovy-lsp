@@ -30,7 +30,7 @@ public class RuleSetProvider {
     private static final String CUSTOM_PROPERTIES_FILENAME = "codenarc.properties";
     
     private final List<String> ruleSetPaths;
-    private RuleSet cachedRuleSet;
+    private @Nullable RuleSet cachedRuleSet;
     
     public RuleSetProvider() {
         this.ruleSetPaths = new ArrayList<>();
@@ -42,7 +42,7 @@ public class RuleSetProvider {
      */
     private void initializeDefaultRuleSets() {
         // Add default CodeNarc rule sets
-        ruleSetPaths.add("rulesets/basic.xml");
+        ruleSetPaths.add(DEFAULT_RULESET_PATH);
         ruleSetPaths.add("rulesets/imports.xml");
         ruleSetPaths.add("rulesets/groovyism.xml");
         ruleSetPaths.add("rulesets/convention.xml");
@@ -67,7 +67,7 @@ public class RuleSetProvider {
      * @return The newly loaded RuleSet
      */
     public RuleSet reloadRuleSet() {
-        cachedRuleSet = null;
+        cachedRuleSet = (@Nullable RuleSet) null;
         return getRuleSet();
     }
     
@@ -78,7 +78,7 @@ public class RuleSetProvider {
      */
     public void addRuleSetPath(String ruleSetPath) {
         ruleSetPaths.add(ruleSetPath);
-        cachedRuleSet = null; // Clear cache to force reload
+        cachedRuleSet = (@Nullable RuleSet) null; // Clear cache to force reload
     }
     
     /**
@@ -87,7 +87,7 @@ public class RuleSetProvider {
     public void resetToDefaults() {
         ruleSetPaths.clear();
         initializeDefaultRuleSets();
-        cachedRuleSet = null;
+        cachedRuleSet = (@Nullable RuleSet) null;
     }
     
     /**

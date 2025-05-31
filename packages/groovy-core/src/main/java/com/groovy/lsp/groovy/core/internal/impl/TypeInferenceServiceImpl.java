@@ -20,7 +20,6 @@ import com.groovy.lsp.groovy.core.api.TypeInferenceService;
  * Wraps Groovy's type inference capabilities for LSP usage.
  */
 public class TypeInferenceServiceImpl implements TypeInferenceService {
-    private static final Logger logger = LoggerFactory.getLogger(TypeInferenceServiceImpl.class);
     
     private final ASTService astService;
     
@@ -37,18 +36,19 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param column the column number (1-based)
      * @return the inferred ClassNode or null if type cannot be determined
      */
+    @Override
     public ClassNode inferTypeAtPosition(String sourceCode, String sourceName, int line, int column) {
         ModuleNode moduleNode = astService.parseSource(sourceCode, sourceName);
         if (moduleNode == null) {
-            return null;
+            return ClassHelper.OBJECT_TYPE;
         }
         
         ASTNode node = astService.findNodeAtPosition(moduleNode, line, column);
-        if (node instanceof Expression) {
-            return inferExpressionType((Expression) node, moduleNode);
+        if (node instanceof Expression expression) {
+            return inferExpressionType(expression, moduleNode);
         }
         
-        return null;
+        return ClassHelper.OBJECT_TYPE;
     }
     
     /**
@@ -58,9 +58,10 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module context
      * @return the inferred ClassNode or null
      */
+    @Override
     public ClassNode inferExpressionType(Expression expression, ModuleNode moduleNode) {
         if (expression == null) {
-            return null;
+            return ClassHelper.OBJECT_TYPE;
         }
         
         // Check if type is already set
@@ -70,16 +71,16 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         }
         
         // Handle different expression types
-        if (expression instanceof VariableExpression) {
-            return inferVariableType((VariableExpression) expression, moduleNode);
-        } else if (expression instanceof ConstantExpression) {
-            return inferConstantType((ConstantExpression) expression);
-        } else if (expression instanceof MethodCallExpression) {
-            return inferMethodCallType((MethodCallExpression) expression, moduleNode);
-        } else if (expression instanceof PropertyExpression) {
-            return inferPropertyType((PropertyExpression) expression, moduleNode);
-        } else if (expression instanceof BinaryExpression) {
-            return inferBinaryExpressionType((BinaryExpression) expression, moduleNode);
+        if (expression instanceof VariableExpression variableExpression) {
+            return inferVariableType(variableExpression, moduleNode);
+        } else if (expression instanceof ConstantExpression constantExpression) {
+            return inferConstantType(constantExpression);
+        } else if (expression instanceof MethodCallExpression methodCallExpression) {
+            return inferMethodCallType(methodCallExpression, moduleNode);
+        } else if (expression instanceof PropertyExpression propertyExpression) {
+            return inferPropertyType(propertyExpression, moduleNode);
+        } else if (expression instanceof BinaryExpression binaryExpression) {
+            return inferBinaryExpressionType(binaryExpression, moduleNode);
         } else if (expression instanceof ListExpression) {
             return ClassHelper.LIST_TYPE;
         } else if (expression instanceof MapExpression) {
@@ -280,7 +281,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
                 return classNode;
             }
         }
-        return null;
+        return ClassHelper.OBJECT_TYPE;
     }
     
     /**
@@ -313,7 +314,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      */
     private static class VariableDeclarationFinder extends ClassCodeVisitorSupport {
         private final String targetVarName;
-        private ClassNode variableType;
+        private ClassNode variableType = ClassHelper.OBJECT_TYPE;
         
         public VariableDeclarationFinder(String varName) {
             this.targetVarName = varName;
@@ -321,21 +322,21 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         
         @Override
         protected SourceUnit getSourceUnit() {
-            return null;
+            // Not used in this visitor context
+            throw new UnsupportedOperationException("SourceUnit not available in this context");
         }
         
         @Override
         public void visitDeclarationExpression(DeclarationExpression expression) {
             Expression leftExpr = expression.getLeftExpression();
-            if (leftExpr instanceof VariableExpression) {
-                VariableExpression varExpr = (VariableExpression) leftExpr;
+            if (leftExpr instanceof VariableExpression varExpr) {
                 if (targetVarName.equals(varExpr.getName())) {
                     variableType = varExpr.getType();
                     if (variableType == null || variableType.equals(ClassHelper.OBJECT_TYPE)) {
                         // Try to infer from right side
                         Expression rightExpr = expression.getRightExpression();
-                        if (rightExpr instanceof ConstantExpression) {
-                            variableType = rightExpr.getType();
+                        if (rightExpr instanceof ConstantExpression constantExpression) {
+                            variableType = constantExpression.getType();
                         }
                     }
                 }

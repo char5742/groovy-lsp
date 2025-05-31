@@ -38,14 +38,9 @@ public class Main {
             
             // Launch the server based on the mode
             switch (mode.type) {
-                case STDIO:
-                    launchStdio(server);
-                    break;
-                case SOCKET:
-                    launchSocket(server, mode.host, mode.port);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
+                case STDIO -> launchStdio(server);
+                case SOCKET -> launchSocket(server, mode.host, mode.port);
+                default -> throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
             }
         } catch (Exception e) {
             logger.error("Failed to start Groovy Language Server", e);
@@ -123,6 +118,7 @@ public class Main {
     /**
      * Parse command line arguments to determine launch mode.
      */
+    @SuppressWarnings("StatementSwitchToExpressionSwitch")
     private static LaunchMode parseArguments(String[] args) {
         LaunchMode mode = new LaunchMode();
         mode.type = LaunchType.STDIO; // Default to stdio
@@ -205,9 +201,9 @@ public class Main {
      * Launch mode configuration.
      */
     private static class LaunchMode {
-        LaunchType type;
-        String host;
-        int port;
+        LaunchType type = LaunchType.STDIO; // Default to STDIO mode
+        String host = "localhost"; // Default host
+        int port = 4389; // Default LSP port
     }
     
     /**

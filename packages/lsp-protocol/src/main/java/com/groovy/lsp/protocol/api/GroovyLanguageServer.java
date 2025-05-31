@@ -10,6 +10,7 @@ import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 
 import java.util.concurrent.CompletableFuture;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Main Language Server implementation for Groovy.
@@ -24,7 +25,7 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
     
     private final GroovyTextDocumentService textDocumentService;
     private final GroovyWorkspaceService workspaceService;
-    private LanguageClient client;
+    private @Nullable LanguageClient client;
     private int errorCode = 1;
     
     public GroovyLanguageServer() {
@@ -112,10 +113,10 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
         this.client = client;
         
         // Pass client to services that need it
-        if (textDocumentService instanceof LanguageClientAware) {
+        if (textDocumentService != null) {
             ((LanguageClientAware) textDocumentService).connect(client);
         }
-        if (workspaceService instanceof LanguageClientAware) {
+        if (workspaceService != null) {
             ((LanguageClientAware) workspaceService).connect(client);
         }
     }
@@ -125,7 +126,7 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
      * 
      * @return the language client
      */
-    public LanguageClient getClient() {
+    public @Nullable LanguageClient getClient() {
         return client;
     }
 }

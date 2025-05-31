@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Main entry point for linting Groovy files using CodeNarc.
  * This class coordinates the static analysis process and converts
@@ -90,7 +92,7 @@ public class LintEngine {
      * @return A CompletableFuture containing a map of file paths to diagnostics
      */
     public CompletableFuture<List<FileAnalysisResult>> analyzeDirectory(
-            String directory, String includes, String excludes) {
+            String directory, String includes, @Nullable String excludes) {
         
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -145,8 +147,7 @@ public class LintEngine {
                 @SuppressWarnings("unchecked")
                 List<Results> childResults = (List<Results>) children;
                 for (Results childResult : childResults) {
-                    if (childResult instanceof FileResults) {
-                        FileResults fileResults = (FileResults) childResult;
+                    if (childResult instanceof FileResults fileResults) {
                         if (fileResults.getPath().equals(filePath)) {
                             diagnostics.addAll(convertViolationsToDiagnostics(fileResults.getViolations(), fileResults.getPath()));
                         }
@@ -168,8 +169,7 @@ public class LintEngine {
                 @SuppressWarnings("unchecked")
                 List<Results> childResults = (List<Results>) children;
                 for (Results childResult : childResults) {
-                    if (childResult instanceof FileResults) {
-                        FileResults fileResult = (FileResults) childResult;
+                    if (childResult instanceof FileResults fileResult) {
                         List<Diagnostic> diagnostics = convertViolationsToDiagnostics(fileResult.getViolations(), fileResult.getPath());
                         fileResults.add(new FileAnalysisResult(fileResult.getPath(), diagnostics));
                     }
@@ -180,11 +180,7 @@ public class LintEngine {
         return fileResults;
     }
     
-    private List<Diagnostic> convertViolationsToDiagnostics(List<Violation> violations) {
-        return convertViolationsToDiagnostics(violations, null);
-    }
-    
-    private List<Diagnostic> convertViolationsToDiagnostics(List<Violation> violations, String filePath) {
+    private List<Diagnostic> convertViolationsToDiagnostics(List<Violation> violations, @Nullable String filePath) {
         List<Diagnostic> diagnostics = new ArrayList<>();
         
         for (Violation violation : violations) {
@@ -223,16 +219,12 @@ public class LintEngine {
     }
     
     private DiagnosticSeverity mapPriorityToSeverity(int priority) {
-        switch (priority) {
-            case 1:
-                return DiagnosticSeverity.Error;
-            case 2:
-                return DiagnosticSeverity.Warning;
-            case 3:
-                return DiagnosticSeverity.Information;
-            default:
-                return DiagnosticSeverity.Hint;
-        }
+        return switch (priority) {
+            case 1 -> DiagnosticSeverity.Error;
+            case 2 -> DiagnosticSeverity.Warning;
+            case 3 -> DiagnosticSeverity.Information;
+            default -> DiagnosticSeverity.Hint;
+        };
     }
     
     /**

@@ -11,6 +11,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.io.StringReaderSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.io.StringReader;
 import java.util.*;
@@ -36,7 +37,8 @@ public class ASTServiceImpl implements ASTService {
      * @param sourceName the name of the source (e.g., filename)
      * @return the parsed ModuleNode or null if parsing failed
      */
-    public ModuleNode parseSource(String sourceCode, String sourceName) {
+    @Override
+    public @Nullable ModuleNode parseSource(String sourceCode, String sourceName) {
         return parseSource(sourceCode, sourceName, CompilerFactoryImpl.createDefaultConfigurationStatic());
     }
     
@@ -48,7 +50,8 @@ public class ASTServiceImpl implements ASTService {
      * @param config the compiler configuration to use
      * @return the parsed ModuleNode or null if parsing failed
      */
-    public ModuleNode parseSource(String sourceCode, String sourceName, CompilerConfiguration config) {
+    @Override
+    public @Nullable ModuleNode parseSource(String sourceCode, String sourceName, CompilerConfiguration config) {
         Objects.requireNonNull(sourceCode, "Source code cannot be null");
         Objects.requireNonNull(sourceName, "Source name cannot be null");
         Objects.requireNonNull(config, "Compiler configuration cannot be null");
@@ -93,7 +96,8 @@ public class ASTServiceImpl implements ASTService {
      * @param column the column number (1-based)
      * @return the ASTNode at the position or null if not found
      */
-    public ASTNode findNodeAtPosition(ModuleNode moduleNode, int line, int column) {
+    @Override
+    public @Nullable ASTNode findNodeAtPosition(ModuleNode moduleNode, int line, int column) {
         if (moduleNode == null) {
             return null;
         }
@@ -109,6 +113,7 @@ public class ASTServiceImpl implements ASTService {
      * @param moduleNode the module node to search
      * @return list of variable expressions
      */
+    @Override
     public List<VariableExpression> findAllVariables(ModuleNode moduleNode) {
         if (moduleNode == null) {
             return Collections.emptyList();
@@ -125,6 +130,7 @@ public class ASTServiceImpl implements ASTService {
      * @param moduleNode the module node to search
      * @return list of method call expressions
      */
+    @Override
     public List<MethodCallExpression> findAllMethodCalls(ModuleNode moduleNode) {
         if (moduleNode == null) {
             return Collections.emptyList();
@@ -159,7 +165,7 @@ public class ASTServiceImpl implements ASTService {
     private static class NodeFinder extends ClassCodeVisitorSupport {
         private final int targetLine;
         private final int targetColumn;
-        private ASTNode foundNode;
+        private @Nullable ASTNode foundNode = null;
         
         public NodeFinder(int line, int column) {
             this.targetLine = line;
@@ -168,7 +174,8 @@ public class ASTServiceImpl implements ASTService {
         
         @Override
         protected SourceUnit getSourceUnit() {
-            return null;
+            // Not used in this visitor context
+            throw new UnsupportedOperationException("SourceUnit not available in this context");
         }
         
         @Override
@@ -203,7 +210,7 @@ public class ASTServiceImpl implements ASTService {
             }
         }
         
-        public ASTNode getFoundNode() {
+        public @Nullable ASTNode getFoundNode() {
             return foundNode;
         }
     }
@@ -216,7 +223,8 @@ public class ASTServiceImpl implements ASTService {
         
         @Override
         protected SourceUnit getSourceUnit() {
-            return null;
+            // Not used in this visitor context
+            throw new UnsupportedOperationException("SourceUnit not available in this context");
         }
         
         @Override
@@ -238,7 +246,8 @@ public class ASTServiceImpl implements ASTService {
         
         @Override
         protected SourceUnit getSourceUnit() {
-            return null;
+            // Not used in this visitor context
+            throw new UnsupportedOperationException("SourceUnit not available in this context");
         }
         
         @Override

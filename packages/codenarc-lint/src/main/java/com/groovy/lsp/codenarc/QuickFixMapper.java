@@ -5,6 +5,7 @@ import org.codenarc.rule.Rule;
 import org.codenarc.rule.Violation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -17,7 +18,7 @@ public class QuickFixMapper {
     private static final Logger logger = LoggerFactory.getLogger(QuickFixMapper.class);
     
     private final Map<String, QuickFixProvider> quickFixProviders;
-    private String currentFilePath;  // Thread-local storage for current file path
+    private @Nullable String currentFilePath;  // Thread-local storage for current file path
     
     public QuickFixMapper() {
         this.quickFixProviders = new HashMap<>();
@@ -75,10 +76,10 @@ public class QuickFixMapper {
      * @return List of code actions that can fix the violation
      */
     public List<CodeAction> getQuickFixesForViolation(Violation violation) {
-        return getQuickFixesForViolation(violation, null);
+        return getQuickFixesForViolation(violation, (@Nullable String) null);
     }
     
-    public List<CodeAction> getQuickFixesForViolation(Violation violation, String filePath) {
+    public List<CodeAction> getQuickFixesForViolation(Violation violation, @Nullable String filePath) {
         String ruleName = violation.getRule().getName();
         QuickFixProvider provider = quickFixProviders.get(ruleName);
         
@@ -90,7 +91,7 @@ public class QuickFixMapper {
             } catch (Exception e) {
                 logger.error("Error creating quick fix for rule: " + ruleName, e);
             } finally {
-                this.currentFilePath = null;
+                this.currentFilePath = (@Nullable String) null;
             }
         }
         
