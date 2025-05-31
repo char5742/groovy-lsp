@@ -322,7 +322,8 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         
         @Override
         protected SourceUnit getSourceUnit() {
-            // Not used in this visitor context
+            // This method is not called in the context of this visitor
+            // as we're only traversing the AST without compilation
             throw new UnsupportedOperationException("SourceUnit not available in this context");
         }
         

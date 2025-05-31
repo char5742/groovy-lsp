@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -139,7 +140,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
             return List.of();
         } catch (Exception e) {
             logger.error("Error indexing file: {}", file, e);
-            String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error occurred while indexing file";
+            String errorMessage = Objects.requireNonNullElse(e.getMessage(), "Unknown error occurred while indexing file");
             eventBus.publish(new FileIndexedEvent(file, errorMessage));
             return List.of(); // Return empty list instead of null
         }

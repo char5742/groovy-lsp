@@ -31,6 +31,7 @@ public class LintEngine {
     
     private final QuickFixMapper quickFixMapper;
     
+    @SuppressWarnings("unused")
     public LintEngine(RuleSetProvider ruleSetProvider, QuickFixMapper quickFixMapper) {
         // RuleSetProvider is not currently used but kept for API compatibility
         this.quickFixMapper = quickFixMapper;
