@@ -48,11 +48,6 @@ dependencies {
     jmh project(':formatting')
     jmh project(':workspace-index')
     jmh project(':lsp-protocol')
-    
-    // Additional dependencies
-    jmh libs.bundles.groovy
-    jmh libs.slf4j.api
-    jmh libs.logback.classic
 }
 
 // カスタムベンチマークタスク

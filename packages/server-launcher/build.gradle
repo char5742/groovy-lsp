@@ -19,9 +19,6 @@ dependencies {
     // Guice for dependency injection
     implementation libs.guice
     
-    // Logging
-    implementation libs.bundles.logging
-    
     // Error tracking
     implementation libs.sentry
 }
@@ -50,9 +47,6 @@ shadowJar {
     }
 }
 
-test {
-    useJUnitPlatform()
-}
 
 // Task to run the server
 task runServer(type: JavaExec) {

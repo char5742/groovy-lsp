@@ -1,8 +1,6 @@
 package com.groovy.lsp.formatting;
 
-import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
-import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.groovy.lsp.formatting.options.FormatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +23,6 @@ public class GroovyFormatter {
     private static final Pattern TRIPLE_QUOTE_PATTERN = Pattern.compile("'''.*?'''|\"\"\".*?\"\"\"", Pattern.DOTALL);
     private static final Pattern GSTRING_PATTERN = Pattern.compile("\"[^\"]*\\$\\{[^}]*\\}[^\"]*\"");
     
-    private final Formatter javaFormatter;
     private final FormatOptions options;
     
     /**
@@ -40,7 +37,6 @@ public class GroovyFormatter {
      */
     public GroovyFormatter(FormatOptions options) {
         this.options = options;
-        this.javaFormatter = createJavaFormatter(options);
     }
     
     /**
@@ -50,29 +46,30 @@ public class GroovyFormatter {
      * @return the formatted source code
      * @throws FormatterException if the source code cannot be formatted
      */
+    @Nullable
     public String format(@Nullable String source) throws FormatterException {
-        if (source == null || source.trim().isEmpty()) {
-            return source != null ? source : "";
+        if (source == null) {
+            return null;
+        }
+        if (source.trim().isEmpty()) {
+            return source;
         }
         
         logger.debug("Formatting Groovy source code");
         
         try {
+            // TODO: Implement proper Groovy formatting
+            // For now, return the source with minimal formatting
+            
             // Pre-process Groovy-specific syntax
             String preprocessed = preprocessGroovySyntax(source);
             
-            // Format using Google Java Format
-            String formatted = javaFormatter.formatSource(preprocessed);
-            
-            // Post-process to restore Groovy-specific formatting
-            String postprocessed = postprocessGroovySyntax(formatted);
+            // Apply basic Groovy formatting rules without using google-java-format
+            String formatted = applyBasicGroovyFormatting(preprocessed);
             
             // Apply additional Groovy-specific formatting rules
-            return applyGroovyFormattingRules(postprocessed);
+            return applyGroovyFormattingRules(formatted);
             
-        } catch (FormatterException e) {
-            logger.error("Failed to format Groovy source code", e);
-            throw e;
         } catch (Exception e) {
             logger.error("Unexpected error during formatting", e);
             throw new FormatterException("Failed to format Groovy code: " + e.getMessage());
@@ -88,6 +85,7 @@ public class GroovyFormatter {
      * @return the formatted source code
      * @throws FormatterException if the source code cannot be formatted
      */
+    @Nullable
     public String formatRange(@Nullable String source, int offset, int length) throws FormatterException {
         if (source == null || offset < 0 || length < 0 || offset + length > source.length()) {
             throw new IllegalArgumentException("Invalid range parameters");
@@ -116,18 +114,6 @@ public class GroovyFormatter {
         return source;
     }
     
-    /**
-     * Post-processes the formatted code to restore Groovy-specific syntax
-     */
-    private String postprocessGroovySyntax(String formatted) {
-        // Restore triple-quoted strings
-        formatted = restoreTripleQuotedStrings(formatted);
-        
-        // Restore GStrings
-        formatted = restoreGStrings(formatted);
-        
-        return formatted;
-    }
     
     /**
      * Applies additional Groovy-specific formatting rules
@@ -147,18 +133,6 @@ public class GroovyFormatter {
         return source;
     }
     
-    /**
-     * Creates a Java formatter with the appropriate options
-     */
-    private static Formatter createJavaFormatter(FormatOptions options) {
-        JavaFormatterOptions.Builder builder = JavaFormatterOptions.builder()
-            .style(options.getStyle());
-        
-        // Apply custom settings if available
-        JavaFormatterOptions javaOptions = builder.build();
-        
-        return new Formatter(javaOptions);
-    }
     
     // Placeholder methods for Groovy-specific formatting
     // These would contain the actual implementation
@@ -210,5 +184,65 @@ public class GroovyFormatter {
     private String formatPropertyAccess(String source) {
         // TODO: Implement property access formatting
         return source;
+    }
+    
+    /**
+     * Applies basic Groovy formatting without using google-java-format
+     */
+    private String applyBasicGroovyFormatting(String source) {
+        // Basic formatting: normalize spaces and indentation
+        String[] lines = source.split("\n");
+        StringBuilder formatted = new StringBuilder();
+        
+        for (String line : lines) {
+            // Remove excessive spaces
+            String trimmedLine = line.trim();
+            if (!trimmedLine.isEmpty()) {
+                // Normalize spaces around keywords and operators
+                trimmedLine = trimmedLine.replaceAll("\\s+", " ");
+                
+                // Protect GString interpolations (${...}) from formatting
+                String gstringProtected = trimmedLine.replace("${", "\u0001GSTRING_START\u0002");
+                
+                gstringProtected = gstringProtected.replaceAll("\\s*\\{\\s*", " {");
+                gstringProtected = gstringProtected.replaceAll("\\s*\\(\\s*", "(");
+                gstringProtected = gstringProtected.replaceAll("\\s*\\)\\s*", ")");
+                gstringProtected = gstringProtected.replaceAll("\\s*,\\s*", ", ");
+                gstringProtected = gstringProtected.replaceAll("\\s*\\+\\s*", " + ");
+                
+                // Restore GString interpolations
+                trimmedLine = gstringProtected.replace("\u0001GSTRING_START\u0002", "${");
+            }
+            
+            // Re-add appropriate indentation based on context
+            String indentedLine = applyIndentation(trimmedLine, getIndentLevel(line));
+            formatted.append(indentedLine).append("\n");
+        }
+        
+        return formatted.toString().trim();
+    }
+    
+    private int getIndentLevel(String line) {
+        int spaces = 0;
+        for (char c : line.toCharArray()) {
+            if (c == ' ') {
+                spaces++;
+            } else if (c == '\t') {
+                spaces += 4; // Assume tab size of 4
+            } else {
+                break;
+            }
+        }
+        return spaces / options.getIndentSize();
+    }
+    
+    private String applyIndentation(String line, int level) {
+        if (line.isEmpty()) {
+            return line;
+        }
+        String indent = options.isUseTabs() 
+            ? "\t".repeat(level)
+            : " ".repeat(level * options.getIndentSize());
+        return indent + line;
     }
 }

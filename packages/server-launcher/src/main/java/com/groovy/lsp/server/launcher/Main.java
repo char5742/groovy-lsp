@@ -42,6 +42,10 @@ public class Main {
                 case SOCKET -> launchSocket(server, mode.host, mode.port);
                 default -> throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
             }
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid arguments: {}", e.getMessage());
+            // Re-throw for tests
+            throw e;
         } catch (Exception e) {
             logger.error("Failed to start Groovy Language Server", e);
             System.exit(1);

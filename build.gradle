@@ -61,23 +61,21 @@ subprojects {
     }
     
     dependencies {
-        implementation libs.groovy
-        implementation libs.groovy.json
-        implementation libs.groovy.xml
-        implementation libs.groovy.nio
-        implementation libs.groovy.templates
-        implementation libs.slf4j.api
-        implementation libs.logback.classic
+        // Groovy dependencies
+        implementation libs.bundles.groovy
+        
+        // Logging
+        implementation libs.bundles.logging
         
         // Error Prone and NullAway
         errorprone libs.errorprone.core
         errorprone libs.nullaway
         
-        testImplementation libs.junit.jupiter
-        testImplementation libs.junit.jupiter.params
-        testImplementation libs.mockk
-        testImplementation libs.assertj.core
+        // Testing
+        testImplementation libs.bundles.testing
         testImplementation libs.archunit
+        testImplementation libs.jmolecules.integrations.archunit
+        testImplementation libs.jmolecules.onion.architecture
         testRuntimeOnly libs.junit.platform.launcher
     }
     

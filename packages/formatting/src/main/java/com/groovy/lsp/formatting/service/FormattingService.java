@@ -63,6 +63,12 @@ public class FormattingService {
                 // Format the entire document
                 String formatted = customFormatter.format(documentContent);
                 
+                // If formatting returns null, return empty list
+                if (formatted == null) {
+                    logger.warn("Formatter returned null for document");
+                    return Collections.emptyList();
+                }
+                
                 // Create a text edit that replaces the entire document
                 TextEdit edit = createFullDocumentEdit(documentContent, formatted);
                 
@@ -109,6 +115,12 @@ public class FormattingService {
                 
                 // Format the range
                 String formatted = customFormatter.formatRange(documentContent, offset, length);
+                
+                // If formatting returns null, return empty list
+                if (formatted == null) {
+                    logger.warn("Formatter returned null for range");
+                    return Collections.emptyList();
+                }
                 
                 // Create text edit for the formatted range
                 TextEdit edit = createRangeEdit(documentContent, formatted, range);

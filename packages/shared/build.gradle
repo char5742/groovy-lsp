@@ -16,13 +16,6 @@ dependencies {
     
     // Guava for event bus implementation
     implementation libs.guava
-    
-    // Logging
-    implementation libs.slf4j.api
-    
-    // Testing
-    testImplementation libs.bundles.testing
-    testImplementation libs.archunit
 }
 
 jar {

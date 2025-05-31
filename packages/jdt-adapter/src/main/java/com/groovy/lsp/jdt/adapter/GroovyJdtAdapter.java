@@ -20,6 +20,9 @@ public class GroovyJdtAdapter {
     private final AstConverter astConverter;
     private final TypeConverter typeConverter;
     
+    /**
+     * Constructs a new GroovyJdtAdapter with default converters.
+     */
     public GroovyJdtAdapter() {
         this.astConverter = new AstConverter();
         this.typeConverter = new TypeConverter();
@@ -129,10 +132,19 @@ public class GroovyJdtAdapter {
      * Exception thrown when adapter operations fail.
      */
     public static class AdapterException extends RuntimeException {
+        /**
+         * Constructs a new AdapterException with the specified message.
+         * @param message the error message
+         */
         public AdapterException(String message) {
             super(message);
         }
         
+        /**
+         * Constructs a new AdapterException with the specified message and cause.
+         * @param message the error message
+         * @param cause the underlying cause
+         */
         public AdapterException(String message, Throwable cause) {
             super(message, cause);
         }

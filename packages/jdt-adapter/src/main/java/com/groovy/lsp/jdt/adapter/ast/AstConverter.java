@@ -19,7 +19,16 @@ public class AstConverter {
     private static final Logger logger = LoggerFactory.getLogger(AstConverter.class);
     
     /**
+     * Default constructor for AstConverter.
+     */
+    public AstConverter() {
+        // Default constructor
+    }
+    
+    /**
      * Converts a Groovy package node to JDT package declaration.
+     * @param packageNode the Groovy package node to convert, may be null
+     * @param compilationUnit the JDT compilation unit to add the package declaration to
      */
     public void convertPackage(@Nullable PackageNode packageNode, CompilationUnit compilationUnit) {
         if (packageNode == null || packageNode.getName() == null) {
@@ -34,6 +43,8 @@ public class AstConverter {
     
     /**
      * Converts a Groovy import node to JDT import declaration.
+     * @param importNode the Groovy import node to convert
+     * @param compilationUnit the JDT compilation unit to add the import declaration to
      */
     public void convertImport(ImportNode importNode, CompilationUnit compilationUnit) {
         AST ast = compilationUnit.getAST();
@@ -54,6 +65,8 @@ public class AstConverter {
     
     /**
      * Converts a Groovy star import to JDT on-demand import.
+     * @param starImport the Groovy star import node to convert
+     * @param compilationUnit the JDT compilation unit to add the import declaration to
      */
     public void convertStarImport(ImportNode starImport, CompilationUnit compilationUnit) {
         AST ast = compilationUnit.getAST();
@@ -70,6 +83,9 @@ public class AstConverter {
     
     /**
      * Converts a Groovy static import to JDT static import.
+     * @param importNode the Groovy import node to convert
+     * @param alias the import alias, if any
+     * @param compilationUnit the JDT compilation unit to add the static import to
      */
     public void convertStaticImport(ImportNode importNode, String alias, CompilationUnit compilationUnit) {
         AST ast = compilationUnit.getAST();
@@ -94,6 +110,9 @@ public class AstConverter {
     
     /**
      * Converts a Groovy static star import to JDT static on-demand import.
+     * @param importNode the Groovy import node to convert
+     * @param alias the import alias, if any
+     * @param compilationUnit the JDT compilation unit to add the static import to
      */
     public void convertStaticStarImport(ImportNode importNode, String alias, CompilationUnit compilationUnit) {
         AST ast = compilationUnit.getAST();
@@ -107,6 +126,8 @@ public class AstConverter {
     
     /**
      * Converts a Groovy class node to JDT type declaration.
+     * @param classNode the Groovy class node to convert
+     * @param compilationUnit the JDT compilation unit to add the type declaration to
      */
     public void convertClass(ClassNode classNode, CompilationUnit compilationUnit) {
         AST ast = compilationUnit.getAST();
@@ -234,11 +255,21 @@ public class AstConverter {
     
     // Reverse conversion methods (JDT to Groovy)
     
+    /**
+     * Converts a JDT package declaration to Groovy package node.
+     * @param packageDecl the JDT package declaration to convert
+     * @param moduleNode the Groovy module node to set the package on
+     */
     public void convertJdtPackage(PackageDeclaration packageDecl, ModuleNode moduleNode) {
         String packageName = packageDecl.getName().getFullyQualifiedName();
         moduleNode.setPackage(new PackageNode(packageName));
     }
     
+    /**
+     * Converts a JDT import declaration to Groovy import node.
+     * @param importObj the JDT import object to convert
+     * @param moduleNode the Groovy module node to add the import to
+     */
     public void convertJdtImport(Object importObj, ModuleNode moduleNode) {
         if (!(importObj instanceof ImportDeclaration importDecl)) {
             return;
@@ -273,6 +304,11 @@ public class AstConverter {
         }
     }
     
+    /**
+     * Converts a JDT type declaration to Groovy class node.
+     * @param typeObj the JDT type object to convert
+     * @param moduleNode the Groovy module node to add the class to
+     */
     public void convertJdtType(Object typeObj, ModuleNode moduleNode) {
         if (!(typeObj instanceof TypeDeclaration typeDecl)) {
             return;

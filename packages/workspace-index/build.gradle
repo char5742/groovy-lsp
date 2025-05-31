@@ -14,19 +14,18 @@ dependencies {
     // LMDB for high-performance symbol indexing
     implementation libs.lmdb.java
     
-    // Logging
-    implementation libs.slf4j.api
-    
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
-    
-    // Testing
-    testImplementation libs.bundles.testing
-    testImplementation libs.archunit
 }
 
 test {
     useJUnitPlatform()
+    
+    jvmArgs = [
+        '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+    ]
 }
 
 jar {

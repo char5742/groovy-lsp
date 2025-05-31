@@ -27,6 +27,13 @@ public class TypeConverter {
     private final Map<String, ITypeBinding> typeBindingCache = new HashMap<>();
     private final Map<String, ClassNode> classNodeCache = new HashMap<>();
     
+    /**
+     * Default constructor for TypeConverter.
+     */
+    public TypeConverter() {
+        // Default constructor
+    }
+    
     // Primitive type mappings
     private static final Map<String, String> PRIMITIVE_TYPE_MAP = new HashMap<>();
     static {

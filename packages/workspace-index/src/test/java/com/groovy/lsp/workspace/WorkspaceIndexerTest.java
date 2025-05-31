@@ -1,5 +1,7 @@
 package com.groovy.lsp.workspace;
 
+import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
+import com.groovy.lsp.workspace.api.WorkspaceIndexService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -10,26 +12,25 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
- * Tests for WorkspaceIndexer.
+ * Tests for WorkspaceIndexService.
  */
 class WorkspaceIndexerTest {
     
     @TempDir
     Path tempDir;
     
-    private WorkspaceIndexer indexer;
+    private WorkspaceIndexService indexer;
     
     @BeforeEach
     void setUp() {
-        indexer = new WorkspaceIndexer(tempDir);
+        indexer = WorkspaceIndexFactory.createWorkspaceIndexService(tempDir);
     }
     
     @AfterEach
     void tearDown() {
-        indexer.close();
+        indexer.shutdown();
     }
     
     @Test

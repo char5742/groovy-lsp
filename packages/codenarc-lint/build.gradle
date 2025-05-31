@@ -14,22 +14,11 @@ dependencies {
     // LSP4J dependencies (for Diagnostic classes)
     implementation libs.lsp4j
     
-    // Groovy dependency (required by CodeNarc)
-    implementation libs.bundles.groovy
-    
-    // SLF4J for logging
-    implementation libs.slf4j.api
-    
-    // Test dependencies
-    testImplementation libs.junit.jupiter
+    // Test dependencies (additional to parent)
     testImplementation libs.mockito.core
     testImplementation libs.mockito.junit.jupiter
-    testImplementation libs.assertj.core
 }
 
-test {
-    useJUnitPlatform()
-}
 
 jar {
     manifest {

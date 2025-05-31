@@ -7,23 +7,10 @@ dependencies {
     implementation project(':shared')  // Includes jMolecules transitively
     implementation project(':lsp-protocol')
     
-    // Apache Groovy dependencies
-    implementation libs.bundles.groovy
-    
-    // Logging
-    implementation libs.slf4j.api
-    
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
-    
-    // Testing
-    testImplementation libs.bundles.testing
-    testImplementation libs.archunit
 }
 
-test {
-    useJUnitPlatform()
-}
 
 jar {
     manifest {

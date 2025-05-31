@@ -1,7 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.compile.nullAnalysis.mode": "automatic",
-  "java.home": "${env:JAVA_HOME}",
   "groovy.lint.enable": true,
   "files.exclude": {
     "**/.gradle": true,
@@ -14,9 +13,6 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
-  },
-  "[groovy]": {
-    "editor.defaultFormatter": "marlon407.code-groovy"
   },
   "[java]": {
     "editor.defaultFormatter": "redhat.java"

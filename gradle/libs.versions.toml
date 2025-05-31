@@ -8,7 +8,7 @@ eclipse-core-resources = "3.21.0"
 eclipse-text = "3.14.100"
 codenarc = "3.6.0"
 google-java-format = "1.27.0"
-junit = "5.12.2"
+junit = "5.13.0"
 mockk = "1.14.2"
 mockito = "5.18.0"
 gradle-shadow = "8.1.1"
@@ -25,9 +25,10 @@ apiguardian = "1.1.2"
 guava = "33.4.8-jre"
 archunit = "1.4.1"
 jmolecules-bom = "2025.0.0-RC2"
-jmolecules-ddd = "1.9.0"
-jmolecules-events = "1.9.0"
-jmolecules-architecture = "1.9.0"
+jmolecules-ddd = "1.10.0"
+jmolecules-events = "1.10.0"
+jmolecules-onion-architecture = "1.10.0"
+jmolecules-integrations-archunit = "0.26.0"
 jspecify = "1.0.0"
 errorprone-core = "2.38.0"
 nullaway = "0.11.1"
@@ -104,7 +105,8 @@ archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "arc
 jmolecules-bom = { module = "org.jmolecules:jmolecules-bom", version.ref = "jmolecules-bom" }
 jmolecules-ddd = { module = "org.jmolecules:jmolecules-ddd", version.ref = "jmolecules-ddd" }
 jmolecules-events = { module = "org.jmolecules:jmolecules-events", version.ref = "jmolecules-events" }
-jmolecules-architecture = { module = "org.jmolecules:jmolecules-architecture", version.ref = "jmolecules-architecture" }
+jmolecules-onion-architecture = { module = "org.jmolecules:jmolecules-onion-architecture", version.ref = "jmolecules-onion-architecture" }
+jmolecules-integrations-archunit = { module = "org.jmolecules.integrations:jmolecules-archunit", version.ref = "jmolecules-integrations-archunit" }
 
 # Null Safety
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
@@ -119,7 +121,7 @@ lsp4j = ["lsp4j", "lsp4j-jsonrpc"]
 testing = ["junit-jupiter", "junit-jupiter-params", "mockk", "assertj-core"]
 logging = ["slf4j-api", "logback-classic"]
 jmh = ["jmh-core", "jmh-generator-annprocess"]
-jmolecules = ["jmolecules-ddd", "jmolecules-events", "jmolecules-architecture"]
+jmolecules = ["jmolecules-ddd", "jmolecules-events", "jmolecules-onion-architecture"]
 
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "gradle-shadow" }

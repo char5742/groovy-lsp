@@ -7,14 +7,6 @@ java {
     withJavadocJar()
 }
 
-repositories {
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
-        url 'https://groovy.jfrog.io/artifactory/libs-release-local'
-    }
-}
 
 dependencies {
     // JDT Core dependencies - using stable version
@@ -31,17 +23,8 @@ dependencies {
     implementation project(':shared')
     implementation project(':groovy-core')
     implementation project(':lsp-protocol')
-    
-    // Groovy dependencies
-    implementation libs.bundles.groovy
-    
-    // Logging
-    implementation libs.slf4j.api
 }
 
-test {
-    useJUnitPlatform()
-}
 
 jar {
     manifest {

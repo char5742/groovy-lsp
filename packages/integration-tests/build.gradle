@@ -19,21 +19,22 @@ dependencies {
     testImplementation project(':workspace-index')
     testImplementation project(':formatting')
     
-    // テストフレームワーク
-    testImplementation libs.bundles.testing
-    testImplementation libs.bundles.logging
-    testImplementation libs.archunit
-    
     // 統合テスト用の追加ライブラリ
     testImplementation libs.lsp4j
+    testImplementation libs.google.java.format // For FormatterException
     testImplementation 'org.awaitility:awaitility:4.2.0'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
-    
-    testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {
     useJUnitPlatform()
+    
+    // JVM arguments for LMDB
+    jvmArgs = [
+        '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+    ]
     
     // 統合テストの設定
     systemProperty 'integration.test', 'true'
@@ -63,6 +64,28 @@ task integrationTest(type: Test) {
     
     useJUnitPlatform {
         includeTags 'integration'
+    }
+    
+    // JVM arguments for LMDB and other reflective access
+    jvmArgs = [
+        '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+    ]
+    
+    // 統合テストの設定
+    systemProperty 'integration.test', 'true'
+    
+    // テストのタイムアウト設定
+    timeout = Duration.ofMinutes(10)
+    
+    // 並列実行を無効化（統合テストのため）
+    maxParallelForks = 1
+    
+    testLogging {
+        events 'started', 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+        showStandardStreams = false
     }
 }
 

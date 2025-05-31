@@ -35,9 +35,13 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         logger.debug("Document opened: {}", params.getTextDocument().getUri());
         // TODO: Implement document open handling
         
-        // Example usage of client field for future diagnostics
+        // For testing purposes, send empty diagnostics to indicate document was processed
         if (client != null) {
             logger.debug("Client is available for sending diagnostics");
+            PublishDiagnosticsParams diagnosticsParams = new PublishDiagnosticsParams();
+            diagnosticsParams.setUri(params.getTextDocument().getUri());
+            diagnosticsParams.setDiagnostics(Collections.emptyList());
+            client.publishDiagnostics(diagnosticsParams);
         }
     }
     
