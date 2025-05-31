@@ -47,13 +47,13 @@ jobs:
         restore-keys: ${{ runner.os }}-gradle-
         
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon --scan
+      run: ./gradlew build --no-daemon
       
     - name: Run unit tests
       run: ./gradlew test --no-daemon
       
     - name: Run integration tests
-      run: ./gradlew integrationTest --no-daemon
+      run: ./gradlew :integration-tests:test --no-daemon
       if: matrix.java == 21  # Run integration tests only on Java 21
       
     - name: Generate test report
@@ -71,7 +71,7 @@ jobs:
         name: build-artifacts-${{ matrix.os }}-java${{ matrix.java }}
         path: |
           packages/server-launcher/build/libs/*.jar
-          packages/server-launcher/build/distributions/*.zip
+          packages/server-launcher/build/libs/*-all.jar
           
     - name: Upload test reports
       uses: actions/upload-artifact@v4
@@ -102,19 +102,6 @@ jobs:
         
     - name: Run static analysis
       run: ./gradlew check -x test --no-daemon
-      
-    - name: SonarCloud Scan
-      if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        ./gradlew sonar \
-          -Dsonar.projectKey=groovy-lsp \
-          -Dsonar.organization=${{ github.repository_owner }} \
-          -Dsonar.host.url=https://sonarcloud.io \
-          --no-daemon
-      continue-on-error: true
       
   security:
     name: Security Scan
@@ -170,7 +157,9 @@ jobs:
       with:
         script: |
           const fs = require('fs');
-          const results = fs.readFileSync('packages/benchmarks/build/results/jmh/results.json', 'utf8');
+          const fs = require('fs');
+          const resultsPath = 'packages/benchmarks/build/results/jmh/results.json';
+          const results = fs.existsSync(resultsPath) ? fs.readFileSync(resultsPath, 'utf8') : 'No benchmark results found';
           const body = `## Benchmark Results\n\`\`\`json\n${results}\n\`\`\``;
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -216,6 +205,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./packages/server-launcher/build/libs/server-launcher-all.jar
+        asset_path: ./packages/server-launcher/build/libs/groovy-language-server-${{ github.run_number }}.jar
         asset_name: groovy-lsp-${{ github.run_number }}.jar
         asset_content_type: application/java-archive

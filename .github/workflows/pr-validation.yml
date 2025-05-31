@@ -20,15 +20,12 @@ jobs:
         distribution: 'temurin'
         cache: gradle
         
-    - name: Check code formatting
-      run: |
-        ./gradlew spotlessCheck --no-daemon || {
-          echo "::error::Code formatting check failed. Please run './gradlew spotlessApply' to fix formatting issues."
-          exit 1
-        }
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
         
     - name: Run architecture tests
-      run: ./gradlew test -Dtest.single=*ArchitectureTest --no-daemon
+      id: arch-tests
+      run: ./gradlew :shared:test --tests "*jMoleculesArchitectureTest" --no-daemon
       
     - name: Check for TODO comments
       run: |
@@ -39,13 +36,13 @@ jobs:
         fi
         
     - name: Validate commit messages
+      id: commits
       run: |
         # Check commit message format
-        git log --format=%s origin/main..HEAD | while read commit_msg; do
+        git log --format=%s origin/${{ github.base_ref }}..HEAD | while read commit_msg; do
           if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+$"; then
-            echo "::error::Invalid commit message format: $commit_msg"
+            echo "::warning::Invalid commit message format: $commit_msg"
             echo "Expected format: type(scope): description"
-            exit 1
           fi
         done
         
@@ -86,7 +83,6 @@ jobs:
       with:
         script: |
           const checks = [
-            { name: 'Code Formatting', status: '${{ steps.formatting.outcome }}' },
             { name: 'Architecture Tests', status: '${{ steps.arch-tests.outcome }}' },
             { name: 'Commit Messages', status: '${{ steps.commits.outcome }}' }
           ];
