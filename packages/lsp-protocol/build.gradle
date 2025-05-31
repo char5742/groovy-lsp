@@ -1,33 +1,32 @@
 plugins {
-    id 'groovy'
     id 'java-library'
 }
 
-group = 'com.groovy.lsp'
-version = '0.1.0'
-
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    // Groovy
-    implementation 'org.apache.groovy:groovy:4.0.15'
+    // Module dependencies
+    implementation project(':shared')  // Includes jMolecules transitively
     
-    // LSP4J
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.1'
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.1'
+    // LSP4J - Language Server Protocol for Java
+    api libs.bundles.lsp4j
     
-    // Testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'junit:junit:4.13.2'
+    // API Guardian for package visibility annotations
+    compileOnly libs.apiguardian.api
 }
 
-test {
-    useJUnitPlatform()
+
+// Generate Javadoc
+javadoc {
+    options.addBooleanOption('html5', true)
+    options.links 'https://docs.oracle.com/en/java/javase/17/docs/api/'
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+// JAR configuration
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Groovy LSP Protocol',
+            'Implementation-Version': project.version,
+            'Automatic-Module-Name': 'com.groovy.lsp.protocol'
+        )
+    }
 }

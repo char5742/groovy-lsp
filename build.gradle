@@ -1,34 +1,85 @@
 plugins {
-    id 'java'
-    id 'groovy'
+    alias(libs.plugins.versions) apply false
+    alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.errorprone) apply false
+    alias(libs.plugins.nullaway) apply false
 }
 
 allprojects {
-    group = 'com.groovy.lsp'
-    version = '0.1.0-SNAPSHOT'
-    
     repositories {
         mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url 'https://repo.gradle.org/gradle/libs-releases/'
+        }
+        maven {
+            url 'https://groovy.jfrog.io/artifactory/libs-release-local'
+        }
+        maven {
+            url 'https://download.eclipse.org/releases/latest/'
+        }
+        maven {
+            url 'https://repo.eclipse.org/content/repositories/groovy-releases/'
+        }
     }
 }
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'
+    apply plugin: 'net.ltgt.errorprone'
+    apply plugin: 'net.ltgt.nullaway'
     
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(23)
+        }
+        
+        // JPMS有効化設定
+        // 現状では外部ライブラリの制約により、sharedとgroovy-coreのみJPMS対応可能
+        def enableJpms = project.name in ['shared', 'groovy-core']
+        
+        modularity.inferModulePath = enableJpms
+        
+        if (!enableJpms) {
+            logger.debug("JPMS disabled for module: ${project.name} (auto-module dependencies)")
         }
     }
     
     dependencies {
-        implementation 'org.apache.groovy:groovy-all:4.0.27'
-        testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        // Groovy dependencies
+        implementation libs.bundles.groovy
+        
+        // Logging
+        implementation libs.bundles.logging
+        
+        // Error Prone and NullAway
+        errorprone libs.errorprone.core
+        errorprone libs.nullaway
+        
+        // Testing
+        testImplementation libs.bundles.testing
+        testImplementation libs.archunit
+        testImplementation libs.jmolecules.integrations.archunit
+        testImplementation libs.jmolecules.onion.architecture
+        testRuntimeOnly libs.junit.platform.launcher
     }
     
     test {
         useJUnitPlatform()
+    }
+    
+    tasks.withType(JavaCompile) {
+        options.errorprone {
+            enabled = true
+            disableWarningsInGeneratedCode = true
+            
+            // NullAway configuration
+            check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+            option("NullAway:AnnotatedPackages", "com.groovy.lsp")
+            option("NullAway:TreatGeneratedAsUnannotated", "true")
+            option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
+        }
+        
     }
 }

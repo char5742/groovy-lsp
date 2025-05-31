@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<ruleset xmlns="http://codenarc.org/ruleset/1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://codenarc.org/ruleset/1.0 http://codenarc.org/ruleset-schema.xsd"
+         xsi:noNamespaceSchemaLocation="http://codenarc.org/ruleset-schema.xsd">
+
+    <description>Default CodeNarc rules for Groovy LSP</description>
+
+    <!-- Basic Rules -->
+    <ruleset-ref path='rulesets/basic.xml'>
+        <exclude name='EmptyCatchBlock'/>
+        <exclude name='EmptyFinallyBlock'/>
+    </ruleset-ref>
+
+    <!-- Import Rules -->
+    <ruleset-ref path='rulesets/imports.xml'>
+        <exclude name='NoWildcardImports'/>
+    </ruleset-ref>
+
+    <!-- Groovyism Rules -->
+    <ruleset-ref path='rulesets/groovyism.xml'>
+        <exclude name='GStringExpressionWithinString'/>
+    </ruleset-ref>
+
+    <!-- Convention Rules -->
+    <ruleset-ref path='rulesets/convention.xml'>
+        <exclude name='NoDef'/>
+        <exclude name='TrailingComma'/>
+    </ruleset-ref>
+
+    <!-- Design Rules -->
+    <ruleset-ref path='rulesets/design.xml'>
+        <exclude name='BuilderMethodWithSideEffects'/>
+        <exclude name='Instanceof'/>
+    </ruleset-ref>
+
+    <!-- Exception Rules -->
+    <ruleset-ref path='rulesets/exceptions.xml'>
+        <exclude name='CatchException'/>
+        <exclude name='CatchThrowable'/>
+    </ruleset-ref>
+
+    <!-- Formatting Rules -->
+    <ruleset-ref path='rulesets/formatting.xml'>
+        <exclude name='SpaceBeforeOpeningBrace'/>
+        <exclude name='SpaceAfterOpeningBrace'/>
+        <exclude name='SpaceBeforeClosingBrace'/>
+        <exclude name='SpaceAfterClosingBrace'/>
+    </ruleset-ref>
+
+    <!-- Custom rule configurations -->
+    <rule class='org.codenarc.rule.formatting.LineLengthRule'>
+        <property name='maximumLineLength' value='120'/>
+    </rule>
+
+    <rule class='org.codenarc.rule.naming.MethodNameRule'>
+        <property name='regex' value='^[a-z][a-zA-Z0-9]*$'/>
+    </rule>
+
+    <rule class='org.codenarc.rule.naming.ClassNameRule'>
+        <property name='regex' value='^[A-Z][a-zA-Z0-9]*$'/>
+    </rule>
+
+</ruleset>
