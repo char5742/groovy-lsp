@@ -1,4 +1,4 @@
-package com.groovy.lsp.groovy.core;
+package com.groovy.lsp.groovy.core.internal.impl;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer;
@@ -10,19 +10,26 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
+
 /**
- * Factory for creating configured Groovy CompilerConfiguration instances.
+ * Internal implementation of CompilerConfigurationService.
  * This factory provides various configurations optimized for LSP usage.
  */
-public class CompilerFactory {
-    private static final Logger logger = LoggerFactory.getLogger(CompilerFactory.class);
+public class CompilerFactoryImpl implements CompilerConfigurationService {
+    private static final Logger logger = LoggerFactory.getLogger(CompilerFactoryImpl.class);
     
     /**
      * Creates a default compiler configuration suitable for LSP operations.
      * 
      * @return a configured CompilerConfiguration instance
      */
-    public static CompilerConfiguration createDefaultConfiguration() {
+    @Override
+    public CompilerConfiguration createDefaultConfiguration() {
+        return createDefaultConfigurationStatic();
+    }
+    
+    public static CompilerConfiguration createDefaultConfigurationStatic() {
         CompilerConfiguration config = new CompilerConfiguration();
         
         // Set source encoding
@@ -50,10 +57,15 @@ public class CompilerFactory {
      * @param classpath the classpath entries
      * @return a configured CompilerConfiguration instance
      */
-    public static CompilerConfiguration createConfigurationWithClasspath(List<String> classpath) {
+    @Override
+    public CompilerConfiguration createConfigurationWithClasspath(List<String> classpath) {
+        return createConfigurationWithClasspathStatic(classpath);
+    }
+    
+    public static CompilerConfiguration createConfigurationWithClasspathStatic(List<String> classpath) {
         Objects.requireNonNull(classpath, "Classpath cannot be null");
         
-        CompilerConfiguration config = createDefaultConfiguration();
+        CompilerConfiguration config = createDefaultConfigurationStatic();
         config.setClasspathList(classpath);
         
         logger.debug("Created compiler configuration with classpath: {}", classpath);
@@ -66,8 +78,13 @@ public class CompilerFactory {
      * 
      * @return a configured CompilerConfiguration instance
      */
-    public static CompilerConfiguration createScriptConfiguration() {
-        CompilerConfiguration config = createDefaultConfiguration();
+    @Override
+    public CompilerConfiguration createScriptConfiguration() {
+        return createScriptConfigurationStatic();
+    }
+    
+    public static CompilerConfiguration createScriptConfigurationStatic() {
+        CompilerConfiguration config = createDefaultConfigurationStatic();
         
         // Set script base class for better script support
         config.setScriptBaseClass("groovy.lang.Script");
@@ -85,8 +102,13 @@ public class CompilerFactory {
      * @param staticTypeChecking whether to enable static type checking
      * @return a configured CompilerConfiguration instance
      */
-    public static CompilerConfiguration createTypeCheckingConfiguration(boolean staticTypeChecking) {
-        CompilerConfiguration config = createDefaultConfiguration();
+    @Override
+    public CompilerConfiguration createTypeCheckingConfiguration(boolean staticTypeChecking) {
+        return createTypeCheckingConfigurationStatic(staticTypeChecking);
+    }
+    
+    public static CompilerConfiguration createTypeCheckingConfigurationStatic(boolean staticTypeChecking) {
+        CompilerConfiguration config = createDefaultConfigurationStatic();
         
         if (staticTypeChecking) {
             // Add static type checking transformation

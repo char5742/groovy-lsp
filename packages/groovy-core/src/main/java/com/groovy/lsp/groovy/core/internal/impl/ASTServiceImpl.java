@@ -1,4 +1,4 @@
-package com.groovy.lsp.groovy.core;
+package com.groovy.lsp.groovy.core.internal.impl;
 
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
@@ -16,12 +16,15 @@ import java.io.StringReader;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.internal.impl.CompilerFactoryImpl;
+
 /**
- * Service for Groovy AST operations.
+ * Internal implementation of ASTService.
  * Provides methods for parsing, traversing, and analyzing Groovy AST.
  */
-public class ASTService {
-    private static final Logger logger = LoggerFactory.getLogger(ASTService.class);
+public class ASTServiceImpl implements ASTService {
+    private static final Logger logger = LoggerFactory.getLogger(ASTServiceImpl.class);
     
     // Cache for parsed ASTs to improve performance
     private final Map<String, ModuleNode> astCache = new ConcurrentHashMap<>();
@@ -34,7 +37,7 @@ public class ASTService {
      * @return the parsed ModuleNode or null if parsing failed
      */
     public ModuleNode parseSource(String sourceCode, String sourceName) {
-        return parseSource(sourceCode, sourceName, CompilerFactory.createDefaultConfiguration());
+        return parseSource(sourceCode, sourceName, CompilerFactoryImpl.createDefaultConfigurationStatic());
     }
     
     /**

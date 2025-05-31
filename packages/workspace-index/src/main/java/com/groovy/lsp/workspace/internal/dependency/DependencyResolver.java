@@ -1,4 +1,4 @@
-package com.groovy.lsp.workspace.dependency;
+package com.groovy.lsp.workspace.internal.dependency;
 
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;

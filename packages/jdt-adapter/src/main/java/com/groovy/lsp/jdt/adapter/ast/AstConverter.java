@@ -4,6 +4,7 @@ import org.codehaus.groovy.ast.*;
 import org.eclipse.jdt.core.dom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.List;
@@ -19,7 +20,7 @@ public class AstConverter {
     /**
      * Converts a Groovy package node to JDT package declaration.
      */
-    public void convertPackage(PackageNode packageNode, CompilationUnit compilationUnit) {
+    public void convertPackage(@Nullable PackageNode packageNode, CompilationUnit compilationUnit) {
         if (packageNode == null || packageNode.getName() == null) {
             return;
         }

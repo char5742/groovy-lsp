@@ -6,6 +6,7 @@ import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.groovy.lsp.formatting.options.FormatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -49,7 +50,7 @@ public class GroovyFormatter {
      * @return the formatted source code
      * @throws FormatterException if the source code cannot be formatted
      */
-    public String format(String source) throws FormatterException {
+    public String format(@Nullable String source) throws FormatterException {
         if (source == null || source.trim().isEmpty()) {
             return source;
         }
@@ -87,7 +88,7 @@ public class GroovyFormatter {
      * @return the formatted source code
      * @throws FormatterException if the source code cannot be formatted
      */
-    public String formatRange(String source, int offset, int length) throws FormatterException {
+    public String formatRange(@Nullable String source, int offset, int length) throws FormatterException {
         if (source == null || offset < 0 || length < 0 || offset + length > source.length()) {
             throw new IllegalArgumentException("Invalid range parameters");
         }

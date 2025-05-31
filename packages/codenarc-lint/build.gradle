@@ -4,30 +4,27 @@ plugins {
 
 dependencies {
     // CodeNarc dependencies
-    implementation 'org.codenarc:CodeNarc:3.5.0'
+    implementation libs.codenarc
     
     // Internal module dependencies
+    implementation project(':shared')
     implementation project(':groovy-core')
     implementation project(':lsp-protocol')
     
     // LSP4J dependencies (for Diagnostic classes)
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1'
+    implementation libs.lsp4j
     
     // Groovy dependency (required by CodeNarc)
-    implementation 'org.apache.groovy:groovy:4.0.27'
-    implementation 'org.apache.groovy:groovy-json:4.0.27'
-    implementation 'org.apache.groovy:groovy-xml:4.0.27'
-    implementation 'org.apache.groovy:groovy-nio:4.0.27'
-    implementation 'org.apache.groovy:groovy-templates:4.0.27'
+    implementation libs.bundles.groovy
     
     // SLF4J for logging
-    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation libs.slf4j.api
     
     // Test dependencies
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
-    testImplementation 'org.mockito:mockito-core:5.14.2'
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
-    testImplementation 'org.assertj:assertj-core:3.27.2'
+    testImplementation libs.junit.jupiter
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.junit.jupiter
+    testImplementation libs.assertj.core
 }
 
 test {

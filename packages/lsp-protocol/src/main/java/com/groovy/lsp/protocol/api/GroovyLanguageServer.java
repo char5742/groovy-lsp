@@ -1,4 +1,4 @@
-package com.groovy.lsp.protocol;
+package com.groovy.lsp.protocol.api;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -6,13 +6,17 @@ import org.eclipse.lsp4j.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
+import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Main Language Server implementation for Groovy.
  * 
  * This class implements the LSP LanguageServer interface and coordinates
- * between the various service implementations.
+ * between the various service implementations. It receives requests from 
+ * LSP clients and delegates to domain services.
  */
 public class GroovyLanguageServer implements LanguageServer, LanguageClientAware {
     

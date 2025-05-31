@@ -4,24 +4,21 @@ plugins {
 
 dependencies {
     // Google Java Format for code formatting
-    implementation 'com.google.googlejavaformat:google-java-format:1.25.2'
+    implementation libs.google.java.format
     
     // Internal module dependencies
+    implementation project(':shared')
     implementation project(':groovy-core')
     implementation project(':lsp-protocol')
     
     // LSP4J dependencies (for formatting types)
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1'
+    implementation libs.lsp4j
     
     // Groovy for groovy-specific formatting
-    implementation 'org.apache.groovy:groovy:4.0.27'
-    implementation 'org.apache.groovy:groovy-json:4.0.27'
-    implementation 'org.apache.groovy:groovy-xml:4.0.27'
-    implementation 'org.apache.groovy:groovy-nio:4.0.27'
-    implementation 'org.apache.groovy:groovy-templates:4.0.27'
+    implementation libs.bundles.groovy
     
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation libs.slf4j.api
 }
 
 test {

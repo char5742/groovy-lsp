@@ -1,4 +1,4 @@
-package com.groovy.lsp.groovy.core;
+package com.groovy.lsp.groovy.core.internal.impl;
 
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
@@ -12,17 +12,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
+
 /**
- * Service for Groovy type inference operations.
+ * Internal implementation of TypeInferenceService.
  * Wraps Groovy's type inference capabilities for LSP usage.
  */
-public class TypeInferenceService {
-    private static final Logger logger = LoggerFactory.getLogger(TypeInferenceService.class);
+public class TypeInferenceServiceImpl implements TypeInferenceService {
+    private static final Logger logger = LoggerFactory.getLogger(TypeInferenceServiceImpl.class);
     
     private final ASTService astService;
     
-    public TypeInferenceService() {
-        this.astService = new ASTService();
+    public TypeInferenceServiceImpl(ASTService astService) {
+        this.astService = Objects.requireNonNull(astService, "ASTService cannot be null");
     }
     
     /**

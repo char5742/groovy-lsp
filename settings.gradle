@@ -13,6 +13,7 @@ dependencyResolutionManagement {
 
 rootProject.name = 'groovy-lsp'
 
+include ':shared'
 include ':server-launcher'
 include ':lsp-protocol'
 include ':groovy-core'
@@ -21,6 +22,7 @@ include ':codenarc-lint'
 include ':workspace-index'
 include ':formatting'
 
+project(':shared').projectDir = file('packages/shared')
 project(':server-launcher').projectDir = file('packages/server-launcher')
 project(':lsp-protocol').projectDir = file('packages/lsp-protocol')
 project(':groovy-core').projectDir = file('packages/groovy-core')

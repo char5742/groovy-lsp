@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     // Internal module dependencies
+    implementation project(':shared')
     implementation project(':lsp-protocol')
     implementation project(':groovy-core')
     implementation project(':jdt-adapter')
@@ -13,18 +14,16 @@ dependencies {
     implementation project(':formatting')
     
     // LSP4J dependencies
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1'
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.23.1'
+    implementation libs.bundles.lsp4j
     
     // Guice for dependency injection
-    implementation 'com.google.inject:guice:7.0.0'
+    implementation libs.guice
     
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.16'
-    implementation 'ch.qos.logback:logback-classic:1.5.16'
+    implementation libs.bundles.logging
     
     // Error tracking
-    implementation 'io.sentry:sentry:7.20.0'
+    implementation libs.sentry
 }
 
 application {

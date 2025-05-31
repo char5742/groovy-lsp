@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.dom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class TypeConverter {
      * @param classNode the Groovy class node
      * @return the JDT type signature
      */
-    public String toJdtSignature(ClassNode classNode) {
+    public String toJdtSignature(@Nullable ClassNode classNode) {
         if (classNode == null) {
             return Signature.SIG_VOID;
         }
@@ -77,7 +78,7 @@ public class TypeConverter {
      * @param signature the JDT type signature
      * @return the Groovy class node
      */
-    public ClassNode fromJdtSignature(String signature) {
+    public ClassNode fromJdtSignature(@Nullable String signature) {
         if (signature == null || signature.isEmpty()) {
             return ClassHelper.OBJECT_TYPE;
         }
@@ -99,7 +100,7 @@ public class TypeConverter {
      * @param type the JDT type
      * @return the Groovy class node
      */
-    public ClassNode fromJdtType(Type type) {
+    public ClassNode fromJdtType(@Nullable Type type) {
         if (type == null) {
             return ClassHelper.OBJECT_TYPE;
         }
@@ -147,7 +148,7 @@ public class TypeConverter {
      * @return the Groovy class node
      * @throws JavaModelException if type information cannot be accessed
      */
-    public ClassNode fromJdtIType(IType iType) throws JavaModelException {
+    public ClassNode fromJdtIType(@Nullable IType iType) throws JavaModelException {
         if (iType == null) {
             return ClassHelper.OBJECT_TYPE;
         }
@@ -180,7 +181,7 @@ public class TypeConverter {
      * @param classNode the Groovy class node
      * @return the JDT type
      */
-    public Type toJdtType(AST ast, ClassNode classNode) {
+    public Type toJdtType(AST ast, @Nullable ClassNode classNode) {
         if (classNode == null) {
             return ast.newSimpleType(ast.newSimpleName("Object"));
         }
@@ -215,7 +216,7 @@ public class TypeConverter {
      * @param typeArguments the type arguments
      * @return resolved class node with type arguments applied
      */
-    public ClassNode resolveGenerics(ClassNode classNode, ClassNode[] typeArguments) {
+    public ClassNode resolveGenerics(ClassNode classNode, @Nullable ClassNode[] typeArguments) {
         if (!classNode.isUsingGenerics() || typeArguments == null || typeArguments.length == 0) {
             return classNode;
         }
@@ -331,7 +332,7 @@ public class TypeConverter {
         return baseType;
     }
     
-    private PrimitiveType.Code getPrimitiveCode(String typeName) {
+    private PrimitiveType.@Nullable Code getPrimitiveCode(String typeName) {
         switch (typeName) {
             case "boolean": return PrimitiveType.BOOLEAN;
             case "byte": return PrimitiveType.BYTE;

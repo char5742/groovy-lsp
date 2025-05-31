@@ -1,6 +1,6 @@
 package com.groovy.lsp.server.launcher;
 
-import com.groovy.lsp.protocol.GroovyLanguageServer;
+import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;

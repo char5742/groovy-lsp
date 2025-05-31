@@ -3,18 +3,22 @@ plugins {
 }
 
 dependencies {
-    // LSP Protocol module dependency
+    // Module dependencies
+    implementation project(':shared')  // Includes jMolecules transitively
     implementation project(':lsp-protocol')
     
     // Apache Groovy dependencies
-    implementation 'org.apache.groovy:groovy:4.0.27'
-    implementation 'org.apache.groovy:groovy-json:4.0.27'
-    implementation 'org.apache.groovy:groovy-xml:4.0.27'
-    implementation 'org.apache.groovy:groovy-nio:4.0.27'
-    implementation 'org.apache.groovy:groovy-templates:4.0.27'
+    implementation libs.bundles.groovy
     
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation libs.slf4j.api
+    
+    // API Guardian for package visibility annotations
+    compileOnly libs.apiguardian.api
+    
+    // Testing
+    testImplementation libs.bundles.testing
+    testImplementation libs.archunit
 }
 
 test {

@@ -1,0 +1,35 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Shared components for Groovy LSP modular architecture'
+
+dependencies {
+    // API Guardian for package visibility annotations
+    compileOnly libs.apiguardian.api
+    
+    // jMolecules for DDD and architecture patterns
+    api libs.bundles.jmolecules
+    
+    // Null Safety annotations
+    api libs.jspecify
+    
+    // Guava for event bus implementation
+    implementation libs.guava
+    
+    // Logging
+    implementation libs.slf4j.api
+    
+    // Testing
+    testImplementation libs.bundles.testing
+    testImplementation libs.archunit
+}
+
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Groovy LSP Shared Module',
+            'Implementation-Version': project.version
+        )
+    }
+}

@@ -5,6 +5,7 @@ import org.codenarc.ruleset.RuleSet;
 import org.codenarc.ruleset.XmlFileRuleSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -124,6 +125,7 @@ public class RuleSetProvider {
     /**
      * Try to load custom rule set from project directory.
      */
+    @Nullable
     private RuleSet loadCustomRuleSet() {
         // Look for custom rule set in project root
         Path projectRoot = findProjectRoot();
@@ -143,6 +145,7 @@ public class RuleSetProvider {
     /**
      * Load rule set from a given path.
      */
+    @Nullable
     private RuleSet loadRuleSetFromPath(String path) {
         // First try as a file path
         File file = new File(path);
@@ -231,6 +234,7 @@ public class RuleSetProvider {
     /**
      * Find the project root directory by looking for common project markers.
      */
+    @Nullable
     private Path findProjectRoot() {
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         
@@ -261,7 +265,7 @@ public class RuleSetProvider {
     /**
      * Find setter method for a property using JavaBeans naming convention.
      */
-    private java.lang.reflect.Method findSetter(Class<?> clazz, String propertyName) {
+    private java.lang.reflect.@Nullable Method findSetter(Class<?> clazz, String propertyName) {
         String setterName = "set" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
         
         for (java.lang.reflect.Method method : clazz.getMethods()) {

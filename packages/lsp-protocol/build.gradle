@@ -3,15 +3,22 @@ plugins {
 }
 
 dependencies {
+    // Module dependencies
+    implementation project(':shared')  // Includes jMolecules transitively
+    
     // LSP4J - Language Server Protocol for Java
-    api 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1'
-    api 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.23.1'
+    api libs.bundles.lsp4j
     
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation libs.slf4j.api
+    
+    // API Guardian for package visibility annotations
+    compileOnly libs.apiguardian.api
     
     // Testing
-    testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.16'
+    testImplementation libs.bundles.testing
+    testRuntimeOnly libs.logback.classic
+    testImplementation libs.archunit
 }
 
 test {

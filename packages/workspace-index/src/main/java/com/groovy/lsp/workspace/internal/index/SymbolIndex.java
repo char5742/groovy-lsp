@@ -1,7 +1,7 @@
-package com.groovy.lsp.workspace.index;
+package com.groovy.lsp.workspace.internal.index;
 
-import com.groovy.lsp.workspace.WorkspaceIndexer.SymbolInfo;
-import com.groovy.lsp.workspace.WorkspaceIndexer.SymbolKind;
+import com.groovy.lsp.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.workspace.api.dto.SymbolKind;
 import org.lmdbjava.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

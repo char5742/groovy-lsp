@@ -1,4 +1,4 @@
-package com.groovy.lsp.protocol;
+package com.groovy.lsp.protocol.internal.impl;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;

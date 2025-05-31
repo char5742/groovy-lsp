@@ -1,35 +1,45 @@
-package com.groovy.lsp.workspace;
+package com.groovy.lsp.workspace.internal.impl;
 
-import com.groovy.lsp.workspace.dependency.DependencyResolver;
-import com.groovy.lsp.workspace.index.SymbolIndex;
+import com.groovy.lsp.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.shared.event.EventBus;
+import com.groovy.lsp.shared.event.EventBusFactory;
+import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
+import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
+import com.groovy.lsp.workspace.internal.dependency.DependencyResolver;
+import com.groovy.lsp.workspace.internal.index.SymbolIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 /**
- * Main service for indexing workspace files and dependencies.
+ * Internal implementation of WorkspaceIndexService.
  * Coordinates between dependency resolution and symbol indexing.
  */
-public class WorkspaceIndexer implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(WorkspaceIndexer.class);
+public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(WorkspaceIndexerImpl.class);
     
     private final Path workspaceRoot;
     private final SymbolIndex symbolIndex;
     private final DependencyResolver dependencyResolver;
     private final ExecutorService executorService;
+    private final EventBus eventBus;
     
-    public WorkspaceIndexer(Path workspaceRoot) {
+    public WorkspaceIndexerImpl(Path workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
         this.symbolIndex = new SymbolIndex(workspaceRoot.resolve(".groovy-lsp/index"));
         this.dependencyResolver = new DependencyResolver(workspaceRoot);
         this.executorService = Executors.newWorkStealingPool();
+        this.eventBus = EventBusFactory.getInstance();
     }
     
     /**
@@ -40,6 +50,10 @@ public class WorkspaceIndexer implements AutoCloseable {
         logger.info("Initializing workspace indexer for: {}", workspaceRoot);
         
         return CompletableFuture.runAsync(() -> {
+            long startTime = System.currentTimeMillis();
+            int totalFiles = 0;
+            int totalSymbols = 0;
+            
             try {
                 // Initialize symbol index
                 symbolIndex.initialize();
@@ -49,12 +63,21 @@ public class WorkspaceIndexer implements AutoCloseable {
                 var dependencies = dependencyResolver.resolveDependencies();
                 
                 // Index workspace files
-                indexWorkspaceFiles();
+                var stats = indexWorkspaceFilesWithStats();
+                totalFiles += stats.files;
+                totalSymbols += stats.symbols;
                 
                 // Index dependency files
                 dependencies.forEach(this::indexDependency);
                 
-                logger.info("Workspace indexing completed");
+                long duration = System.currentTimeMillis() - startTime;
+                logger.info("Workspace indexing completed in {}ms - Files: {}, Symbols: {}", 
+                    duration, totalFiles, totalSymbols);
+                
+                // Publish workspace indexed event
+                eventBus.publish(new WorkspaceIndexedEvent(
+                    workspaceRoot, totalFiles, totalSymbols, duration));
+                    
             } catch (Exception e) {
                 logger.error("Failed to initialize workspace indexer", e);
                 throw new RuntimeException(e);
@@ -75,16 +98,59 @@ public class WorkspaceIndexer implements AutoCloseable {
     }
     
     /**
+     * Index workspace files and return statistics.
+     */
+    private IndexStats indexWorkspaceFilesWithStats() {
+        IndexStats stats = new IndexStats();
+        try (Stream<Path> paths = Files.walk(workspaceRoot)) {
+            paths.filter(this::shouldIndexFile)
+                 .forEach(file -> {
+                     var symbols = indexFileWithResult(file);
+                     if (symbols != null) {
+                         stats.files++;
+                         stats.symbols += symbols.size();
+                     }
+                 });
+        } catch (Exception e) {
+            logger.error("Error indexing workspace files", e);
+        }
+        return stats;
+    }
+    
+    /**
+     * Simple class to hold indexing statistics.
+     */
+    private static class IndexStats {
+        int files = 0;
+        int symbols = 0;
+    }
+    
+    /**
      * Index a single file.
      */
     private void indexFile(Path file) {
+        var symbols = indexFileWithResult(file);
+        if (symbols != null) {
+            eventBus.publish(new FileIndexedEvent(file, symbols));
+        }
+    }
+    
+    /**
+     * Index a single file and return the symbols found.
+     */
+    private List<SymbolInfo> indexFileWithResult(Path file) {
         try {
             logger.debug("Indexing file: {}", file);
             // TODO: Parse file and extract symbols
             // For now, just register the file
             symbolIndex.addFile(file);
+            
+            // Return empty list for now
+            return List.of();
         } catch (Exception e) {
             logger.error("Error indexing file: {}", file, e);
+            eventBus.publish(new FileIndexedEvent(file, e.getMessage()));
+            return null;
         }
     }
     
@@ -145,6 +211,11 @@ public class WorkspaceIndexer implements AutoCloseable {
     }
     
     @Override
+    public void shutdown() {
+        close();
+    }
+    
+    @Override
     public void close() {
         executorService.shutdown();
         try {
@@ -154,29 +225,4 @@ public class WorkspaceIndexer implements AutoCloseable {
         }
     }
     
-    /**
-     * Information about a symbol in the workspace.
-     */
-    public record SymbolInfo(
-        String name,
-        SymbolKind kind,
-        Path location,
-        int line,
-        int column
-    ) {}
-    
-    /**
-     * Types of symbols that can be indexed.
-     */
-    public enum SymbolKind {
-        CLASS,
-        INTERFACE,
-        TRAIT,
-        METHOD,
-        FIELD,
-        PROPERTY,
-        CONSTRUCTOR,
-        ENUM,
-        ENUM_CONSTANT
-    }
 }

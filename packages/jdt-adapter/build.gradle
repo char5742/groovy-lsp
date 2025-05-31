@@ -18,28 +18,25 @@ repositories {
 
 dependencies {
     // JDT Core dependencies - using stable version
-    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.39.0'
-    implementation 'org.eclipse.platform:org.eclipse.core.runtime:3.29.0'
-    implementation 'org.eclipse.platform:org.eclipse.core.resources:3.19.0'
-    implementation 'org.eclipse.platform:org.eclipse.text:3.13.0'
+    implementation libs.jdt.core
+    implementation libs.eclipse.core.runtime
+    implementation libs.eclipse.core.resources
+    implementation libs.eclipse.text
     
     // Groovy-Eclipse batch for enhanced Groovy support
     // TODO: Add groovy-eclipse-batch when proper repository is found
-    // implementation 'org.codehaus.groovy:groovy-eclipse-batch:4.0.15-01'
+    // implementation libs.groovy.eclipse.batch
     
     // Internal module dependencies
+    implementation project(':shared')
     implementation project(':groovy-core')
     implementation project(':lsp-protocol')
     
     // Groovy dependencies
-    implementation 'org.apache.groovy:groovy:4.0.27'
-    implementation 'org.apache.groovy:groovy-json:4.0.27'
-    implementation 'org.apache.groovy:groovy-xml:4.0.27'
-    implementation 'org.apache.groovy:groovy-nio:4.0.27'
-    implementation 'org.apache.groovy:groovy-templates:4.0.27'
+    implementation libs.bundles.groovy
     
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation libs.slf4j.api
 }
 
 test {
