@@ -174,7 +174,9 @@ class ModuleIntegrationTest {
         
         // シンボル検索
         CompletableFuture<Stream<SymbolInfo>> searchFuture = indexer.searchSymbols("Service");
-        List<SymbolInfo> symbols = searchFuture.get().toList();
+        List<SymbolInfo> symbols = searchFuture.get()
+            .filter(java.util.Objects::nonNull)  // null値をフィルタリング
+            .toList();
         
         // TODO: Verify search results when symbol extraction is implemented
     }
