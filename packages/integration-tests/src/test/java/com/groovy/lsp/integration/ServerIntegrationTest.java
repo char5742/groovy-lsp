@@ -9,6 +9,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -125,7 +127,7 @@ class ServerIntegrationTest {
         // Initialize if not already done
         if (client.getDiagnostics().isEmpty()) {
             InitializeParams initParams = new InitializeParams();
-            initParams.setRootUri(Path.of(uri).getParent().toUri().toString());
+            initParams.setRootUri(Paths.get(new URI(uri)).getParent().toUri().toString());
             server.initialize(initParams).get(5, TimeUnit.SECONDS);
             server.initialized(new InitializedParams());
         }
