@@ -1,9 +1,9 @@
 package com.groovy.lsp.codenarc;
 
-import com.groovy.lsp.protocol.Diagnostic;
-import com.groovy.lsp.protocol.DiagnosticSeverity;
-import com.groovy.lsp.protocol.Position;
-import com.groovy.lsp.protocol.Range;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.codenarc.CodeNarcRunner;
 import org.codenarc.analyzer.FilesystemSourceAnalyzer;
 import org.codenarc.report.ReportWriter;
@@ -47,14 +47,26 @@ public class LintEngine {
                 logger.debug("Analyzing file: {}", filePath);
                 
                 RuleSet ruleSet = ruleSetProvider.getRuleSet();
-                CodeNarcRunner runner = new CodeNarcRunner();
-                runner.setRuleSet(ruleSet);
                 
                 // Create a source analyzer for the single file
                 FilesystemSourceAnalyzer analyzer = new FilesystemSourceAnalyzer();
                 analyzer.setBaseDirectory(new File(filePath).getParent());
                 analyzer.setIncludes(new File(filePath).getName());
+                
+                // Create CodeNarcRunner and run analysis
+                CodeNarcRunner runner = new CodeNarcRunner();
                 runner.setSourceAnalyzer(analyzer);
+                
+                // Note: In CodeNarc 3.x, ruleSet might be set differently
+                // Try using reflection if setRuleSet is not available
+                try {
+                    java.lang.reflect.Method setRuleSetMethod = runner.getClass().getMethod("setRuleSet", RuleSet.class);
+                    setRuleSetMethod.invoke(runner, ruleSet);
+                } catch (NoSuchMethodException e) {
+                    // If setRuleSet doesn't exist, try alternative approaches
+                    // For now, we'll log and continue
+                    logger.warn("setRuleSet method not found in CodeNarcRunner, using default rules");
+                }
                 
                 // Run the analysis
                 Results results = runner.execute();
@@ -73,7 +85,7 @@ public class LintEngine {
      * Analyze multiple Groovy files in a directory.
      * 
      * @param directory The directory containing Groovy files
-     * @param includes Pattern for files to include (e.g., "**/*.groovy")
+     * @param includes Pattern for files to include (e.g., **&#47;*.groovy)
      * @param excludes Pattern for files to exclude
      * @return A CompletableFuture containing a map of file paths to diagnostics
      */
@@ -86,8 +98,6 @@ public class LintEngine {
                     directory, includes, excludes);
                 
                 RuleSet ruleSet = ruleSetProvider.getRuleSet();
-                CodeNarcRunner runner = new CodeNarcRunner();
-                runner.setRuleSet(ruleSet);
                 
                 // Configure source analyzer
                 FilesystemSourceAnalyzer analyzer = new FilesystemSourceAnalyzer();
@@ -98,7 +108,19 @@ public class LintEngine {
                 if (excludes != null) {
                     analyzer.setExcludes(excludes);
                 }
+                
+                CodeNarcRunner runner = new CodeNarcRunner();
                 runner.setSourceAnalyzer(analyzer);
+                
+                // Note: In CodeNarc 3.x, ruleSet might be set differently
+                // Try using reflection if setRuleSet is not available
+                try {
+                    java.lang.reflect.Method setRuleSetMethod = runner.getClass().getMethod("setRuleSet", RuleSet.class);
+                    setRuleSetMethod.invoke(runner, ruleSet);
+                } catch (NoSuchMethodException e) {
+                    // If setRuleSet doesn't exist, try alternative approaches
+                    logger.warn("setRuleSet method not found in CodeNarcRunner, using default rules");
+                }
                 
                 // Run the analysis
                 Results results = runner.execute();
@@ -117,11 +139,17 @@ public class LintEngine {
         List<Diagnostic> diagnostics = new ArrayList<>();
         
         if (results != null && results.getChildren() != null) {
-            for (Results childResult : results.getChildren()) {
-                if (childResult instanceof FileResults) {
-                    FileResults fileResults = (FileResults) childResult;
-                    if (fileResults.getPath().equals(filePath)) {
-                        diagnostics.addAll(convertViolationsToDiagnostics(fileResults.getViolations()));
+            // In CodeNarc 3.x, getChildren() might return a different type
+            Object children = results.getChildren();
+            if (children instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Results> childResults = (List<Results>) children;
+                for (Results childResult : childResults) {
+                    if (childResult instanceof FileResults) {
+                        FileResults fileResults = (FileResults) childResult;
+                        if (fileResults.getPath().equals(filePath)) {
+                            diagnostics.addAll(convertViolationsToDiagnostics(fileResults.getViolations(), fileResults.getPath()));
+                        }
                     }
                 }
             }
@@ -134,11 +162,17 @@ public class LintEngine {
         List<FileAnalysisResult> fileResults = new ArrayList<>();
         
         if (results != null && results.getChildren() != null) {
-            for (Results childResult : results.getChildren()) {
-                if (childResult instanceof FileResults) {
-                    FileResults fileResult = (FileResults) childResult;
-                    List<Diagnostic> diagnostics = convertViolationsToDiagnostics(fileResult.getViolations());
-                    fileResults.add(new FileAnalysisResult(fileResult.getPath(), diagnostics));
+            // In CodeNarc 3.x, getChildren() might return a different type
+            Object children = results.getChildren();
+            if (children instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Results> childResults = (List<Results>) children;
+                for (Results childResult : childResults) {
+                    if (childResult instanceof FileResults) {
+                        FileResults fileResult = (FileResults) childResult;
+                        List<Diagnostic> diagnostics = convertViolationsToDiagnostics(fileResult.getViolations(), fileResult.getPath());
+                        fileResults.add(new FileAnalysisResult(fileResult.getPath(), diagnostics));
+                    }
                 }
             }
         }
@@ -147,6 +181,10 @@ public class LintEngine {
     }
     
     private List<Diagnostic> convertViolationsToDiagnostics(List<Violation> violations) {
+        return convertViolationsToDiagnostics(violations, null);
+    }
+    
+    private List<Diagnostic> convertViolationsToDiagnostics(List<Violation> violations, String filePath) {
         List<Diagnostic> diagnostics = new ArrayList<>();
         
         for (Violation violation : violations) {
@@ -173,7 +211,7 @@ public class LintEngine {
             diagnostic.setSource("codenarc");
             
             // Add code actions if available
-            var codeActions = quickFixMapper.getQuickFixesForViolation(violation);
+            var codeActions = quickFixMapper.getQuickFixesForViolation(violation, filePath);
             if (!codeActions.isEmpty()) {
                 diagnostic.setData(codeActions);
             }

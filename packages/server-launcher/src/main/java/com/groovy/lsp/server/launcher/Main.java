@@ -1,9 +1,6 @@
 package com.groovy.lsp.server.launcher;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.groovy.lsp.language.server.GroovyLanguageServer;
-import com.groovy.lsp.language.server.GroovyLanguageServerModule;
+import com.groovy.lsp.protocol.GroovyLanguageServer;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -36,9 +33,8 @@ public class Main {
             // Parse command line arguments
             LaunchMode mode = parseArguments(args);
             
-            // Create the server using Guice dependency injection
-            Injector injector = Guice.createInjector(new GroovyLanguageServerModule());
-            GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
+            // Create the server instance
+            GroovyLanguageServer server = new GroovyLanguageServer();
             
             // Launch the server based on the mode
             switch (mode.type) {
@@ -73,7 +69,7 @@ public class Main {
         
         // Connect the server to the client
         LanguageClient client = launcher.getRemoteProxy();
-        server.connect(client);
+        ((GroovyLanguageServer) server).connect(client);
         
         // Start listening
         Future<Void> listening = launcher.startListening();
@@ -101,7 +97,7 @@ public class Main {
             
             // Connect the server to the client
             LanguageClient client = launcher.getRemoteProxy();
-            server.connect(client);
+            ((GroovyLanguageServer) server).connect(client);
             
             // Start listening
             Future<Void> listening = launcher.startListening();

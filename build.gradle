@@ -6,6 +6,20 @@ plugins {
 allprojects {
     group = 'com.groovy.lsp'
     version = '0.1.0-SNAPSHOT'
+    
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url 'https://repo.gradle.org/gradle/libs-releases/'
+        }
+        maven {
+            url 'https://groovy.jfrog.io/artifactory/libs-release-local'
+        }
+        maven {
+            url 'https://repo.eclipse.org/releases/latest'
+        }
+    }
 }
 
 subprojects {
@@ -16,7 +30,8 @@ subprojects {
         toolchain {
             languageVersion = JavaLanguageVersion.of(23)
         }
-        modularity.inferModulePath = true
+        // Temporarily disable module path to fix build issues
+        modularity.inferModulePath = false
     }
     
     dependencies {
@@ -47,5 +62,29 @@ subprojects {
     tasks.withType(GroovyCompile) {
         options.encoding = 'UTF-8'
         groovyOptions.parameters = true
+    }
+    
+    configurations.all {
+        resolutionStrategy {
+            capabilitiesResolution {
+                withCapability('org.codehaus.groovy:groovy') {
+                    selectHighestVersion()
+                }
+                withCapability('org.codehaus.groovy:groovy-json') {
+                    selectHighestVersion()
+                }
+                withCapability('org.codehaus.groovy:groovy-xml') {
+                    selectHighestVersion()
+                }
+                withCapability('org.codehaus.groovy:groovy-templates') {
+                    selectHighestVersion()
+                }
+            }
+            force 'org.apache.groovy:groovy:4.0.27'
+            force 'org.apache.groovy:groovy-json:4.0.27'
+            force 'org.apache.groovy:groovy-xml:4.0.27'
+            force 'org.apache.groovy:groovy-nio:4.0.27'
+            force 'org.apache.groovy:groovy-templates:4.0.27'
+        }
     }
 }

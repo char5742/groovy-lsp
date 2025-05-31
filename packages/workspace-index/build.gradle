@@ -8,7 +8,7 @@ dependencies {
     implementation project(':lsp-protocol')
     
     // Gradle Tooling API for build system integration
-    implementation 'org.gradle:gradle-tooling-api:8.12'
+    implementation 'org.gradle:gradle-tooling-api:8.5'
     
     // LMDB for high-performance symbol indexing
     implementation 'org.lmdbjava:lmdbjava:0.9.0'

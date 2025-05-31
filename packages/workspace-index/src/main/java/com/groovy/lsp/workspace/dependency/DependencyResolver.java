@@ -5,6 +5,8 @@ import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.ExternalDependency;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.idea.IdeaProject;
+import org.gradle.tooling.model.idea.IdeaDependency;
+import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,9 +80,13 @@ public class DependencyResolver {
             // Extract dependencies from all modules
             ideaProject.getModules().forEach(module -> {
                 module.getDependencies().forEach(dep -> {
-                    if (dep.getFile() != null) {
-                        dependencies.add(dep.getFile().toPath());
-                        logger.debug("Found dependency: {}", dep.getFile());
+                    // Check if it's a single entry library dependency
+                    if (dep instanceof IdeaSingleEntryLibraryDependency) {
+                        IdeaSingleEntryLibraryDependency libDep = (IdeaSingleEntryLibraryDependency) dep;
+                        if (libDep.getFile() != null) {
+                            dependencies.add(libDep.getFile().toPath());
+                            logger.debug("Found dependency: {}", libDep.getFile());
+                        }
                     }
                 });
             });
@@ -111,8 +117,10 @@ public class DependencyResolver {
         
         try {
             // Execute a task to get the runtime classpath
-            var result = connection.newBuild()
-                .forTasks("dependencies", "--configuration", "compileClasspath")
+            // Note: run() returns void, not a result
+            connection.newBuild()
+                .forTasks("dependencies")
+                .withArguments("--configuration", "compileClasspath")
                 .run();
             
             // Parse the output to extract JAR paths

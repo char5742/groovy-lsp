@@ -1,11 +1,13 @@
 package com.groovy.lsp.codenarc;
 
-import com.groovy.lsp.protocol.Diagnostic;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.codenarc.ruleset.RuleSet;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +22,7 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for the LintEngine class.
  */
+@ExtendWith(MockitoExtension.class)
 class LintEngineTest {
     
     @TempDir
@@ -31,12 +34,15 @@ class LintEngineTest {
     @Mock
     private QuickFixMapper quickFixMapper;
     
+    @Mock
+    private RuleSet mockRuleSet;
+    
     private LintEngine lintEngine;
     
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         lintEngine = new LintEngine(ruleSetProvider, quickFixMapper);
+        when(mockRuleSet.getRules()).thenReturn(List.of());
     }
     
     @Test
@@ -55,7 +61,7 @@ class LintEngineTest {
         Files.writeString(testFile, groovyCode);
         
         // Mock the rule set provider
-        when(ruleSetProvider.getRuleSet()).thenReturn(new MockRuleSet());
+        when(ruleSetProvider.getRuleSet()).thenReturn(mockRuleSet);
         
         // Analyze the file
         CompletableFuture<List<Diagnostic>> future = lintEngine.analyzeFile(testFile.toString());
@@ -69,7 +75,7 @@ class LintEngineTest {
     @Test
     void testAnalyzeFile_WithNonExistentFile() throws ExecutionException, InterruptedException {
         // Mock the rule set provider
-        when(ruleSetProvider.getRuleSet()).thenReturn(new MockRuleSet());
+        when(ruleSetProvider.getRuleSet()).thenReturn(mockRuleSet);
         
         // Analyze a non-existent file
         CompletableFuture<List<Diagnostic>> future = lintEngine.analyzeFile("/non/existent/file.groovy");
@@ -90,7 +96,7 @@ class LintEngineTest {
         Files.writeString(file2, "class Class2 { }");
         
         // Mock the rule set provider
-        when(ruleSetProvider.getRuleSet()).thenReturn(new MockRuleSet());
+        when(ruleSetProvider.getRuleSet()).thenReturn(mockRuleSet);
         
         // Analyze the directory
         CompletableFuture<List<LintEngine.FileAnalysisResult>> future = 
@@ -103,23 +109,4 @@ class LintEngineTest {
         assertTrue(results.size() >= 0);
     }
     
-    /**
-     * Mock RuleSet for testing purposes.
-     */
-    private static class MockRuleSet implements org.codenarc.ruleset.RuleSet {
-        @Override
-        public List getRules() {
-            return List.of();
-        }
-        
-        @Override
-        public void addRule(org.codenarc.rule.Rule rule) {
-            // Mock implementation
-        }
-        
-        @Override
-        public void removeRule(org.codenarc.rule.Rule rule) {
-            // Mock implementation
-        }
-    }
 }

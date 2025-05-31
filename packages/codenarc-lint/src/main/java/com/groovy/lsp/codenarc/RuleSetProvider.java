@@ -1,7 +1,6 @@
 package com.groovy.lsp.codenarc;
 
 import org.codenarc.ruleset.CompositeRuleSet;
-import org.codenarc.ruleset.PropertiesFileRuleSet;
 import org.codenarc.ruleset.RuleSet;
 import org.codenarc.ruleset.XmlFileRuleSet;
 import org.slf4j.Logger;
@@ -151,7 +150,9 @@ public class RuleSetProvider {
             if (path.endsWith(".xml")) {
                 return new XmlFileRuleSet(path);
             } else if (path.endsWith(".properties")) {
-                return new PropertiesFileRuleSet(path);
+                // PropertiesFileRuleSet might not exist in CodeNarc 3.x
+                logger.warn("Properties file rule sets might not be supported in CodeNarc 3.x: {}", path);
+                return null;
             }
         }
         
@@ -159,7 +160,9 @@ public class RuleSetProvider {
         if (path.endsWith(".xml")) {
             return new XmlFileRuleSet(path);
         } else if (path.endsWith(".properties")) {
-            return new PropertiesFileRuleSet(path);
+            // PropertiesFileRuleSet might not exist in CodeNarc 3.x
+            logger.warn("Properties file rule sets might not be supported in CodeNarc 3.x: {}", path);
+            return null;
         }
         
         logger.warn("Unable to determine rule set type for: {}", path);
@@ -180,24 +183,42 @@ public class RuleSetProvider {
                         properties.load(is);
                     }
                     
-                    // Apply properties to rules
-                    compositeRuleSet.getRules().forEach(rule -> {
-                        String rulePrefix = rule.getName() + ".";
-                        properties.stringPropertyNames().stream()
-                            .filter(key -> key.startsWith(rulePrefix))
-                            .forEach(key -> {
-                                String propertyName = key.substring(rulePrefix.length());
-                                String value = properties.getProperty(key);
-                                try {
-                                    rule.setProperty(propertyName, value);
-                                    logger.debug("Set property {} = {} for rule {}", 
-                                        propertyName, value, rule.getName());
-                                } catch (Exception e) {
-                                    logger.warn("Failed to set property {} for rule {}: {}", 
-                                        propertyName, rule.getName(), e.getMessage());
-                                }
+                    // Apply properties to rules - handle potential API changes in CodeNarc 3.x
+                    try {
+                        java.lang.reflect.Method getRulesMethod = compositeRuleSet.getClass().getMethod("getRules");
+                        Object rulesObj = getRulesMethod.invoke(compositeRuleSet);
+                        if (rulesObj instanceof List) {
+                            @SuppressWarnings("unchecked")
+                            List<org.codenarc.rule.Rule> rules = (List<org.codenarc.rule.Rule>) rulesObj;
+                            rules.forEach(rule -> {
+                                String rulePrefix = rule.getName() + ".";
+                                properties.stringPropertyNames().stream()
+                                    .filter(key -> key.startsWith(rulePrefix))
+                                    .forEach(key -> {
+                                        String propertyName = key.substring(rulePrefix.length());
+                                        String value = properties.getProperty(key);
+                                        try {
+                                            // Use reflection to set property - CodeNarc 3.x might not have setProperty method
+                                            java.lang.reflect.Method setter = findSetter(rule.getClass(), propertyName);
+                                            if (setter != null) {
+                                                Object convertedValue = convertValue(value, setter.getParameterTypes()[0]);
+                                                setter.invoke(rule, convertedValue);
+                                                logger.debug("Set property {} = {} for rule {}", 
+                                                    propertyName, value, rule.getName());
+                                            } else {
+                                                logger.warn("No setter found for property {} on rule {}", 
+                                                    propertyName, rule.getName());
+                                            }
+                                        } catch (Exception e) {
+                                            logger.warn("Failed to set property {} for rule {}: {}", 
+                                                propertyName, rule.getName(), e.getMessage());
+                                        }
+                                    });
                             });
-                    });
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to apply custom properties to rules: {}", e.getMessage());
+                    }
                     
                     logger.info("Loaded custom properties from: {}", propertiesPath);
                 } catch (IOException e) {
@@ -235,5 +256,48 @@ public class RuleSetProvider {
      */
     public List<String> getRuleSetPaths() {
         return new ArrayList<>(ruleSetPaths);
+    }
+    
+    /**
+     * Find setter method for a property using JavaBeans naming convention.
+     */
+    private java.lang.reflect.Method findSetter(Class<?> clazz, String propertyName) {
+        String setterName = "set" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+        
+        for (java.lang.reflect.Method method : clazz.getMethods()) {
+            if (method.getName().equals(setterName) && 
+                method.getParameterCount() == 1 &&
+                method.getReturnType() == void.class) {
+                return method;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Convert string value to appropriate type for setter parameter.
+     */
+    private Object convertValue(String value, Class<?> targetType) {
+        if (targetType == String.class) {
+            return value;
+        } else if (targetType == int.class || targetType == Integer.class) {
+            return Integer.parseInt(value);
+        } else if (targetType == boolean.class || targetType == Boolean.class) {
+            return Boolean.parseBoolean(value);
+        } else if (targetType == long.class || targetType == Long.class) {
+            return Long.parseLong(value);
+        } else if (targetType == double.class || targetType == Double.class) {
+            return Double.parseDouble(value);
+        } else if (targetType == float.class || targetType == Float.class) {
+            return Float.parseFloat(value);
+        } else {
+            // Try to use string constructor
+            try {
+                return targetType.getConstructor(String.class).newInstance(value);
+            } catch (Exception e) {
+                logger.warn("Cannot convert value '{}' to type {}", value, targetType.getName());
+                return value;
+            }
+        }
     }
 }

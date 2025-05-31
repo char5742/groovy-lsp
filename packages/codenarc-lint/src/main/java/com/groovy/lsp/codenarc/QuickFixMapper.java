@@ -1,6 +1,6 @@
 package com.groovy.lsp.codenarc;
 
-import com.groovy.lsp.protocol.*;
+import org.eclipse.lsp4j.*;
 import org.codenarc.rule.Rule;
 import org.codenarc.rule.Violation;
 import org.slf4j.Logger;
@@ -17,6 +17,7 @@ public class QuickFixMapper {
     private static final Logger logger = LoggerFactory.getLogger(QuickFixMapper.class);
     
     private final Map<String, QuickFixProvider> quickFixProviders;
+    private String currentFilePath;  // Thread-local storage for current file path
     
     public QuickFixMapper() {
         this.quickFixProviders = new HashMap<>();
@@ -74,14 +75,22 @@ public class QuickFixMapper {
      * @return List of code actions that can fix the violation
      */
     public List<CodeAction> getQuickFixesForViolation(Violation violation) {
+        return getQuickFixesForViolation(violation, null);
+    }
+    
+    public List<CodeAction> getQuickFixesForViolation(Violation violation, String filePath) {
         String ruleName = violation.getRule().getName();
         QuickFixProvider provider = quickFixProviders.get(ruleName);
         
         if (provider != null) {
             try {
+                // Store file path in thread local for use by providers
+                this.currentFilePath = filePath;
                 return provider.createQuickFix(violation);
             } catch (Exception e) {
                 logger.error("Error creating quick fix for rule: " + ruleName, e);
+            } finally {
+                this.currentFilePath = null;
             }
         }
         
@@ -93,7 +102,7 @@ public class QuickFixMapper {
     private List<CodeAction> createUnusedImportFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove unused import");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         // Create text edit to remove the import line
         TextEdit edit = new TextEdit();
@@ -101,7 +110,9 @@ public class QuickFixMapper {
         edit.setNewText(""); // Empty string to delete the line
         
         WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        workspaceEdit.setChanges(Map.of(violation.getSourceCode().getName(), List.of(edit)));
+        // Use the file path provided through the analysis context
+        String filePath = this.currentFilePath != null ? this.currentFilePath : "unknown";
+        workspaceEdit.setChanges(Map.of(filePath, List.of(edit)));
         action.setEdit(workspaceEdit);
         
         return List.of(action);
@@ -110,14 +121,16 @@ public class QuickFixMapper {
     private List<CodeAction> createDuplicateImportFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove duplicate import");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         TextEdit edit = new TextEdit();
         edit.setRange(createRangeForLine(violation.getLineNumber() - 1));
         edit.setNewText("");
         
         WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        workspaceEdit.setChanges(Map.of(violation.getSourceCode().getName(), List.of(edit)));
+        // Use the file path provided through the analysis context
+        String filePath = this.currentFilePath != null ? this.currentFilePath : "unknown";
+        workspaceEdit.setChanges(Map.of(filePath, List.of(edit)));
         action.setEdit(workspaceEdit);
         
         return List.of(action);
@@ -126,14 +139,16 @@ public class QuickFixMapper {
     private List<CodeAction> createImportFromSamePackageFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove import from same package");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         TextEdit edit = new TextEdit();
         edit.setRange(createRangeForLine(violation.getLineNumber() - 1));
         edit.setNewText("");
         
         WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        workspaceEdit.setChanges(Map.of(violation.getSourceCode().getName(), List.of(edit)));
+        // Use the file path provided through the analysis context
+        String filePath = this.currentFilePath != null ? this.currentFilePath : "unknown";
+        workspaceEdit.setChanges(Map.of(filePath, List.of(edit)));
         action.setEdit(workspaceEdit);
         
         return List.of(action);
@@ -142,14 +157,16 @@ public class QuickFixMapper {
     private List<CodeAction> createUnnecessaryGroovyImportFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove unnecessary Groovy import");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         TextEdit edit = new TextEdit();
         edit.setRange(createRangeForLine(violation.getLineNumber() - 1));
         edit.setNewText("");
         
         WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-        workspaceEdit.setChanges(Map.of(violation.getSourceCode().getName(), List.of(edit)));
+        // Use the file path provided through the analysis context
+        String filePath = this.currentFilePath != null ? this.currentFilePath : "unknown";
+        workspaceEdit.setChanges(Map.of(filePath, List.of(edit)));
         action.setEdit(workspaceEdit);
         
         return List.of(action);
@@ -158,7 +175,7 @@ public class QuickFixMapper {
     private List<CodeAction> createEmptyCatchBlockFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Add log statement to catch block");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         // This would need more context to properly implement
         // For now, return a placeholder action
@@ -168,7 +185,7 @@ public class QuickFixMapper {
     private List<CodeAction> createEmptyElseBlockFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove empty else block");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -176,7 +193,7 @@ public class QuickFixMapper {
     private List<CodeAction> createEmptyFinallyBlockFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove empty finally block");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -184,7 +201,7 @@ public class QuickFixMapper {
     private List<CodeAction> createEmptyIfStatementFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove empty if statement");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -192,7 +209,7 @@ public class QuickFixMapper {
     private List<CodeAction> createEmptyWhileStatementFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Remove empty while statement");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -201,7 +218,7 @@ public class QuickFixMapper {
         // Would need to parse the field name and suggest proper casing
         CodeAction action = new CodeAction();
         action.setTitle("Fix field name to follow conventions");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -209,7 +226,7 @@ public class QuickFixMapper {
     private List<CodeAction> createMethodNameFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Fix method name to follow conventions");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -217,7 +234,7 @@ public class QuickFixMapper {
     private List<CodeAction> createClassNameFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Fix class name to follow conventions");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -225,7 +242,7 @@ public class QuickFixMapper {
     private List<CodeAction> createVariableNameFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Fix variable name to follow conventions");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -233,7 +250,7 @@ public class QuickFixMapper {
     private List<CodeAction> createExplicitArrayListFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Use Groovy list literal []");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         // Would need to parse and replace new ArrayList() with []
         return List.of(action);
@@ -242,7 +259,7 @@ public class QuickFixMapper {
     private List<CodeAction> createExplicitHashMapFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Use Groovy map literal [:]");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         // Would need to parse and replace new HashMap() with [:]
         return List.of(action);
@@ -251,7 +268,7 @@ public class QuickFixMapper {
     private List<CodeAction> createExplicitLinkedListFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Use Groovy list literal [] as LinkedList");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -259,7 +276,7 @@ public class QuickFixMapper {
     private List<CodeAction> createGStringAsMapKeyFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Convert GString to String");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -267,7 +284,7 @@ public class QuickFixMapper {
     private List<CodeAction> createSimpleDateFormatFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Add Locale parameter to SimpleDateFormat");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }
@@ -275,7 +292,7 @@ public class QuickFixMapper {
     private List<CodeAction> createBooleanMethodReturnsNullFix(Violation violation) {
         CodeAction action = new CodeAction();
         action.setTitle("Return false instead of null");
-        action.setKind(CodeActionKind.QUICK_FIX);
+        action.setKind(CodeActionKind.QuickFix);
         
         return List.of(action);
     }

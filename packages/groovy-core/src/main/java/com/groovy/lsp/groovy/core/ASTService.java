@@ -8,6 +8,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.io.StringReaderSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,8 @@ public class ASTService {
         
         try {
             CompilationUnit unit = new CompilationUnit(config);
-            SourceUnit sourceUnit = new SourceUnit(sourceName, new StringReader(sourceCode), 
+            SourceUnit sourceUnit = new SourceUnit(sourceName, 
+                                                   new StringReaderSource(sourceCode, config), 
                                                    config, unit.getClassLoader(), new ErrorCollector(config));
             
             unit.addSource(sourceUnit);
@@ -173,9 +175,21 @@ public class ASTService {
         }
         
         @Override
-        public void visitExpression(Expression expression) {
+        public void visitMethodCallExpression(MethodCallExpression call) {
+            checkNode(call);
+            super.visitMethodCallExpression(call);
+        }
+        
+        @Override
+        public void visitBinaryExpression(BinaryExpression expression) {
             checkNode(expression);
-            super.visitExpression(expression);
+            super.visitBinaryExpression(expression);
+        }
+        
+        @Override
+        public void visitVariableExpression(VariableExpression expression) {
+            checkNode(expression);
+            super.visitVariableExpression(expression);
         }
         
         private void checkNode(ASTNode node) {

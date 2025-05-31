@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol;
 
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -29,10 +30,10 @@ public class GroovyWorkspaceService implements WorkspaceService, LanguageClientA
     }
     
     @Override
-    public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
+    public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
         logger.debug("Workspace symbols requested for query: '{}'", params.getQuery());
         // TODO: Implement workspace symbol search
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
     }
     
     @Override

@@ -1,5 +1,6 @@
 package com.groovy.lsp.jdt.adapter.type;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.eclipse.jdt.core.IType;
@@ -78,7 +79,7 @@ public class TypeConverter {
      */
     public ClassNode fromJdtSignature(String signature) {
         if (signature == null || signature.isEmpty()) {
-            return ClassNode.OBJECT_TYPE;
+            return ClassHelper.OBJECT_TYPE;
         }
         
         // Check cache first
@@ -100,7 +101,7 @@ public class TypeConverter {
      */
     public ClassNode fromJdtType(Type type) {
         if (type == null) {
-            return ClassNode.OBJECT_TYPE;
+            return ClassHelper.OBJECT_TYPE;
         }
         
         if (type.isPrimitiveType()) {
@@ -122,21 +123,21 @@ public class TypeConverter {
         if (type.isSimpleType()) {
             SimpleType simpleType = (SimpleType) type;
             String typeName = simpleType.getName().getFullyQualifiedName();
-            return ClassNode.make(typeName);
+            return ClassHelper.make(typeName);
         }
         
         if (type.isQualifiedType()) {
             QualifiedType qualifiedType = (QualifiedType) type;
-            return ClassNode.make(qualifiedType.getName().getFullyQualifiedName());
+            return ClassHelper.make(qualifiedType.getName().getFullyQualifiedName());
         }
         
         if (type.isWildcardType()) {
             // Wildcards are represented as Object in Groovy
-            return ClassNode.OBJECT_TYPE;
+            return ClassHelper.OBJECT_TYPE;
         }
         
         logger.warn("Unknown JDT type: {}", type.getClass());
-        return ClassNode.OBJECT_TYPE;
+        return ClassHelper.OBJECT_TYPE;
     }
     
     /**
@@ -148,7 +149,7 @@ public class TypeConverter {
      */
     public ClassNode fromJdtIType(IType iType) throws JavaModelException {
         if (iType == null) {
-            return ClassNode.OBJECT_TYPE;
+            return ClassHelper.OBJECT_TYPE;
         }
         
         String fullyQualifiedName = iType.getFullyQualifiedName();
@@ -160,11 +161,11 @@ public class TypeConverter {
         }
         
         // Create new ClassNode
-        ClassNode classNode = ClassNode.make(fullyQualifiedName);
+        ClassNode classNode = ClassHelper.make(fullyQualifiedName);
         
         // Set interface flag
         if (iType.isInterface()) {
-            classNode.setModifiers(classNode.getModifiers() | org.objectweb.asm.Opcodes.ACC_INTERFACE);
+            classNode.setModifiers(classNode.getModifiers() | 0x0200); // ACC_INTERFACE
         }
         
         // Cache and return
@@ -267,7 +268,7 @@ public class TypeConverter {
             // Primitive type
             for (Map.Entry<String, String> entry : PRIMITIVE_TYPE_MAP.entrySet()) {
                 if (entry.getValue().equals(signature)) {
-                    return ClassNode.make(entry.getKey());
+                    return ClassHelper.make(entry.getKey());
                 }
             }
         }
@@ -287,28 +288,37 @@ public class TypeConverter {
             if (genericStart > 0) {
                 String baseClass = className.substring(0, genericStart);
                 // TODO: Parse generic type arguments
-                return ClassNode.make(baseClass);
+                return ClassHelper.make(baseClass);
             }
             
-            return ClassNode.make(className);
+            return ClassHelper.make(className);
         }
         
         logger.warn("Unable to parse JDT signature: {}", signature);
-        return ClassNode.OBJECT_TYPE;
+        return ClassHelper.OBJECT_TYPE;
     }
     
     private ClassNode fromPrimitiveType(PrimitiveType.Code code) {
-        switch (code) {
-            case BOOLEAN: return ClassNode.boolean_TYPE;
-            case BYTE: return ClassNode.byte_TYPE;
-            case CHAR: return ClassNode.char_TYPE;
-            case DOUBLE: return ClassNode.double_TYPE;
-            case FLOAT: return ClassNode.float_TYPE;
-            case INT: return ClassNode.int_TYPE;
-            case LONG: return ClassNode.long_TYPE;
-            case SHORT: return ClassNode.short_TYPE;
-            case VOID: return ClassNode.VOID_TYPE;
-            default: return ClassNode.OBJECT_TYPE;
+        if (code == PrimitiveType.BOOLEAN) {
+            return ClassHelper.boolean_TYPE;
+        } else if (code == PrimitiveType.BYTE) {
+            return ClassHelper.byte_TYPE;
+        } else if (code == PrimitiveType.CHAR) {
+            return ClassHelper.char_TYPE;
+        } else if (code == PrimitiveType.DOUBLE) {
+            return ClassHelper.double_TYPE;
+        } else if (code == PrimitiveType.FLOAT) {
+            return ClassHelper.float_TYPE;
+        } else if (code == PrimitiveType.INT) {
+            return ClassHelper.int_TYPE;
+        } else if (code == PrimitiveType.LONG) {
+            return ClassHelper.long_TYPE;
+        } else if (code == PrimitiveType.SHORT) {
+            return ClassHelper.short_TYPE;
+        } else if (code == PrimitiveType.VOID) {
+            return ClassHelper.VOID_TYPE;
+        } else {
+            return ClassHelper.OBJECT_TYPE;
         }
     }
     

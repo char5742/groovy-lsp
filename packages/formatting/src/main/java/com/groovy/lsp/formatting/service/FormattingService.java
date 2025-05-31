@@ -3,12 +3,12 @@ package com.groovy.lsp.formatting.service;
 import com.google.googlejavaformat.java.FormatterException;
 import com.groovy.lsp.formatting.GroovyFormatter;
 import com.groovy.lsp.formatting.options.FormatOptions;
-import com.groovy.lsp.protocol.DocumentFormattingParams;
-import com.groovy.lsp.protocol.DocumentRangeFormattingParams;
-import com.groovy.lsp.protocol.FormattingOptions;
-import com.groovy.lsp.protocol.Position;
-import com.groovy.lsp.protocol.Range;
-import com.groovy.lsp.protocol.TextEdit;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,13 +130,8 @@ public class FormattingService {
         FormatOptions.Builder builder = FormatOptions.builder();
         
         // Tab size and spaces/tabs preference
-        if (lspOptions.getTabSize() != null) {
-            builder.indentSize(lspOptions.getTabSize());
-        }
-        
-        if (lspOptions.isInsertSpaces() != null) {
-            builder.useTabs(!lspOptions.isInsertSpaces());
-        }
+        builder.indentSize(lspOptions.getTabSize());
+        builder.useTabs(!lspOptions.isInsertSpaces());
         
         // Additional options can be extracted from custom properties
         // For example, style preference, line length, etc.

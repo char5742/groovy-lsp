@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -147,9 +148,12 @@ public class AstConverter {
         }
         
         // Convert inner classes
-        for (ClassNode innerClass : classNode.getInnerClasses()) {
-            if (innerClass != classNode) { // Avoid self-reference
-                convertClass(innerClass, compilationUnit);
+        Iterator<InnerClassNode> innerClassIter = classNode.getInnerClasses();
+        while (innerClassIter != null && innerClassIter.hasNext()) {
+            InnerClassNode innerClassNode = innerClassIter.next();
+            // InnerClassNode extends ClassNode, so we can use it directly
+            if (innerClassNode != classNode) { // Avoid self-reference
+                convertClass(innerClassNode, compilationUnit);
             }
         }
         
@@ -244,12 +248,12 @@ public class AstConverter {
         if (importDecl.isOnDemand()) {
             // Star import
             if (importDecl.isStatic()) {
-                ImportNode starImport = new ImportNode(null, importName, null);
-                moduleNode.addStaticStarImport(importName, starImport);
+                // For static star imports, we need the class type
+                ClassNode type = ClassHelper.make(importName);
+                moduleNode.addStaticStarImport(importName, type);
             } else {
-                ImportNode starImport = new ImportNode(null, null, null);
-                starImport.setPackageName(importName + ".");
-                moduleNode.addStarImport(starImport);
+                // For package star imports, just pass the package name
+                moduleNode.addStarImport(importName + ".");
             }
         } else {
             // Regular import
@@ -258,11 +262,13 @@ public class AstConverter {
                 int lastDot = importName.lastIndexOf('.');
                 String className = importName.substring(0, lastDot);
                 String memberName = importName.substring(lastDot + 1);
-                ImportNode staticImport = new ImportNode(className, memberName, null);
-                moduleNode.addStaticImport(className, memberName, memberName);
+                ClassNode type = ClassHelper.make(className);
+                moduleNode.addStaticImport(type, memberName, memberName);
             } else {
-                ImportNode importNode = new ImportNode(importName, null);
-                moduleNode.addImport(importNode);
+                // For regular imports, create the ClassNode and add it
+                ClassNode type = ClassHelper.make(importName);
+                String alias = importName.substring(importName.lastIndexOf('.') + 1);
+                moduleNode.addImport(alias, type);
             }
         }
     }
@@ -347,28 +353,28 @@ public class AstConverter {
     private int convertModifiers(int groovyModifiers) {
         int jdtModifiers = 0;
         
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_PUBLIC) != 0) {
+        if ((groovyModifiers & 0x0001) != 0) {
             jdtModifiers |= Modifier.PUBLIC;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_PRIVATE) != 0) {
+        if ((groovyModifiers & 0x0002) != 0) {
             jdtModifiers |= Modifier.PRIVATE;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_PROTECTED) != 0) {
+        if ((groovyModifiers & 0x0004) != 0) {
             jdtModifiers |= Modifier.PROTECTED;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_STATIC) != 0) {
+        if ((groovyModifiers & 0x0008) != 0) {
             jdtModifiers |= Modifier.STATIC;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_FINAL) != 0) {
+        if ((groovyModifiers & 0x0010) != 0) {
             jdtModifiers |= Modifier.FINAL;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_ABSTRACT) != 0) {
+        if ((groovyModifiers & 0x0400) != 0) {
             jdtModifiers |= Modifier.ABSTRACT;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_SYNCHRONIZED) != 0) {
+        if ((groovyModifiers & 0x0020) != 0) {
             jdtModifiers |= Modifier.SYNCHRONIZED;
         }
-        if ((groovyModifiers & org.objectweb.asm.Opcodes.ACC_NATIVE) != 0) {
+        if ((groovyModifiers & 0x0100) != 0) {
             jdtModifiers |= Modifier.NATIVE;
         }
         
@@ -382,12 +388,12 @@ public class AstConverter {
         for (Object mod : modifiers) {
             if (mod instanceof Modifier) {
                 Modifier modifier = (Modifier) mod;
-                if (modifier.isPublic()) groovyModifiers |= org.objectweb.asm.Opcodes.ACC_PUBLIC;
-                if (modifier.isPrivate()) groovyModifiers |= org.objectweb.asm.Opcodes.ACC_PRIVATE;
-                if (modifier.isProtected()) groovyModifiers |= org.objectweb.asm.Opcodes.ACC_PROTECTED;
-                if (modifier.isStatic()) groovyModifiers |= org.objectweb.asm.Opcodes.ACC_STATIC;
-                if (modifier.isFinal()) groovyModifiers |= org.objectweb.asm.Opcodes.ACC_FINAL;
-                if (modifier.isAbstract()) groovyModifiers |= org.objectweb.asm.Opcodes.ACC_ABSTRACT;
+                if (modifier.isPublic()) groovyModifiers |= 0x0001;
+                if (modifier.isPrivate()) groovyModifiers |= 0x0002;
+                if (modifier.isProtected()) groovyModifiers |= 0x0004;
+                if (modifier.isStatic()) groovyModifiers |= 0x0008;
+                if (modifier.isFinal()) groovyModifiers |= 0x0010;
+                if (modifier.isAbstract()) groovyModifiers |= 0x0400;
             }
         }
         

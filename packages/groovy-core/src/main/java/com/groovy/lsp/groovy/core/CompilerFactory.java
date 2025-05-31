@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Factory for creating configured Groovy CompilerConfiguration instances.
@@ -72,7 +73,7 @@ public class CompilerFactory {
         config.setScriptBaseClass("groovy.lang.Script");
         
         // Enable script extensions
-        config.setScriptExtensions(List.of("groovy", "gvy", "gy", "gsh"));
+        config.setScriptExtensions(Set.of("groovy", "gvy", "gy", "gsh"));
         
         logger.debug("Created script compiler configuration");
         return config;
