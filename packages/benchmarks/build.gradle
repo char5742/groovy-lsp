@@ -10,9 +10,6 @@ jar {
 }
 
 jmh {
-    // JMH version
-    jmhVersion = libs.versions.jmh.get()
-    
     // JVM arguments
     jvmArgs = ['-Xms2g', '-Xmx2g']
     

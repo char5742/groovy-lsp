@@ -26,7 +26,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'groovy-lsp.groovy-conventions'
+    apply plugin: 'groovy'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'net.ltgt.nullaway'
     
