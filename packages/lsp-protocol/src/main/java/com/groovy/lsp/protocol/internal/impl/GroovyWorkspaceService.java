@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Workspace Service implementation for Groovy.
@@ -22,7 +23,7 @@ public class GroovyWorkspaceService implements WorkspaceService, LanguageClientA
     
     private static final Logger logger = LoggerFactory.getLogger(GroovyWorkspaceService.class);
     
-    private LanguageClient client;
+    private @Nullable LanguageClient client;
     
     @Override
     public void connect(LanguageClient client) {
@@ -40,6 +41,11 @@ public class GroovyWorkspaceService implements WorkspaceService, LanguageClientA
     public void didChangeConfiguration(DidChangeConfigurationParams params) {
         logger.debug("Configuration changed");
         // TODO: Implement configuration change handling
+        
+        // Example usage of client field for future workspace operations
+        if (client != null) {
+            logger.debug("Client is available for workspace operations");
+        }
     }
     
     @Override

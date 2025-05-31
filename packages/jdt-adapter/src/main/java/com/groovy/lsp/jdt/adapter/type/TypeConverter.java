@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -333,18 +335,18 @@ public class TypeConverter {
     }
     
     private PrimitiveType.@Nullable Code getPrimitiveCode(String typeName) {
-        switch (typeName) {
-            case "boolean": return PrimitiveType.BOOLEAN;
-            case "byte": return PrimitiveType.BYTE;
-            case "char": return PrimitiveType.CHAR;
-            case "double": return PrimitiveType.DOUBLE;
-            case "float": return PrimitiveType.FLOAT;
-            case "int": return PrimitiveType.INT;
-            case "long": return PrimitiveType.LONG;
-            case "short": return PrimitiveType.SHORT;
-            case "void": return PrimitiveType.VOID;
-            default: return null;
-        }
+        return switch (typeName) {
+            case "boolean" -> PrimitiveType.BOOLEAN;
+            case "byte" -> PrimitiveType.BYTE;
+            case "char" -> PrimitiveType.CHAR;
+            case "double" -> PrimitiveType.DOUBLE;
+            case "float" -> PrimitiveType.FLOAT;
+            case "int" -> PrimitiveType.INT;
+            case "long" -> PrimitiveType.LONG;
+            case "short" -> PrimitiveType.SHORT;
+            case "void" -> PrimitiveType.VOID;
+            default -> null;
+        };
     }
     
     private Type createParameterizedType(AST ast, ClassNode classNode) {
@@ -369,14 +371,14 @@ public class TypeConverter {
     }
     
     private Name createTypeName(AST ast, String typeName) {
-        String[] parts = typeName.split("\\.");
-        if (parts.length == 1) {
-            return ast.newSimpleName(parts[0]);
+        List<String> parts = Arrays.asList(typeName.split("\\."));
+        if (parts.size() == 1) {
+            return ast.newSimpleName(parts.get(0));
         }
         
-        Name name = ast.newSimpleName(parts[0]);
-        for (int i = 1; i < parts.length; i++) {
-            SimpleName simpleName = ast.newSimpleName(parts[i]);
+        Name name = ast.newSimpleName(parts.get(0));
+        for (int i = 1; i < parts.size(); i++) {
+            SimpleName simpleName = ast.newSimpleName(parts.get(i));
             name = ast.newQualifiedName(name, simpleName);
         }
         return name;

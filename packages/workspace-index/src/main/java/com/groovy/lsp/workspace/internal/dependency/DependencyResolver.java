@@ -81,8 +81,7 @@ public class DependencyResolver {
             ideaProject.getModules().forEach(module -> {
                 module.getDependencies().forEach(dep -> {
                     // Check if it's a single entry library dependency
-                    if (dep instanceof IdeaSingleEntryLibraryDependency) {
-                        IdeaSingleEntryLibraryDependency libDep = (IdeaSingleEntryLibraryDependency) dep;
+                    if (dep instanceof IdeaSingleEntryLibraryDependency libDep) {
                         if (libDep.getFile() != null) {
                             dependencies.add(libDep.getFile().toPath());
                             logger.debug("Found dependency: {}", libDep.getFile());

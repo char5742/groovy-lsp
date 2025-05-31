@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -153,7 +154,7 @@ public class AstConverter {
         while (innerClassIter != null && innerClassIter.hasNext()) {
             InnerClassNode innerClassNode = innerClassIter.next();
             // InnerClassNode extends ClassNode, so we can use it directly
-            if (innerClassNode != classNode) { // Avoid self-reference
+            if (!innerClassNode.equals(classNode)) { // Avoid self-reference
                 convertClass(innerClassNode, compilationUnit);
             }
         }
@@ -239,11 +240,9 @@ public class AstConverter {
     }
     
     public void convertJdtImport(Object importObj, ModuleNode moduleNode) {
-        if (!(importObj instanceof ImportDeclaration)) {
+        if (!(importObj instanceof ImportDeclaration importDecl)) {
             return;
         }
-        
-        ImportDeclaration importDecl = (ImportDeclaration) importObj;
         String importName = importDecl.getName().getFullyQualifiedName();
         
         if (importDecl.isOnDemand()) {
@@ -275,11 +274,9 @@ public class AstConverter {
     }
     
     public void convertJdtType(Object typeObj, ModuleNode moduleNode) {
-        if (!(typeObj instanceof TypeDeclaration)) {
+        if (!(typeObj instanceof TypeDeclaration typeDecl)) {
             return;
         }
-        
-        TypeDeclaration typeDecl = (TypeDeclaration) typeObj;
         
         // Create ClassNode
         String className = moduleNode.getPackageName() != null ? 
@@ -296,14 +293,14 @@ public class AstConverter {
     // Helper methods
     
     private Name createQualifiedName(AST ast, String qualifiedName) {
-        String[] parts = qualifiedName.split("\\.");
-        if (parts.length == 1) {
-            return ast.newSimpleName(parts[0]);
+        List<String> parts = Arrays.asList(qualifiedName.split("\\."));
+        if (parts.size() == 1) {
+            return ast.newSimpleName(parts.get(0));
         }
         
-        Name name = ast.newSimpleName(parts[0]);
-        for (int i = 1; i < parts.length; i++) {
-            SimpleName simpleName = ast.newSimpleName(parts[i]);
+        Name name = ast.newSimpleName(parts.get(0));
+        for (int i = 1; i < parts.size(); i++) {
+            SimpleName simpleName = ast.newSimpleName(parts.get(i));
             name = ast.newQualifiedName(name, simpleName);
         }
         return name;
@@ -337,18 +334,18 @@ public class AstConverter {
     }
     
     private PrimitiveType.Code getPrimitiveTypeCode(String typeName) {
-        switch (typeName) {
-            case "boolean": return PrimitiveType.BOOLEAN;
-            case "byte": return PrimitiveType.BYTE;
-            case "char": return PrimitiveType.CHAR;
-            case "double": return PrimitiveType.DOUBLE;
-            case "float": return PrimitiveType.FLOAT;
-            case "int": return PrimitiveType.INT;
-            case "long": return PrimitiveType.LONG;
-            case "short": return PrimitiveType.SHORT;
-            case "void": return PrimitiveType.VOID;
-            default: throw new IllegalArgumentException("Unknown primitive type: " + typeName);
-        }
+        return switch (typeName) {
+            case "boolean" -> PrimitiveType.BOOLEAN;
+            case "byte" -> PrimitiveType.BYTE;
+            case "char" -> PrimitiveType.CHAR;
+            case "double" -> PrimitiveType.DOUBLE;
+            case "float" -> PrimitiveType.FLOAT;
+            case "int" -> PrimitiveType.INT;
+            case "long" -> PrimitiveType.LONG;
+            case "short" -> PrimitiveType.SHORT;
+            case "void" -> PrimitiveType.VOID;
+            default -> throw new IllegalArgumentException("Unknown primitive type: " + typeName);
+        };
     }
     
     private int convertModifiers(int groovyModifiers) {
@@ -387,8 +384,7 @@ public class AstConverter {
         List modifiers = typeDecl.modifiers();
         
         for (Object mod : modifiers) {
-            if (mod instanceof Modifier) {
-                Modifier modifier = (Modifier) mod;
+            if (mod instanceof Modifier modifier) {
                 if (modifier.isPublic()) groovyModifiers |= 0x0001;
                 if (modifier.isPrivate()) groovyModifiers |= 0x0002;
                 if (modifier.isProtected()) groovyModifiers |= 0x0004;

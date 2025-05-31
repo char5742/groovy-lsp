@@ -24,7 +24,6 @@ public class FormattingService {
     
     private static final Logger logger = LoggerFactory.getLogger(FormattingService.class);
     
-    private final GroovyFormatter formatter;
     
     /**
      * Creates a new FormattingService with default options
@@ -37,7 +36,7 @@ public class FormattingService {
      * Creates a new FormattingService with the specified options
      */
     public FormattingService(FormatOptions options) {
-        this.formatter = new GroovyFormatter(options);
+        // Options will be used when creating formatters for specific requests
     }
     
     /**
@@ -159,8 +158,13 @@ public class FormattingService {
      * Creates a text edit for a specific range
      */
     private TextEdit createRangeEdit(String original, String formatted, Range range) {
+        // Log range information for debugging
+        logger.debug("Creating range edit for range: start={}:{}, end={}:{}", 
+            range.getStart().getLine(), range.getStart().getCharacter(),
+            range.getEnd().getLine(), range.getEnd().getCharacter());
+        
         // For now, return a full document edit
-        // TODO: Implement proper range extraction
+        // TODO: Implement proper range extraction based on range parameter
         return createFullDocumentEdit(original, formatted);
     }
     

@@ -27,7 +27,7 @@ public class FileIndexedEvent extends DomainEvent {
         this.filePath = filePath;
         this.symbols = List.copyOf(symbols); // Defensive copy
         this.success = true;
-        this.errorMessage = null;
+        this.errorMessage = ""; // Empty string for successful indexing
     }
     
     /**
@@ -74,7 +74,7 @@ public class FileIndexedEvent extends DomainEvent {
     /**
      * Gets the error message if indexing failed.
      * 
-     * @return the error message, or null if successful
+     * @return the error message, or empty string if successful
      */
     public String getErrorMessage() {
         return errorMessage;
@@ -87,7 +87,7 @@ public class FileIndexedEvent extends DomainEvent {
                 filePath, symbols.size());
         } else {
             return String.format("FileIndexedEvent{file=%s, error=%s}", 
-                filePath, errorMessage);
+                filePath, errorMessage.isEmpty() ? "Unknown error" : errorMessage);
         }
     }
 }

@@ -32,6 +32,8 @@ public abstract class DomainEvent {
     }
     
     /**
+     * Returns unique identifier for this event instance.
+     * 
      * @return unique identifier for this event instance
      */
     public String getEventId() {
@@ -39,6 +41,8 @@ public abstract class DomainEvent {
     }
     
     /**
+     * Returns the timestamp when this event occurred.
+     * 
      * @return the timestamp when this event occurred
      */
     public Instant getOccurredOn() {
@@ -46,6 +50,8 @@ public abstract class DomainEvent {
     }
     
     /**
+     * Returns the ID of the aggregate that this event is related to.
+     * 
      * @return the ID of the aggregate that this event is related to
      */
     public String getAggregateId() {
@@ -53,6 +59,8 @@ public abstract class DomainEvent {
     }
     
     /**
+     * Returns the type name of this event.
+     * 
      * @return the type name of this event
      */
     public String getEventType() {

@@ -3,6 +3,7 @@ package com.groovy.lsp.shared.event;
 import com.groovy.lsp.shared.internal.event.GuavaEventBus;
 import org.apiguardian.api.API;
 import org.jmolecules.ddd.annotation.Factory;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Factory for creating EventBus instances.
@@ -16,7 +17,7 @@ import org.jmolecules.ddd.annotation.Factory;
 @Factory
 public final class EventBusFactory {
     
-    private static volatile EventBus instance;
+    private static volatile @Nullable EventBus instance;
     
     private EventBusFactory() {
         // Prevent instantiation

@@ -46,6 +46,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
      * Initialize the workspace index.
      * This includes setting up the symbol database and scanning for build files.
      */
+    @Override
     public CompletableFuture<Void> initialize() {
         logger.info("Initializing workspace indexer for: {}", workspaceRoot);
         
@@ -85,17 +86,6 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
         }, executorService);
     }
     
-    /**
-     * Index all Groovy and Java files in the workspace.
-     */
-    private void indexWorkspaceFiles() {
-        try (Stream<Path> paths = Files.walk(workspaceRoot)) {
-            paths.filter(this::shouldIndexFile)
-                 .forEach(this::indexFile);
-        } catch (Exception e) {
-            logger.error("Error indexing workspace files", e);
-        }
-    }
     
     /**
      * Index workspace files and return statistics.
@@ -149,8 +139,9 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
             return List.of();
         } catch (Exception e) {
             logger.error("Error indexing file: {}", file, e);
-            eventBus.publish(new FileIndexedEvent(file, e.getMessage()));
-            return null;
+            String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error occurred while indexing file";
+            eventBus.publish(new FileIndexedEvent(file, errorMessage));
+            return List.of(); // Return empty list instead of null
         }
     }
     
@@ -185,6 +176,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
     /**
      * Update index for a single file change.
      */
+    @Override
     public CompletableFuture<Void> updateFile(Path file) {
         return CompletableFuture.runAsync(() -> {
             if (Files.exists(file)) {
@@ -198,6 +190,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
     /**
      * Search for symbols matching the given query.
      */
+    @Override
     public CompletableFuture<Stream<SymbolInfo>> searchSymbols(String query) {
         return CompletableFuture.supplyAsync(() -> 
             symbolIndex.search(query), executorService);

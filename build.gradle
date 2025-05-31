@@ -39,23 +39,23 @@ subprojects {
     }
     
     dependencies {
-        implementation 'org.apache.groovy:groovy:4.0.27'
-        implementation 'org.apache.groovy:groovy-json:4.0.27'
-        implementation 'org.apache.groovy:groovy-xml:4.0.27'
-        implementation 'org.apache.groovy:groovy-nio:4.0.27'
-        implementation 'org.apache.groovy:groovy-templates:4.0.27'
-        implementation 'org.slf4j:slf4j-api:2.0.16'
-        implementation 'ch.qos.logback:logback-classic:1.5.16'
+        implementation libs.groovy
+        implementation libs.groovy.json
+        implementation libs.groovy.xml
+        implementation libs.groovy.nio
+        implementation libs.groovy.templates
+        implementation libs.slf4j.api
+        implementation libs.logback.classic
         
         // Error Prone and NullAway
         errorprone libs.errorprone.core
         errorprone libs.nullaway
         
-        testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
-        testImplementation 'org.junit.jupiter:junit-jupiter-params:5.11.4'
-        testImplementation 'io.mockk:mockk:1.13.14'
-        testImplementation 'org.assertj:assertj-core:3.27.3'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        testImplementation libs.junit.jupiter
+        testImplementation libs.junit.jupiter.params
+        testImplementation libs.mockk
+        testImplementation libs.assertj.core
+        testRuntimeOnly libs.junit.platform.launcher
     }
     
     test {
@@ -63,32 +63,15 @@ subprojects {
     }
     
     tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-        options.compilerArgs += ['-parameters']
-        
-        // Conditionally apply Error Prone based on Java version
-        def javaVersion = JavaVersion.current()
-        if (javaVersion <= JavaVersion.VERSION_21) {
-            // Error Prone configuration for Java 21 and below
-            options.errorprone {
-                enabled = true
-                disableWarningsInGeneratedCode = true
-                
-                // NullAway configuration
-                check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
-                option("NullAway:AnnotatedPackages", "com.groovy.lsp")
-                option("NullAway:TreatGeneratedAsUnannotated", "true")
-                option("NullAway:OnlyNullMarked", "true") // Use with jSpecify @NullMarked
-                option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
-                
-                // Disable specific Error Prone checks that may conflict with Groovy
-                disable("UnusedVariable") // Groovy's dynamic nature can trigger false positives
-                disable("StringSplitter") // Groovy has its own string handling
-            }
-        } else {
-            // Disable Error Prone for Java 22+ due to compatibility issues
-            options.errorprone.enabled = false
-            logger.warn("Error Prone is disabled for Java ${javaVersion} due to compatibility issues. Consider using Java 21 for full static analysis support.")
+        options.errorprone {
+            enabled = true
+            disableWarningsInGeneratedCode = true
+            
+            // NullAway configuration
+            check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+            option("NullAway:AnnotatedPackages", "com.groovy.lsp")
+            option("NullAway:TreatGeneratedAsUnannotated", "true")
+            option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
         }
     }
     
@@ -113,11 +96,11 @@ subprojects {
                     selectHighestVersion()
                 }
             }
-            force 'org.apache.groovy:groovy:4.0.27'
-            force 'org.apache.groovy:groovy-json:4.0.27'
-            force 'org.apache.groovy:groovy-xml:4.0.27'
-            force 'org.apache.groovy:groovy-nio:4.0.27'
-            force 'org.apache.groovy:groovy-templates:4.0.27'
+            force 'org.apache.groovy:groovy:4.0.25'
+            force 'org.apache.groovy:groovy-json:4.0.25'
+            force 'org.apache.groovy:groovy-xml:4.0.25'
+            force 'org.apache.groovy:groovy-nio:4.0.25'
+            force 'org.apache.groovy:groovy-templates:4.0.25'
         }
     }
 }

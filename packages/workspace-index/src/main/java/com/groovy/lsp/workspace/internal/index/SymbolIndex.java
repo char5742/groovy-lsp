@@ -5,6 +5,7 @@ import com.groovy.lsp.workspace.api.dto.SymbolKind;
 import org.lmdbjava.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +14,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import java.util.Objects;
 
 /**
  * Manages the symbol database using LMDB for high-performance lookups.
@@ -26,10 +28,11 @@ public class SymbolIndex implements AutoCloseable {
     private static final String DB_DEPENDENCIES = "dependencies";
     
     private final Path indexPath;
-    private Env<ByteBuffer> env;
-    private Dbi<ByteBuffer> symbolsDb;
-    private Dbi<ByteBuffer> filesDb;
-    private Dbi<ByteBuffer> dependenciesDb;
+    private @Nullable Env<ByteBuffer> env;
+    private @Nullable Dbi<ByteBuffer> symbolsDb;
+    private @Nullable Dbi<ByteBuffer> filesDb;
+    private @Nullable Dbi<ByteBuffer> dependenciesDb;
+    private boolean initialized = false;
     
     // In-memory caches for frequently accessed data
     private final Map<Path, Set<String>> fileSymbols = new ConcurrentHashMap<>();
@@ -59,20 +62,62 @@ public class SymbolIndex implements AutoCloseable {
             dependenciesDb = env.openDbi(DB_DEPENDENCIES, DbiFlags.MDB_CREATE);
             
             logger.info("Symbol index initialized at: {}", indexPath);
+            this.initialized = true;
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize symbol index", e);
         }
     }
     
     /**
+     * Check if the index has been initialized.
+     */
+    private void checkInitialized() {
+        if (!initialized || env == null || symbolsDb == null || filesDb == null || dependenciesDb == null) {
+            throw new IllegalStateException("Symbol index is not initialized. Call initialize() first.");
+        }
+    }
+    
+    /**
+     * Get the environment, ensuring it's initialized.
+     */
+    private Env<ByteBuffer> getEnv() {
+        checkInitialized();
+        return Objects.requireNonNull(env, "env should not be null after checkInitialized()");
+    }
+    
+    /**
+     * Get the symbols database, ensuring it's initialized.
+     */
+    private Dbi<ByteBuffer> getSymbolsDb() {
+        checkInitialized();
+        return Objects.requireNonNull(symbolsDb, "symbolsDb should not be null after checkInitialized()");
+    }
+    
+    /**
+     * Get the files database, ensuring it's initialized.
+     */
+    private Dbi<ByteBuffer> getFilesDb() {
+        checkInitialized();
+        return Objects.requireNonNull(filesDb, "filesDb should not be null after checkInitialized()");
+    }
+    
+    /**
+     * Get the dependencies database, ensuring it's initialized.
+     */
+    private Dbi<ByteBuffer> getDependenciesDb() {
+        checkInitialized();
+        return Objects.requireNonNull(dependenciesDb, "dependenciesDb should not be null after checkInitialized()");
+    }
+    
+    /**
      * Add a file to the index.
      */
     public void addFile(Path file) {
-        try (Txn<ByteBuffer> txn = env.txnWrite()) {
+        try (Txn<ByteBuffer> txn = getEnv().txnWrite()) {
             ByteBuffer key = toBuffer(file.toString());
             ByteBuffer value = toBuffer(Long.toString(System.currentTimeMillis()));
             
-            filesDb.put(txn, key, value);
+            getFilesDb().put(txn, key, value);
             txn.commit();
             
             // Clear cache for this file
@@ -84,9 +129,10 @@ public class SymbolIndex implements AutoCloseable {
      * Remove a file from the index.
      */
     public void removeFile(Path file) {
-        try (Txn<ByteBuffer> txn = env.txnWrite()) {
+        checkInitialized();
+        try (Txn<ByteBuffer> txn = getEnv().txnWrite()) {
             ByteBuffer key = toBuffer(file.toString());
-            filesDb.delete(txn, key);
+            getFilesDb().delete(txn, key);
             
             // Remove all symbols from this file
             Set<String> symbols = fileSymbols.remove(file);
@@ -104,11 +150,12 @@ public class SymbolIndex implements AutoCloseable {
      * Add a dependency to the index.
      */
     public void addDependency(Path dependency) {
-        try (Txn<ByteBuffer> txn = env.txnWrite()) {
+        checkInitialized();
+        try (Txn<ByteBuffer> txn = getEnv().txnWrite()) {
             ByteBuffer key = toBuffer(dependency.toString());
             ByteBuffer value = toBuffer(Long.toString(System.currentTimeMillis()));
             
-            dependenciesDb.put(txn, key, value);
+            getDependenciesDb().put(txn, key, value);
             txn.commit();
         }
     }
@@ -117,12 +164,13 @@ public class SymbolIndex implements AutoCloseable {
      * Add a symbol to the index.
      */
     public void addSymbol(SymbolInfo symbol) {
-        try (Txn<ByteBuffer> txn = env.txnWrite()) {
+        checkInitialized();
+        try (Txn<ByteBuffer> txn = getEnv().txnWrite()) {
             String symbolKey = createSymbolKey(symbol);
             ByteBuffer key = toBuffer(symbolKey);
             ByteBuffer value = serializeSymbol(symbol);
             
-            symbolsDb.put(txn, key, value);
+            getSymbolsDb().put(txn, key, value);
             
             // Update file symbols cache
             fileSymbols.computeIfAbsent(symbol.location(), k -> ConcurrentHashMap.newKeySet())
@@ -139,6 +187,7 @@ public class SymbolIndex implements AutoCloseable {
      * Search for symbols matching the query.
      */
     public Stream<SymbolInfo> search(String query) {
+        checkInitialized();
         // Check cache first
         List<SymbolInfo> cached = symbolCache.get(query);
         if (cached != null) {
@@ -147,8 +196,8 @@ public class SymbolIndex implements AutoCloseable {
         
         List<SymbolInfo> results = new ArrayList<>();
         
-        try (Txn<ByteBuffer> txn = env.txnRead()) {
-            try (Cursor<ByteBuffer> cursor = symbolsDb.openCursor(txn)) {
+        try (Txn<ByteBuffer> txn = getEnv().txnRead()) {
+            try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
                 ByteBuffer queryBuffer = toBuffer(query);
                 
                 // Prefix search
@@ -178,10 +227,11 @@ public class SymbolIndex implements AutoCloseable {
      * Get all symbols in a file.
      */
     public Stream<SymbolInfo> getFileSymbols(Path file) {
+        checkInitialized();
         List<SymbolInfo> symbols = new ArrayList<>();
         
-        try (Txn<ByteBuffer> txn = env.txnRead()) {
-            try (Cursor<ByteBuffer> cursor = symbolsDb.openCursor(txn)) {
+        try (Txn<ByteBuffer> txn = getEnv().txnRead()) {
+            try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
                 if (cursor.first()) {
                     do {
                         SymbolInfo symbol = deserializeSymbol(cursor.val());
@@ -212,7 +262,7 @@ public class SymbolIndex implements AutoCloseable {
      * Remove a symbol entry for a specific file.
      */
     private void removeSymbolEntry(Txn<ByteBuffer> txn, String symbolName, Path file) {
-        try (Cursor<ByteBuffer> cursor = symbolsDb.openCursor(txn)) {
+        try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
             ByteBuffer key = toBuffer(symbolName);
             if (cursor.get(key, GetOp.MDB_SET_RANGE)) {
                 do {
@@ -246,17 +296,17 @@ public class SymbolIndex implements AutoCloseable {
     /**
      * Deserialize a symbol from ByteBuffer.
      */
-    private SymbolInfo deserializeSymbol(ByteBuffer buffer) {
+    private @Nullable SymbolInfo deserializeSymbol(ByteBuffer buffer) {
         try {
             String data = toString(buffer);
-            String[] parts = data.split("\\|");
-            if (parts.length == 5) {
+            List<String> parts = Arrays.asList(data.split("\\|"));
+            if (parts.size() == 5) {
                 return new SymbolInfo(
-                    parts[0],
-                    SymbolKind.valueOf(parts[1]),
-                    Path.of(parts[2]),
-                    Integer.parseInt(parts[3]),
-                    Integer.parseInt(parts[4])
+                    parts.get(0),
+                    SymbolKind.valueOf(parts.get(1)),
+                    Path.of(parts.get(2)),
+                    Integer.parseInt(parts.get(3)),
+                    Integer.parseInt(parts.get(4))
                 );
             }
         } catch (Exception e) {

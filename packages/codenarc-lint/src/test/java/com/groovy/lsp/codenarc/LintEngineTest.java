@@ -8,11 +8,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.codenarc.ruleset.RuleSet;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -26,7 +28,7 @@ import static org.mockito.Mockito.*;
 class LintEngineTest {
     
     @TempDir
-    Path tempDir;
+    @Nullable Path tempDir;
     
     @Mock
     private RuleSetProvider ruleSetProvider;
@@ -48,6 +50,7 @@ class LintEngineTest {
     @Test
     void testAnalyzeFile_WithValidGroovyFile() throws IOException, ExecutionException, InterruptedException {
         // Create a test Groovy file
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path testFile = tempDir.resolve("TestClass.groovy");
         String groovyCode = """
             class TestClass {
@@ -89,6 +92,7 @@ class LintEngineTest {
     @Test
     void testAnalyzeDirectory() throws IOException, ExecutionException, InterruptedException {
         // Create test Groovy files
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path file1 = tempDir.resolve("Class1.groovy");
         Path file2 = tempDir.resolve("Class2.groovy");
         
@@ -106,7 +110,7 @@ class LintEngineTest {
         // Verify the results
         assertNotNull(results);
         // Should have results for both files
-        assertTrue(results.size() >= 0);
+        assertEquals(2, results.size());
     }
     
 }

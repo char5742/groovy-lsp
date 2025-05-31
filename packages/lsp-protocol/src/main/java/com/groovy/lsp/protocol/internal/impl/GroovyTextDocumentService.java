@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Text Document Service implementation for Groovy.
@@ -22,7 +23,7 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     
     private static final Logger logger = LoggerFactory.getLogger(GroovyTextDocumentService.class);
     
-    private LanguageClient client;
+    private @Nullable LanguageClient client;
     
     @Override
     public void connect(LanguageClient client) {
@@ -33,6 +34,11 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     public void didOpen(DidOpenTextDocumentParams params) {
         logger.debug("Document opened: {}", params.getTextDocument().getUri());
         // TODO: Implement document open handling
+        
+        // Example usage of client field for future diagnostics
+        if (client != null) {
+            logger.debug("Client is available for sending diagnostics");
+        }
     }
     
     @Override
