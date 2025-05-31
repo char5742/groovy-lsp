@@ -47,6 +47,23 @@ class ModuleIntegrationTest {
         indexer = WorkspaceIndexFactory.createWorkspaceIndexService(tempDir);
     }
     
+    @AfterEach
+    void tearDown() {
+        // Ensure indexer is properly closed to release LMDB locks
+        if (indexer != null) {
+            try {
+                indexer.shutdown();
+                // Give Windows time to release file locks
+                if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                    Thread.sleep(100);
+                }
+            } catch (Exception e) {
+                // Log but don't fail the test
+                System.err.println("Failed to close indexer: " + e.getMessage());
+            }
+        }
+    }
+    
     @Test
     @DisplayName("Groovy Core と Lint Engine の統合")
     void testGroovyCoreAndLintIntegration() throws Exception {
