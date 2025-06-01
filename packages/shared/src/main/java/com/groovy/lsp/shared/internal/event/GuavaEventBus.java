@@ -79,7 +79,7 @@ public class GuavaEventBus implements EventBus {
 
         @com.google.common.eventbus.Subscribe
         public void handleEvent(DomainEvent event) {
-            if (eventType.isInstance(event)) {
+            if (eventType.equals(event.getClass())) {
                 handler.handle(eventType.cast(event));
             }
         }

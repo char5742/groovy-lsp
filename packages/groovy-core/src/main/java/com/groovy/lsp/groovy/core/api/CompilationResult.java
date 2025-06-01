@@ -156,6 +156,11 @@ public class CompilationResult {
                 } else {
                     msgText = message.toString();
                 }
+            } else if (message
+                    instanceof org.codehaus.groovy.control.messages.SimpleMessage simpleMsg) {
+                // SimpleMessage has a message field but no public getter,
+                // so we need to use reflection or toString
+                msgText = simpleMsg.getMessage();
             } else {
                 // For other message types, extract from toString
                 msgText = message.toString();

@@ -61,7 +61,10 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         // Check if type is already set
         ClassNode existingType = expression.getType();
         if (existingType != null && !existingType.equals(ClassHelper.OBJECT_TYPE)) {
-            return existingType;
+            // For method calls, we should compute the type instead of using pre-set type
+            if (!(expression instanceof MethodCallExpression)) {
+                return existingType;
+            }
         }
 
         // Handle different expression types
@@ -140,6 +143,12 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
             return ClassHelper.float_TYPE;
         } else if (value instanceof Boolean) {
             return ClassHelper.boolean_TYPE;
+        }
+
+        // For other types, use the constant expression's type if available
+        ClassNode type = constExpr.getType();
+        if (type != null && !type.equals(ClassHelper.OBJECT_TYPE)) {
+            return type;
         }
 
         return ClassHelper.make(value.getClass());
@@ -301,16 +310,34 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      */
     private ClassNode findVariableDeclarationType(String varName, ModuleNode moduleNode) {
         VariableDeclarationFinder finder = new VariableDeclarationFinder(varName);
-        moduleNode.visit(finder);
+
+        // Visit classes
+        for (ClassNode classNode : moduleNode.getClasses()) {
+            classNode.visitContents(finder);
+        }
+
+        // Visit script body (statements outside classes)
+        BlockStatement statementBlock = moduleNode.getStatementBlock();
+        if (statementBlock != null) {
+            for (Statement stmt : statementBlock.getStatements()) {
+                if (stmt instanceof ExpressionStatement exprStmt) {
+                    Expression expr = exprStmt.getExpression();
+                    if (expr instanceof DeclarationExpression) {
+                        expr.visit(finder);
+                    }
+                }
+            }
+        }
+
         return finder.getVariableType();
     }
 
     /**
      * Visitor for finding variable declarations.
      */
-    private static class VariableDeclarationFinder extends ClassCodeVisitorSupport {
+    private class VariableDeclarationFinder extends ClassCodeVisitorSupport {
         private final String targetVarName;
-        private ClassNode variableType = ClassHelper.OBJECT_TYPE;
+        private ClassNode variableType = null;
 
         public VariableDeclarationFinder(String varName) {
             this.targetVarName = varName;
@@ -333,7 +360,11 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
                         // Try to infer from right side
                         Expression rightExpr = expression.getRightExpression();
                         if (rightExpr instanceof ConstantExpression constantExpression) {
-                            variableType = constantExpression.getType();
+                            // Use inferConstantType method to properly infer the type
+                            variableType = inferConstantType(constantExpression);
+                        } else if (rightExpr != null) {
+                            // For other expression types, try to infer their type
+                            variableType = inferExpressionType(rightExpr, null);
                         }
                     }
                 }
@@ -342,7 +373,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         }
 
         public ClassNode getVariableType() {
-            return variableType;
+            return variableType != null ? variableType : ClassHelper.OBJECT_TYPE;
         }
     }
 }

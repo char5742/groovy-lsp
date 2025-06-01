@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.SourceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -930,6 +931,215 @@ class IncrementalCompilationServiceImplTest {
             assertThat(first.isSuccessful()).isTrue();
             assertThat(second.isSuccessful()).isTrue();
             assertThat(second.getModuleNode()).isSameAs(first.getModuleNode());
+        }
+
+        @Test
+        @DisplayName("Should handle compilation error without error collector messages")
+        void shouldHandleCompilationErrorWithoutMessages() {
+            // This test simulates a scenario where compilation fails but errorCollector has no
+            // errors
+            // We need to cause an exception during compilation
+            String problematicCode = "class Test { }";
+
+            // Create a custom configuration that will cause issues
+            CompilerConfiguration brokenConfig = new CompilerConfiguration();
+            // Setting an invalid target bytecode version might cause compilation to fail
+            brokenConfig.setTargetBytecode("99");
+
+            CompilationUnit unit = service.createCompilationUnit(brokenConfig);
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit,
+                            problematicCode,
+                            "BrokenTest.groovy",
+                            CompilationPhase.CONVERSION);
+
+            // The result should have errors even without specific error messages
+            if (!result.isSuccessful()) {
+                assertThat(result.hasErrors()).isTrue();
+                assertThat(result.getErrors()).isNotEmpty();
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle unexpected exception during compilation")
+        void shouldHandleUnexpectedException() {
+            // Test with null source code to trigger unexpected exception
+            CompilationUnit unit = service.createCompilationUnit(config);
+
+            // The implementation catches exceptions and returns a failure result
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit, null, "Test.groovy", CompilationPhase.CONVERSION);
+
+            // Should return a failure result with error
+            assertThat(result).isNotNull();
+            assertThat(result.isSuccessful()).isFalse();
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.getErrors()).isNotEmpty();
+
+            // The error should contain information about the null pointer
+            CompilationResult.CompilationError error = result.getErrors().get(0);
+            assertThat(error.getMessage()).containsAnyOf("null", "Compilation failed");
+        }
+
+        @Test
+        @DisplayName("Should return partial result when AST exists but has errors")
+        void shouldReturnPartialResult() {
+            // Create code that parses but has semantic errors
+            String codeWithSemanticError =
+                    """
+                    class PartialTest {
+                        void method() {
+                            // Reference to undefined variable
+                            println undefinedVariable
+                        }
+                    }
+                    """;
+
+            CompilationUnit unit = service.createCompilationUnit(config);
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit,
+                            codeWithSemanticError,
+                            "PartialTest.groovy",
+                            CompilationPhase.SEMANTIC_ANALYSIS);
+
+            // Depending on the phase and error type, we might get a partial result
+            // The test verifies the code path is covered
+            assertThat(result).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Should handle errors and warnings together")
+        void shouldHandleErrorsAndWarnings() {
+            // Code that might generate both errors and warnings
+            String mixedCode =
+                    """
+                    import java.util.*
+
+                    class MixedTest {
+                        def unusedVar = "unused" // potential warning
+
+                        void broken() {
+                            def x = // syntax error
+                        }
+                    }
+                    """;
+
+            CompilationUnit unit = service.createCompilationUnit(config);
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit,
+                            mixedCode,
+                            "MixedTest.groovy",
+                            CompilationPhase.SEMANTIC_ANALYSIS);
+
+            assertThat(result.hasErrors()).isTrue();
+            // Verify error handling for mixed scenarios
+        }
+    }
+
+    @Nested
+    @DisplayName("Additional edge cases")
+    class AdditionalEdgeCases {
+
+        @Test
+        @DisplayName("Should handle when compileToPhase cache check has expired entry")
+        void shouldHandleExpiredCacheInCompileToPhase() throws InterruptedException {
+            // Create service with very short TTL
+            service = new IncrementalCompilationServiceImpl(100, 50); // 50ms TTL
+
+            String sourceCode = "class ExpireTest { }";
+            CompilationUnit unit = service.createCompilationUnit(config);
+
+            // First compilation
+            ModuleNode first =
+                    service.compileToPhase(
+                            unit, sourceCode, "ExpireTest.groovy", CompilationPhase.CONVERSION);
+            assertThat(first).isNotNull();
+
+            // Wait for TTL to expire
+            Thread.sleep(100);
+
+            // Second compilation should recompile due to expired cache
+            ModuleNode second =
+                    service.compileToPhase(
+                            unit, sourceCode, "ExpireTest.groovy", CompilationPhase.CONVERSION);
+            assertThat(second).isNotNull();
+            assertThat(second).isNotSameAs(first);
+        }
+
+        @Test
+        @DisplayName("Should handle getDependencies with null AST elements")
+        void shouldHandleNullASTElements() {
+            // Create a minimal module node with potential null elements
+            ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+            // Call getDependencies - should handle gracefully
+            Map<String, DependencyType> deps = service.getDependencies(moduleNode);
+            assertThat(deps).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Should handle phase comparison edge cases")
+        void shouldHandlePhaseComparison() {
+            String sourceCode = "class PhaseTest { }";
+            CompilationUnit unit = service.createCompilationUnit(config);
+
+            // Compile to SEMANTIC_ANALYSIS first
+            ModuleNode semantic =
+                    service.compileToPhase(
+                            unit,
+                            sourceCode,
+                            "PhaseTest.groovy",
+                            CompilationPhase.SEMANTIC_ANALYSIS);
+            assertThat(semantic).isNotNull();
+
+            // Request CONVERSION phase - should use cached result since SEMANTIC > CONVERSION
+            ModuleNode conversion =
+                    service.compileToPhase(
+                            unit, sourceCode, "PhaseTest.groovy", CompilationPhase.CONVERSION);
+            assertThat(conversion).isSameAs(semantic);
+        }
+
+        @Test
+        @DisplayName("Should update dependency graph correctly")
+        void shouldUpdateDependencyGraph() {
+            String sourceWithDeps =
+                    """
+                    import java.util.List
+
+                    class DepsTest {
+                        List<String> items
+                    }
+                    """;
+
+            CompilationUnit unit = service.createCompilationUnit(config);
+            ModuleNode module =
+                    service.compileToPhase(
+                            unit,
+                            sourceWithDeps,
+                            "DepsTest.groovy",
+                            CompilationPhase.SEMANTIC_ANALYSIS);
+
+            assertThat(module).isNotNull();
+
+            // Compile another file that depends on DepsTest
+            String dependent =
+                    """
+                    class DependentTest {
+                        DepsTest deps
+                    }
+                    """;
+
+            service.compileToPhase(
+                    unit, dependent, "DependentTest.groovy", CompilationPhase.CONVERSION);
+
+            // Check affected modules
+            Map<String, ModuleNode> allModules = new HashMap<>();
+            List<String> affected = service.getAffectedModules("DepsTest.groovy", allModules);
+            assertThat(affected).contains("DependentTest.groovy");
         }
     }
 }

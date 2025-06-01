@@ -105,7 +105,14 @@ public class ASTServiceImpl implements ASTService {
         }
 
         NodeFinder finder = new NodeFinder(line, column);
-        moduleNode.visit(finder);
+        // Visit all classes in the module
+        for (ClassNode classNode : moduleNode.getClasses()) {
+            classNode.visitContents(finder);
+        }
+        // Also visit the script body if present
+        if (moduleNode.getStatementBlock() != null) {
+            moduleNode.getStatementBlock().visit(finder);
+        }
         return finder.getFoundNode();
     }
 
@@ -122,7 +129,14 @@ public class ASTServiceImpl implements ASTService {
         }
 
         VariableCollector collector = new VariableCollector();
-        moduleNode.visit(collector);
+        // Visit all classes in the module
+        for (ClassNode classNode : moduleNode.getClasses()) {
+            classNode.visitContents(collector);
+        }
+        // Also visit the script body if present
+        if (moduleNode.getStatementBlock() != null) {
+            moduleNode.getStatementBlock().visit(collector);
+        }
         return collector.getVariables();
     }
 
@@ -139,7 +153,14 @@ public class ASTServiceImpl implements ASTService {
         }
 
         MethodCallCollector collector = new MethodCallCollector();
-        moduleNode.visit(collector);
+        // Visit all classes in the module
+        for (ClassNode classNode : moduleNode.getClasses()) {
+            classNode.visitContents(collector);
+        }
+        // Also visit the script body if present
+        if (moduleNode.getStatementBlock() != null) {
+            moduleNode.getStatementBlock().visit(collector);
+        }
         return collector.getMethodCalls();
     }
 
@@ -181,6 +202,24 @@ public class ASTServiceImpl implements ASTService {
         }
 
         @Override
+        public void visitField(FieldNode field) {
+            checkNode(field);
+            if (field.getType() != null) {
+                checkNode(field.getType());
+            }
+            super.visitField(field);
+        }
+
+        @Override
+        public void visitMethod(MethodNode method) {
+            checkNode(method);
+            if (method.getReturnType() != null) {
+                checkNode(method.getReturnType());
+            }
+            super.visitMethod(method);
+        }
+
+        @Override
         public void visitStatement(Statement statement) {
             checkNode(statement);
             super.visitStatement(statement);
@@ -211,6 +250,30 @@ public class ASTServiceImpl implements ASTService {
                     foundNode = node;
                 }
             }
+        }
+
+        @Override
+        public void visitPropertyExpression(PropertyExpression expression) {
+            checkNode(expression);
+            super.visitPropertyExpression(expression);
+        }
+
+        @Override
+        public void visitFieldExpression(FieldExpression expression) {
+            checkNode(expression);
+            super.visitFieldExpression(expression);
+        }
+
+        @Override
+        public void visitClassExpression(ClassExpression expression) {
+            checkNode(expression);
+            super.visitClassExpression(expression);
+        }
+
+        @Override
+        public void visitConstantExpression(ConstantExpression expression) {
+            checkNode(expression);
+            super.visitConstantExpression(expression);
         }
 
         public @Nullable ASTNode getFoundNode() {

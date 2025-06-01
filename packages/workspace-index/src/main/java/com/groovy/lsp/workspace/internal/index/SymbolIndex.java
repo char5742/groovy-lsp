@@ -207,21 +207,33 @@ public class SymbolIndex implements AutoCloseable {
 
         try (Txn<ByteBuffer> txn = getEnv().txnRead()) {
             try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
-                ByteBuffer queryBuffer = toBuffer(query);
+                // Handle empty query - return all symbols
+                if (query.isEmpty()) {
+                    if (cursor.first()) {
+                        do {
+                            SymbolInfo symbol = deserializeSymbol(cursor.val());
+                            if (symbol != null) {
+                                results.add(symbol);
+                            }
+                        } while (cursor.next());
+                    }
+                } else {
+                    ByteBuffer queryBuffer = toBuffer(query);
 
-                // Prefix search
-                if (cursor.get(queryBuffer, GetOp.MDB_SET_RANGE)) {
-                    do {
-                        String key = toString(cursor.key());
-                        if (!key.startsWith(query)) {
-                            break;
-                        }
+                    // Prefix search
+                    if (cursor.get(queryBuffer, GetOp.MDB_SET_RANGE)) {
+                        do {
+                            String key = toString(cursor.key());
+                            if (!key.startsWith(query)) {
+                                break;
+                            }
 
-                        SymbolInfo symbol = deserializeSymbol(cursor.val());
-                        if (symbol != null) {
-                            results.add(symbol);
-                        }
-                    } while (cursor.next());
+                            SymbolInfo symbol = deserializeSymbol(cursor.val());
+                            if (symbol != null) {
+                                results.add(symbol);
+                            }
+                        } while (cursor.next());
+                    }
                 }
             }
         }

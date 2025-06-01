@@ -168,6 +168,10 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         logger.debug("Compiling {} to phase {} with detailed results", sourceName, phase);
 
         try {
+            // Validate input parameters
+            if (sourceCode == null) {
+                throw new NullPointerException("Source code cannot be null");
+            }
             // Check cache first with read lock
             cacheLock.readLock().lock();
             try {
