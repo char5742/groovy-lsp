@@ -36,6 +36,7 @@ errorprone-plugin = "4.2.0"
 nullaway-plugin = "2.2.0"
 jmh-plugin = "0.7.2"
 spotless-plugin = "6.25.0"
+jacoco = "0.8.12"
 awaitility = "4.3.0"
 wiremock = "3.0.1"
 

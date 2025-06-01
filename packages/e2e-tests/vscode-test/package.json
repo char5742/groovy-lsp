@@ -1,0 +1,21 @@
+{
+  "name": "groovy-lsp-vscode-test",
+  "version": "1.0.0",
+  "description": "VS Code integration tests for Groovy Language Server",
+  "scripts": {
+    "test": "node ./test/runTest.js",
+    "compile": "tsc -p ./",
+    "pretest": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^2.4.1",
+    "mocha": "^10.7.3",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  }
+}

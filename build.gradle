@@ -33,6 +33,7 @@ subprojects {
     apply plugin: 'groovy'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'net.ltgt.nullaway'
+    apply plugin: 'jacoco'
 
     java {
         toolchain {
@@ -71,6 +72,33 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+
+        testLogging {
+            events "passed", "skipped", "failed"
+            exceptionFormat "full"
+        }
+    }
+
+    jacoco {
+        toolVersion = libs.versions.jacoco.get()
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/*Launcher*',
+                    '**/*Module*',
+                    '**/*Constants*'
+                ])
+            }))
+        }
     }
 
     tasks.withType(JavaCompile) {
@@ -85,5 +113,23 @@ subprojects {
             option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
         }
 
+    }
+}
+
+// 全体のカバレッジレポートを集約
+task jacocoRootReport(type: JacocoReport) {
+    description = "Aggregate JaCoCo reports from all subprojects"
+    group = "verification"
+
+    dependsOn subprojects.test
+
+    sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.from = files(subprojects.sourceSets.main.output)
+    executionData.from = files(subprojects.jacocoTestReport.executionData).filter { it.exists() }
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
     }
 }
