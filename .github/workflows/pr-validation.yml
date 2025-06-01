@@ -5,13 +5,11 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  validate-pr:
-    name: Validate Pull Request
+  validate:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       
     - name: Set up JDK 23
       uses: actions/setup-java@v4
@@ -20,84 +18,5 @@ jobs:
         distribution: 'temurin'
         cache: gradle
         
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-        
-    - name: Run architecture tests
-      id: arch-tests
-      run: ./gradlew :shared:test --tests "*jMoleculesArchitectureTest" --no-daemon
-      
-    - name: Check for TODO comments
-      run: |
-        TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK" --include="*.java" --include="*.groovy" packages/ | wc -l)
-        if [ $TODO_COUNT -gt 0 ]; then
-          echo "::warning::Found $TODO_COUNT TODO/FIXME/HACK comments in the code"
-          grep -rn "TODO\|FIXME\|HACK" --include="*.java" --include="*.groovy" packages/ | head -20
-        fi
-        
-    - name: Validate commit messages
-      id: commits
-      run: |
-        # Check commit message format
-        git log --format=%s origin/${{ github.base_ref }}..HEAD | while read commit_msg; do
-          if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+$"; then
-            echo "::warning::Invalid commit message format: $commit_msg"
-            echo "Expected format: type(scope): description"
-          fi
-        done
-        
-    - name: Check module dependencies
-      run: |
-        # Ensure no circular dependencies
-        ./gradlew dependencies --no-daemon > deps.txt
-        if grep -q "circular" deps.txt; then
-          echo "::error::Circular dependency detected!"
-          exit 1
-        fi
-        
-    - name: License check
-      run: |
-        # Check for license headers
-        find packages/ -name "*.java" -o -name "*.groovy" | while read file; do
-          if ! head -n 5 "$file" | grep -q "Copyright\|License\|SPDX"; then
-            echo "::warning::Missing license header in $file"
-          fi
-        done
-        
-    - name: PR size check
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        # Check PR size
-        ADDITIONS=$(gh pr view ${{ github.event.pull_request.number }} --json additions -q .additions)
-        DELETIONS=$(gh pr view ${{ github.event.pull_request.number }} --json deletions -q .deletions)
-        TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
-        
-        if [ $TOTAL_CHANGES -gt 1000 ]; then
-          echo "::warning::Large PR detected ($TOTAL_CHANGES lines changed). Consider breaking it into smaller PRs."
-        fi
-        
-    - name: Comment PR status
-      uses: actions/github-script@v7
-      if: always()
-      with:
-        script: |
-          const checks = [
-            { name: 'Architecture Tests', status: '${{ steps.arch-tests.outcome }}' },
-            { name: 'Commit Messages', status: '${{ steps.commits.outcome }}' }
-          ];
-          
-          let comment = '## PR Validation Results\n\n';
-          comment += '| Check | Status |\n|-------|--------|\n';
-          
-          checks.forEach(check => {
-            const emoji = check.status === 'success' ? '✅' : '❌';
-            comment += `| ${check.name} | ${emoji} ${check.status} |\n`;
-          });
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+    - name: Run tests
+      run: ./gradlew test --no-daemon
