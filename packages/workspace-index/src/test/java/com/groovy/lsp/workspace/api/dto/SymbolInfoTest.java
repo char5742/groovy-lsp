@@ -1,6 +1,7 @@
 package com.groovy.lsp.workspace.api.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,5 +58,52 @@ class SymbolInfoTest {
         String toString = symbol.toString();
         assertThat(toString).contains("MyMethod");
         assertThat(toString).contains("METHOD");
+    }
+
+    @Test
+    void testSymbolInfoValidation_NullName() {
+        Path location = Paths.get("/path/to/MyClass.groovy");
+        assertThatThrownBy(() -> new SymbolInfo(null, SymbolKind.CLASS, location, 10, 5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Symbol name cannot be null or blank");
+    }
+
+    @Test
+    void testSymbolInfoValidation_BlankName() {
+        Path location = Paths.get("/path/to/MyClass.groovy");
+        assertThatThrownBy(() -> new SymbolInfo("   ", SymbolKind.CLASS, location, 10, 5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Symbol name cannot be null or blank");
+    }
+
+    @Test
+    void testSymbolInfoValidation_NullKind() {
+        Path location = Paths.get("/path/to/MyClass.groovy");
+        assertThatThrownBy(() -> new SymbolInfo("MyClass", null, location, 10, 5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Symbol kind cannot be null");
+    }
+
+    @Test
+    void testSymbolInfoValidation_NullLocation() {
+        assertThatThrownBy(() -> new SymbolInfo("MyClass", SymbolKind.CLASS, null, 10, 5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Symbol location cannot be null");
+    }
+
+    @Test
+    void testSymbolInfoValidation_InvalidLine() {
+        Path location = Paths.get("/path/to/MyClass.groovy");
+        assertThatThrownBy(() -> new SymbolInfo("MyClass", SymbolKind.CLASS, location, 0, 5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Line number must be positive");
+    }
+
+    @Test
+    void testSymbolInfoValidation_InvalidColumn() {
+        Path location = Paths.get("/path/to/MyClass.groovy");
+        assertThatThrownBy(() -> new SymbolInfo("MyClass", SymbolKind.CLASS, location, 10, -1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Column number must be positive");
     }
 }

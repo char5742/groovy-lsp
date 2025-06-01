@@ -21,6 +21,11 @@ dependencies {
 
     // Error tracking
     implementation libs.sentry
+
+    // Test dependencies
+    testImplementation libs.bundles.testing
+    testImplementation libs.mockito.core
+    testImplementation libs.logback.classic
 }
 
 application {
