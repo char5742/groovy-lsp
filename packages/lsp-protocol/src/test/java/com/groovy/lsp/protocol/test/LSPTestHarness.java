@@ -29,6 +29,7 @@ public class LSPTestHarness implements AutoCloseable {
     private final Launcher<LanguageClient> serverLauncher;
     private final Launcher<LanguageServer> clientLauncher;
 
+    @SuppressWarnings("FutureReturnValueIgnored")
     private LSPTestHarness(Builder builder) throws IOException {
         // NullAway requires explicit null check even though Builder.build() validates
         if (builder.server == null) {
