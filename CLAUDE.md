@@ -1,1 +1,2 @@
  - lefthookにおいて--no-verifyは絶対に使用しないでください
+ - 極力@SuppressWarningsを使用しないでください

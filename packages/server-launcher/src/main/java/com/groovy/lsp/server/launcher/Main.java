@@ -20,6 +20,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,6 +183,8 @@ public class Main {
 
     /**
      * Parse command line arguments to determine launch mode.
+     * Using statement switch (not expression switch) because we need to modify loop index 'i'
+     * and handle multiple statements with side effects in some cases.
      */
     @SuppressWarnings("StatementSwitchToExpressionSwitch")
     private static LaunchMode parseArguments(String[] args) {
@@ -312,8 +315,8 @@ public class Main {
         String host = DEFAULT_SOCKET_HOST; // Default host
         int port = DEFAULT_SOCKET_PORT; // Default LSP port
 
-        @SuppressWarnings("NullAway") // Field will be initialized before use
-        String workspaceRoot = null; // Workspace root directory
+        @Nullable String workspaceRoot =
+                null; // Workspace root directory (null = use current directory)
     }
 
     /**

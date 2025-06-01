@@ -29,7 +29,6 @@ public class LSPTestHarness implements AutoCloseable {
     private final Launcher<LanguageClient> serverLauncher;
     private final Launcher<LanguageServer> clientLauncher;
 
-    @SuppressWarnings("FutureReturnValueIgnored")
     private LSPTestHarness(Builder builder) throws IOException {
         // NullAway requires explicit null check even though Builder.build() validates
         if (builder.server == null) {
@@ -61,8 +60,13 @@ public class LSPTestHarness implements AutoCloseable {
         }
 
         // Start listening
+        // Error-prone incorrectly flags this as FutureReturnValueIgnored, but we ARE using the
+        // futures
+        // by passing them to CompletableFuture.allOf() which properly handles exceptions
+        @SuppressWarnings("FutureReturnValueIgnored")
         CompletableFuture<?> serverFuture =
                 CompletableFuture.runAsync(serverLauncher::startListening, executorService);
+        @SuppressWarnings("FutureReturnValueIgnored")
         CompletableFuture<?> clientFuture =
                 CompletableFuture.runAsync(clientLauncher::startListening, executorService);
         CompletableFuture.allOf(serverFuture, clientFuture).join();
@@ -84,7 +88,8 @@ public class LSPTestHarness implements AutoCloseable {
     }
 
     @NonNull
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // LSP4J API returns CompletableFuture<?>, requires cast to
+    // CompletableFuture<T>
     public <T> CompletableFuture<T> request(String method, Object params) {
         return (CompletableFuture<T>) serverLauncher.getRemoteEndpoint().request(method, params);
     }

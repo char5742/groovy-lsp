@@ -46,7 +46,6 @@ public class GuavaEventBus implements EventBus {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T extends DomainEvent> void subscribe(Class<T> eventType, EventHandler<T> handler) {
         EventHandlerAdapter<T> adapter = new EventHandlerAdapter<>(eventType, handler);
         adapters.put(handler, adapter);
