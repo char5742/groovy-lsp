@@ -30,6 +30,10 @@ public class LSPTestHarness implements AutoCloseable {
     private final Launcher<LanguageServer> clientLauncher;
 
     private LSPTestHarness(Builder builder) throws IOException {
+        // NullAway requires explicit null check even though Builder.build() validates
+        if (builder.server == null) {
+            throw new IllegalStateException("Server must be provided");
+        }
         this.server = builder.server;
         this.testClient = builder.client != null ? builder.client : new TestLanguageClient();
         this.executorService = Executors.newCachedThreadPool();
@@ -56,11 +60,11 @@ public class LSPTestHarness implements AutoCloseable {
         }
 
         // Start listening
-        CompletableFuture<Void> serverListening =
+        CompletableFuture<?> serverFuture =
                 CompletableFuture.runAsync(serverLauncher::startListening, executorService);
-        CompletableFuture<Void> clientListening =
+        CompletableFuture<?> clientFuture =
                 CompletableFuture.runAsync(clientLauncher::startListening, executorService);
-        CompletableFuture.allOf(serverListening, clientListening).join();
+        CompletableFuture.allOf(serverFuture, clientFuture).join();
     }
 
     @NonNull

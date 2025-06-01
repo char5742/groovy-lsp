@@ -63,6 +63,10 @@ public final class ProtocolAssertions {
 
         public DiagnosticsAssertion hasCount(int expectedCount) {
             assertThat(diagnostics).isNotNull();
+            // NullAway requires explicit null check
+            if (diagnostics == null) {
+                throw new AssertionError("Diagnostics should not be null");
+            }
             assertThat(diagnostics.getDiagnostics()).hasSize(expectedCount);
             return this;
         }
@@ -94,6 +98,10 @@ public final class ProtocolAssertions {
         public DiagnosticsAssertion hasDiagnostic(
                 @NonNull DiagnosticSeverity severity, @NonNull String message) {
             assertThat(diagnostics).isNotNull();
+            // NullAway requires explicit null check
+            if (diagnostics == null) {
+                throw new AssertionError("Diagnostics should not be null");
+            }
             assertThat(diagnostics.getDiagnostics())
                     .anySatisfy(
                             d -> {
@@ -106,6 +114,10 @@ public final class ProtocolAssertions {
         public DiagnosticsAssertion satisfies(
                 @NonNull Consumer<? super List<? extends Diagnostic>> requirements) {
             assertThat(diagnostics).isNotNull();
+            // NullAway requires explicit null check
+            if (diagnostics == null) {
+                throw new AssertionError("Diagnostics should not be null");
+            }
             assertThat(diagnostics.getDiagnostics()).satisfies(requirements);
             return this;
         }
