@@ -79,14 +79,7 @@ commit-msg:
   commands:
     # Conventional Commitsフォーマットのチェック
     conventional:
-      run: |
-        commit_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,}$'
-        if ! grep -qE "$commit_regex" "$1"; then
-          echo "❌ コミットメッセージがConventional Commits形式に従っていません!"
-          echo "形式: <type>(<scope>): <subject>"
-          echo "例: feat(groovy-core): Add incremental compilation support"
-          exit 1
-        fi
+      run: ./scripts/check-commit-msg.sh {1}
 
 # カスタムコマンド
 commands:
