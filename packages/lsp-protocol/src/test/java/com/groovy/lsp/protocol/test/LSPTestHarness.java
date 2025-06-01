@@ -51,15 +51,16 @@ public class LSPTestHarness implements AutoCloseable {
                         testClient, clientInput, clientOutput, executorService, builder.wrapper);
 
         this.client = serverLauncher.getRemoteProxy();
-        if (server instanceof LanguageClientAware) {
-            ((LanguageClientAware) server).connect(serverLauncher.getRemoteProxy());
+        if (server instanceof LanguageClientAware languageClientAware) {
+            languageClientAware.connect(serverLauncher.getRemoteProxy());
         }
 
         // Start listening
-        CompletableFuture.allOf(
-                        CompletableFuture.runAsync(serverLauncher::startListening, executorService),
-                        CompletableFuture.runAsync(clientLauncher::startListening, executorService))
-                .join();
+        CompletableFuture<Void> serverListening =
+                CompletableFuture.runAsync(serverLauncher::startListening, executorService);
+        CompletableFuture<Void> clientListening =
+                CompletableFuture.runAsync(clientLauncher::startListening, executorService);
+        CompletableFuture.allOf(serverListening, clientListening).join();
     }
 
     @NonNull
@@ -101,9 +102,9 @@ public class LSPTestHarness implements AutoCloseable {
     }
 
     public static class Builder {
-        private LanguageServer server;
-        private TestLanguageClient client;
-        private Function<MessageConsumer, MessageConsumer> wrapper;
+        private @Nullable LanguageServer server;
+        private @Nullable TestLanguageClient client;
+        private @Nullable Function<MessageConsumer, MessageConsumer> wrapper;
 
         public Builder server(@NonNull LanguageServer server) {
             this.server = server;

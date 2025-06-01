@@ -15,14 +15,12 @@ import org.jspecify.annotations.Nullable;
  */
 public class ProtocolMockServer implements AutoCloseable {
     private final WireMockServer wireMockServer;
-    private final int port;
 
     public ProtocolMockServer() {
         this(0); // Random port
     }
 
     public ProtocolMockServer(int port) {
-        this.port = port;
         WireMockConfiguration config = WireMockConfiguration.wireMockConfig();
         if (port > 0) {
             config.port(port);

@@ -59,12 +59,11 @@ public final class TestDataBuilder {
      * Builder for Diagnostic objects.
      */
     public static class DiagnosticBuilder {
-        private Range range;
+        private @Nullable Range range;
         private DiagnosticSeverity severity = DiagnosticSeverity.Error;
-        private String code;
-        private String source;
+        private @Nullable String code;
+        private @Nullable String source;
         private String message = "";
-        private List<Object> relatedInformation;
 
         public DiagnosticBuilder range(int startLine, int startChar, int endLine, int endChar) {
             this.range = TestDataBuilder.range(startLine, startChar, endLine, endChar);
@@ -139,16 +138,16 @@ public final class TestDataBuilder {
      */
     public static class CompletionItemBuilder {
         private String label = "";
-        private CompletionItemKind kind;
-        private String detail;
-        private String documentation;
-        private Boolean deprecated;
-        private Boolean preselect;
-        private String sortText;
-        private String filterText;
-        private String insertText;
-        private TextEdit textEdit;
-        private List<TextEdit> additionalTextEdits;
+        private @Nullable CompletionItemKind kind;
+        private @Nullable String detail;
+        private @Nullable String documentation;
+        private @Nullable Boolean deprecated;
+        private @Nullable Boolean preselect;
+        private @Nullable String sortText;
+        private @Nullable String filterText;
+        private @Nullable String insertText;
+        private @Nullable TextEdit textEdit;
+        private @Nullable List<TextEdit> additionalTextEdits;
 
         public CompletionItemBuilder label(@NonNull String label) {
             this.label = label;

@@ -83,7 +83,6 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
     private static class TestGroovyLanguageServer implements LanguageServer, LanguageClientAware {
         private final TextDocumentService textDocumentService = new GroovyTextDocumentService();
         private final WorkspaceService workspaceService = new GroovyWorkspaceService();
-        private LanguageClient client;
 
         @Override
         public CompletableFuture<InitializeResult> initialize(
@@ -119,12 +118,11 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
 
         @Override
         public void connect(LanguageClient client) {
-            this.client = client;
-            if (textDocumentService instanceof LanguageClientAware) {
-                ((LanguageClientAware) textDocumentService).connect(client);
+            if (textDocumentService instanceof LanguageClientAware languageClientAware) {
+                languageClientAware.connect(client);
             }
-            if (workspaceService instanceof LanguageClientAware) {
-                ((LanguageClientAware) workspaceService).connect(client);
+            if (workspaceService instanceof LanguageClientAware languageClientAware) {
+                languageClientAware.connect(client);
             }
         }
     }

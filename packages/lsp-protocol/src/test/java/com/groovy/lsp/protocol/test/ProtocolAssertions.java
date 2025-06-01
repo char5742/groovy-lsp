@@ -10,6 +10,7 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Assertion utilities for LSP protocol testing.
@@ -54,9 +55,9 @@ public final class ProtocolAssertions {
      * Fluent assertions for diagnostics.
      */
     public static class DiagnosticsAssertion {
-        private final PublishDiagnosticsParams diagnostics;
+        private final @Nullable PublishDiagnosticsParams diagnostics;
 
-        DiagnosticsAssertion(PublishDiagnosticsParams diagnostics) {
+        DiagnosticsAssertion(@Nullable PublishDiagnosticsParams diagnostics) {
             this.diagnostics = diagnostics;
         }
 

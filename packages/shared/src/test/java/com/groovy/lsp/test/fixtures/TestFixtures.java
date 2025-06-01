@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -140,10 +141,9 @@ public final class TestFixtures {
                 throws IOException {
             Path packageDir = srcMain;
             if (!packageName.isEmpty()) {
-                String[] parts = packageName.split("\\.");
-                for (String part : parts) {
-                    packageDir = packageDir.resolve(part);
-                }
+                // Use replace instead of split to avoid StringSplitter warning
+                String pathSegments = packageName.replace('.', '/');
+                packageDir = packageDir.resolve(pathSegments);
                 Files.createDirectories(packageDir);
             }
 
@@ -158,10 +158,9 @@ public final class TestFixtures {
                 throws IOException {
             Path packageDir = srcTest;
             if (!packageName.isEmpty()) {
-                String[] parts = packageName.split("\\.");
-                for (String part : parts) {
-                    packageDir = packageDir.resolve(part);
-                }
+                // Use replace instead of split to avoid StringSplitter warning
+                String pathSegments = packageName.replace('.', '/');
+                packageDir = packageDir.resolve(pathSegments);
                 Files.createDirectories(packageDir);
             }
 
@@ -185,16 +184,18 @@ public final class TestFixtures {
 
         private void deleteRecursively(Path path) throws IOException {
             if (Files.exists(path)) {
-                Files.walk(path)
-                        .sorted((a, b) -> b.compareTo(a)) // Delete in reverse order
-                        .forEach(
-                                p -> {
-                                    try {
-                                        Files.delete(p);
-                                    } catch (IOException e) {
-                                        // Ignore errors during cleanup
-                                    }
-                                });
+                try (Stream<Path> pathStream = Files.walk(path)) {
+                    pathStream
+                            .sorted((a, b) -> b.compareTo(a)) // Delete in reverse order
+                            .forEach(
+                                    p -> {
+                                        try {
+                                            Files.delete(p);
+                                        } catch (IOException e) {
+                                            // Ignore errors during cleanup
+                                        }
+                                    });
+                }
             }
         }
     }
