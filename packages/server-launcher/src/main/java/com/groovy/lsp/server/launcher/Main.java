@@ -1,6 +1,9 @@
 package com.groovy.lsp.server.launcher;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.server.launcher.di.ServerModule;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -33,8 +36,12 @@ public class Main {
             // Parse command line arguments
             LaunchMode mode = parseArguments(args);
             
-            // Create the server instance
-            GroovyLanguageServer server = new GroovyLanguageServer();
+            // Create Guice injector
+            Injector injector = Guice.createInjector(new ServerModule());
+            logger.info("Dependency injection container initialized");
+            
+            // Create the server instance through DI
+            GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
             
             // Launch the server based on the mode
             switch (mode.type) {
