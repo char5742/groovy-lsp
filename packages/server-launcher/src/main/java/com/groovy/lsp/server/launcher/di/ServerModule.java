@@ -36,6 +36,24 @@ public class ServerModule extends AbstractModule {
     
     private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
     
+    // Configuration keys
+    private static final String THREAD_POOL_SIZE_KEY = "groovy.lsp.scheduler.threads";
+    private static final String WORKSPACE_ROOT_KEY = "groovy.lsp.workspace.root";
+    
+    // Default values
+    private static final int DEFAULT_SCHEDULER_THREADS = 2;
+    private static final String DEFAULT_WORKSPACE_ROOT = ".";
+    
+    private final String workspaceRoot;
+    
+    public ServerModule() {
+        this(System.getProperty(WORKSPACE_ROOT_KEY, DEFAULT_WORKSPACE_ROOT));
+    }
+    
+    public ServerModule(String workspaceRoot) {
+        this.workspaceRoot = workspaceRoot;
+    }
+    
     @Override
     protected void configure() {
         // Bind LanguageServer interface to our implementation
@@ -74,8 +92,8 @@ public class ServerModule extends AbstractModule {
     @Provides
     @Singleton
     WorkspaceIndexService provideWorkspaceIndexService(EventBus eventBus) {
-        // TODO: Update this to use proper factory method
-        return WorkspaceIndexFactory.createWorkspaceIndexService(java.nio.file.Paths.get("."));
+        logger.info("Creating WorkspaceIndexService with root: {}", workspaceRoot);
+        return WorkspaceIndexFactory.createWorkspaceIndexService(java.nio.file.Paths.get(workspaceRoot));
     }
     
     @Provides
@@ -101,7 +119,9 @@ public class ServerModule extends AbstractModule {
     @Singleton
     @ScheduledServerExecutor
     ScheduledExecutorService provideScheduledExecutor() {
-        return Executors.newScheduledThreadPool(2, new NamedThreadFactory("groovy-lsp-scheduler"));
+        int poolSize = Integer.getInteger(THREAD_POOL_SIZE_KEY, DEFAULT_SCHEDULER_THREADS);
+        logger.info("Creating scheduled thread pool with {} threads", poolSize);
+        return Executors.newScheduledThreadPool(poolSize, new NamedThreadFactory("groovy-lsp-scheduler"));
     }
     
     /**

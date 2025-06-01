@@ -36,8 +36,12 @@ public class Main {
             // Parse command line arguments
             LaunchMode mode = parseArguments(args);
             
-            // Create Guice injector
-            Injector injector = Guice.createInjector(new ServerModule());
+            // Get workspace root (from command line or current directory)
+            String workspaceRoot = mode.workspaceRoot != null ? mode.workspaceRoot : System.getProperty("user.dir");
+            logger.info("Using workspace root: {}", workspaceRoot);
+            
+            // Create Guice injector with workspace root
+            Injector injector = Guice.createInjector(new ServerModule(workspaceRoot));
             logger.info("Dependency injection container initialized");
             
             // Create the server instance through DI
@@ -165,6 +169,15 @@ public class Main {
                     }
                     break;
                     
+                case "--workspace":
+                case "-w":
+                    if (i + 1 < args.length) {
+                        mode.workspaceRoot = args[++i];
+                    } else {
+                        throw new IllegalArgumentException("Missing value for " + arg);
+                    }
+                    break;
+                    
                 case "--help":
                     printHelp();
                     System.exit(0);
@@ -197,10 +210,15 @@ public class Main {
         System.out.println("Usage: groovy-language-server [options]");
         System.out.println();
         System.out.println("Options:");
-        System.out.println("  --socket, -s        Use socket mode instead of stdio");
-        System.out.println("  --host, -h <host>   Host for socket mode (default: localhost)");
-        System.out.println("  --port, -p <port>   Port for socket mode (default: 5007)");
-        System.out.println("  --help              Show this help message");
+        System.out.println("  --socket, -s              Use socket mode instead of stdio");
+        System.out.println("  --host, -h <host>         Host for socket mode (default: localhost)");
+        System.out.println("  --port, -p <port>         Port for socket mode (default: 5007)");
+        System.out.println("  --workspace, -w <path>    Workspace root directory (default: current directory)");
+        System.out.println("  --help                    Show this help message");
+        System.out.println();
+        System.out.println("Environment variables:");
+        System.out.println("  groovy.lsp.scheduler.threads    Number of threads for scheduled executor (default: 2)");
+        System.out.println("  groovy.lsp.workspace.root       Workspace root directory (can be overridden by --workspace)");
         System.out.println();
         System.out.println("Examples:");
         System.out.println("  groovy-language-server                    # Start in stdio mode");
@@ -215,6 +233,7 @@ public class Main {
         LaunchType type = LaunchType.STDIO; // Default to STDIO mode
         String host = "localhost"; // Default host
         int port = 4389; // Default LSP port
+        String workspaceRoot = null; // Workspace root directory
     }
     
     /**
