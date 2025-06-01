@@ -1,6 +1,6 @@
 [versions]
 java = "21"
-groovy = "4.0.25"
+groovy = "4.0.27"
 lsp4j = "0.24.0"
 jdt-core = "3.41.0"
 eclipse-core-runtime = "3.33.0"
