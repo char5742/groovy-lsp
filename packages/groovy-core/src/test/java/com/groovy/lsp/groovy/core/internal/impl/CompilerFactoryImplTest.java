@@ -113,7 +113,9 @@ class CompilerFactoryImplTest {
         @Test
         @DisplayName("Should throw exception for null classpath")
         void shouldThrowForNullClasspath() {
-            assertThatThrownBy(() -> factory.createConfigurationWithClasspath(null))
+            @SuppressWarnings("NullAway") // Intentionally testing null handling
+            List<String> nullClasspath = null;
+            assertThatThrownBy(() -> factory.createConfigurationWithClasspath(nullClasspath))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("Classpath cannot be null");
         }

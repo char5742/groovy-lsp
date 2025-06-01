@@ -87,7 +87,9 @@ public class ServerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    WorkspaceIndexService provideWorkspaceIndexService(EventBus eventBus) {
+    WorkspaceIndexService provideWorkspaceIndexService(
+            @SuppressWarnings("UnusedVariable") EventBus eventBus) {
+        // TODO: Use EventBus when workspace index service supports event publishing
         logger.info("Creating WorkspaceIndexService with root: {}", workspaceRoot);
         return WorkspaceIndexFactory.createWorkspaceIndexService(
                 java.nio.file.Paths.get(workspaceRoot));

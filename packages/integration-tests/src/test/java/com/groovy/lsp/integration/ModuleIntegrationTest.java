@@ -26,7 +26,9 @@ import org.junit.jupiter.api.io.TempDir;
 @Tag("integration")
 class ModuleIntegrationTest {
 
-    @TempDir Path tempDir;
+    @SuppressWarnings("NullAway") // @TempDir is guaranteed to be initialized by JUnit
+    @TempDir
+    Path tempDir;
 
     private GroovyCoreFactory groovyCoreFactory;
     private LintEngine lintEngine;
@@ -39,8 +41,11 @@ class ModuleIntegrationTest {
         // Create mock dependencies for LintEngine
         RuleSetProvider ruleSetProvider = null; // TODO: Create proper mock
         QuickFixMapper quickFixMapper = null; // TODO: Create proper mock
-        lintEngine = new LintEngine(ruleSetProvider, quickFixMapper);
+        @SuppressWarnings("NullAway") // TODO: Replace with proper mocks
+        var engine = new LintEngine(ruleSetProvider, quickFixMapper);
+        lintEngine = engine;
         formatter = new GroovyFormatter();
+        // @TempDir is guaranteed to be initialized before @BeforeEach
         indexer = WorkspaceIndexFactory.createWorkspaceIndexService(tempDir);
     }
 
@@ -51,7 +56,9 @@ class ModuleIntegrationTest {
             try {
                 indexer.shutdown();
                 // Give Windows time to release file locks
-                if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                if (System.getProperty("os.name")
+                        .toLowerCase(java.util.Locale.ROOT)
+                        .contains("windows")) {
                     Thread.sleep(100);
                 }
             } catch (Exception e) {
@@ -96,12 +103,13 @@ class ModuleIntegrationTest {
         CompletableFuture<List<Diagnostic>> lintFuture =
                 lintEngine.analyzeFile(groovyFile.toString());
         List<Diagnostic> violations = lintFuture.get();
+        assertThat(violations).isNotNull();
 
         // 現在の実装では、デフォルトのルールセットが適用されない場合があるため、
         // 違反が検出されない可能性がある。実装が進んだら、適切なアサーションに更新する。
         // assertThat(violations).isNotEmpty();
         // TODO: Check for specific diagnostics when rules are properly configured
-        assertThat(violations).isNotNull();
+        // Violations will be used once rules are configured
     }
 
     @Test
@@ -202,8 +210,10 @@ class ModuleIntegrationTest {
                         .get()
                         .filter(java.util.Objects::nonNull) // null値をフィルタリング
                         .toList();
+        assertThat(symbols).isNotNull();
 
         // TODO: Verify search results when symbol extraction is implemented
+        // Symbols will be verified once symbol extraction is implemented
     }
 
     @Test
@@ -228,7 +238,9 @@ class ModuleIntegrationTest {
         CompletableFuture<List<Diagnostic>> lintFuture =
                 lintEngine.analyzeFile(sourceFile.toString());
         List<Diagnostic> violations = lintFuture.get();
+        assertThat(violations).isNotNull();
         // TODO: Check violations when rules are properly configured
+        // Violations will be used once rules are configured
 
         // 2. フォーマット実行
         String originalContent = Files.readString(sourceFile);
@@ -254,8 +266,10 @@ class ModuleIntegrationTest {
         CompletableFuture<List<Diagnostic>> lintAfterFormat =
                 lintEngine.analyzeFile(sourceFile.toString());
         List<Diagnostic> violationsAfter = lintAfterFormat.get();
+        assertThat(violationsAfter).isNotNull();
 
         // TODO: Verify results when rules are properly configured
+        // Violations will be verified once rules are configured
     }
 
     private Path createGroovyFile(String relativePath, String content) throws Exception {

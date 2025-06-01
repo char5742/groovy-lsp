@@ -60,7 +60,7 @@ public final class ExecutorShutdownHelper {
                         "{} did not terminate within {} {}, forcing shutdown",
                         executorName,
                         timeout,
-                        unit.toString().toLowerCase());
+                        unit.toString().toLowerCase(java.util.Locale.ROOT));
 
                 // Force shutdown
                 executor.shutdownNow();

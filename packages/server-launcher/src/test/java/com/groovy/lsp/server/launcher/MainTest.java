@@ -35,7 +35,7 @@ class MainTest {
             // Expected when System.exit is called
         }
 
-        String output = errContent.toString();
+        String output = errContent.toString(java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(
                 output.contains("Groovy Language Server") || output.contains("Usage:"),
                 "Help output should contain usage information");

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -80,7 +81,7 @@ class IncrementalCompilationServiceImplTest {
                             unit, sourceCode, "TestClass.groovy", CompilationPhase.CONVERSION);
 
             assertThat(result).isNotNull();
-            assertThat(result.getClasses()).hasSize(1);
+            assertThat(Objects.requireNonNull(result).getClasses()).hasSize(1);
             assertThat(result.getClasses().get(0).getName()).isEqualTo("TestClass");
         }
 
@@ -105,7 +106,8 @@ class IncrementalCompilationServiceImplTest {
                             CompilationPhase.SEMANTIC_ANALYSIS);
 
             assertThat(result).isNotNull();
-            assertThat(result.getImports()).hasSize(1);
+            assertThat(result).isNotNull();
+            assertThat(Objects.requireNonNull(result).getImports()).hasSize(1);
             assertThat(result.getImports().get(0).getClassName()).isEqualTo("java.util.List");
         }
 
@@ -176,8 +178,10 @@ class IncrementalCompilationServiceImplTest {
             assertThat(first).isNotNull();
             assertThat(second).isNotNull();
             assertThat(second).isNotSameAs(first);
-            assertThat(first.getClasses().get(0).getName()).isEqualTo("FirstClass");
-            assertThat(second.getClasses().get(0).getName()).isEqualTo("SecondClass");
+            assertThat(Objects.requireNonNull(first).getClasses().get(0).getName())
+                    .isEqualTo("FirstClass");
+            assertThat(Objects.requireNonNull(second).getClasses().get(0).getName())
+                    .isEqualTo("SecondClass");
         }
 
         @Test
@@ -244,7 +248,9 @@ class IncrementalCompilationServiceImplTest {
                     service.compileToPhase(
                             unit, sourceCode, "Test.groovy", CompilationPhase.SEMANTIC_ANALYSIS);
 
-            Map<String, DependencyType> deps = service.getDependencies(module);
+            assertThat(module).isNotNull();
+            Map<String, DependencyType> deps =
+                    service.getDependencies(Objects.requireNonNull(module));
 
             // Should contain imports
             assertThat(deps).containsEntry("java.io.*", DependencyType.IMPORT);
@@ -270,7 +276,9 @@ class IncrementalCompilationServiceImplTest {
                     service.compileToPhase(
                             unit, sourceCode, "Test.groovy", CompilationPhase.SEMANTIC_ANALYSIS);
 
-            Map<String, DependencyType> deps = service.getDependencies(module);
+            assertThat(module).isNotNull();
+            Map<String, DependencyType> deps =
+                    service.getDependencies(Objects.requireNonNull(module));
 
             assertThat(deps).containsEntry("java.util.ArrayList", DependencyType.EXTENDS);
             assertThat(deps).containsEntry("java.io.Serializable", DependencyType.IMPLEMENTS);
@@ -295,7 +303,9 @@ class IncrementalCompilationServiceImplTest {
                     service.compileToPhase(
                             unit, sourceCode, "Test.groovy", CompilationPhase.SEMANTIC_ANALYSIS);
 
-            Map<String, DependencyType> deps = service.getDependencies(module);
+            assertThat(module).isNotNull();
+            Map<String, DependencyType> deps =
+                    service.getDependencies(Objects.requireNonNull(module));
 
             assertThat(deps)
                     .containsEntry("java.lang.String", DependencyType.FIELD_TYPE)
@@ -321,7 +331,9 @@ class IncrementalCompilationServiceImplTest {
                     service.compileToPhase(
                             unit, sourceCode, "Test.groovy", CompilationPhase.SEMANTIC_ANALYSIS);
 
-            Map<String, DependencyType> deps = service.getDependencies(module);
+            assertThat(module).isNotNull();
+            Map<String, DependencyType> deps =
+                    service.getDependencies(Objects.requireNonNull(module));
 
             assertThat(deps)
                     .containsEntry("java.util.Optional", DependencyType.METHOD_TYPE)
@@ -408,15 +420,16 @@ class IncrementalCompilationServiceImplTest {
                             "Test.groovy",
                             CompilationPhase.CONVERSION);
 
+            assertThat(original).isNotNull();
             ModuleNode updated =
                     service.updateModule(
                             unit,
-                            original,
+                            Objects.requireNonNull(original),
                             "class TestClass { String name; int age }",
                             "Test.groovy");
 
             assertThat(updated).isNotNull();
-            assertThat(updated.getClasses().get(0).getFields()).hasSize(2);
+            assertThat(Objects.requireNonNull(updated).getClasses().get(0).getFields()).hasSize(2);
         }
     }
 
@@ -437,56 +450,60 @@ class IncrementalCompilationServiceImplTest {
 
             try {
                 for (int i = 0; i < threadCount; i++) {
-                    executor.submit(
-                            () -> {
-                                try {
-                                    startLatch.await(); // Wait for all threads to be ready
+                    @SuppressWarnings("FutureReturnValueIgnored")
+                    var unused =
+                            executor.submit(
+                                    () -> {
+                                        try {
+                                            startLatch.await(); // Wait for all threads to be ready
 
-                                    for (int j = 0; j < operationsPerThread; j++) {
-                                        // Mix of different operations
-                                        String sourceName = "Test" + (j % 5) + ".groovy";
-                                        String sourceCode =
-                                                "class Test"
-                                                        + (j % 5)
-                                                        + " { String field"
-                                                        + j
-                                                        + " }";
+                                            for (int j = 0; j < operationsPerThread; j++) {
+                                                // Mix of different operations
+                                                String sourceName = "Test" + (j % 5) + ".groovy";
+                                                String sourceCode =
+                                                        "class Test"
+                                                                + (j % 5)
+                                                                + " { String field"
+                                                                + j
+                                                                + " }";
 
-                                        CompilationUnit unit =
-                                                service.createCompilationUnit(config);
+                                                CompilationUnit unit =
+                                                        service.createCompilationUnit(config);
 
-                                        // Alternate between compiling and clearing cache
-                                        if (j % 10 == 0) {
-                                            service.clearCache(sourceName);
-                                        } else {
-                                            ModuleNode result =
-                                                    service.compileToPhase(
-                                                            unit,
-                                                            sourceCode,
-                                                            sourceName,
-                                                            CompilationPhase.CONVERSION);
-                                            if (result != null) {
-                                                successCount.incrementAndGet();
+                                                // Alternate between compiling and clearing cache
+                                                if (j % 10 == 0) {
+                                                    service.clearCache(sourceName);
+                                                } else {
+                                                    ModuleNode result =
+                                                            service.compileToPhase(
+                                                                    unit,
+                                                                    sourceCode,
+                                                                    sourceName,
+                                                                    CompilationPhase.CONVERSION);
+                                                    if (result != null) {
+                                                        successCount.incrementAndGet();
 
-                                                // Check if it was a cache hit by compiling again
-                                                ModuleNode second =
-                                                        service.compileToPhase(
-                                                                unit,
-                                                                sourceCode,
-                                                                sourceName,
-                                                                CompilationPhase.CONVERSION);
-                                                if (second == result) {
-                                                    cacheHitCount.incrementAndGet();
+                                                        // Check if it was a cache hit by compiling
+                                                        // again
+                                                        ModuleNode second =
+                                                                service.compileToPhase(
+                                                                        unit,
+                                                                        sourceCode,
+                                                                        sourceName,
+                                                                        CompilationPhase
+                                                                                .CONVERSION);
+                                                        if (second == result) {
+                                                            cacheHitCount.incrementAndGet();
+                                                        }
+                                                    }
                                                 }
                                             }
+                                        } catch (Exception e) {
+                                            logger.error("Error in concurrent test", e);
+                                        } finally {
+                                            doneLatch.countDown();
                                         }
-                                    }
-                                } catch (Exception e) {
-                                    logger.error("Error in concurrent test", e);
-                                } finally {
-                                    doneLatch.countDown();
-                                }
-                            });
+                                    });
                 }
 
                 // Start all threads at the same time
@@ -520,23 +537,27 @@ class IncrementalCompilationServiceImplTest {
 
             try {
                 for (int i = 0; i < threadCount; i++) {
-                    executor.submit(
-                            () -> {
-                                try {
-                                    CompilationUnit unit = service.createCompilationUnit(config);
-                                    ModuleNode result =
-                                            service.compileToPhase(
-                                                    unit,
-                                                    sourceCode,
-                                                    sourceName,
-                                                    CompilationPhase.CONVERSION);
-                                    if (result != null) {
-                                        results.put(Thread.currentThread().getName(), result);
-                                    }
-                                } finally {
-                                    latch.countDown();
-                                }
-                            });
+                    @SuppressWarnings("FutureReturnValueIgnored")
+                    var unused =
+                            executor.submit(
+                                    () -> {
+                                        try {
+                                            CompilationUnit unit =
+                                                    service.createCompilationUnit(config);
+                                            ModuleNode result =
+                                                    service.compileToPhase(
+                                                            unit,
+                                                            sourceCode,
+                                                            sourceName,
+                                                            CompilationPhase.CONVERSION);
+                                            if (result != null) {
+                                                results.put(
+                                                        Thread.currentThread().getName(), result);
+                                            }
+                                        } finally {
+                                            latch.countDown();
+                                        }
+                                    });
                 }
 
                 assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
@@ -773,6 +794,11 @@ class IncrementalCompilationServiceImplTest {
 
             // Force garbage collection
             System.gc();
+            @SuppressWarnings({
+                "ThreadPriorityCheck",
+                "UnusedVariable"
+            }) // Intentional use for testing
+            Thread t = Thread.currentThread();
             Thread.yield();
             System.gc();
 
@@ -803,6 +829,11 @@ class IncrementalCompilationServiceImplTest {
 
             // Force garbage collection
             System.gc();
+            @SuppressWarnings({
+                "ThreadPriorityCheck",
+                "UnusedVariable"
+            }) // Intentional use for testing
+            Thread t = Thread.currentThread();
             Thread.yield();
             System.gc();
 

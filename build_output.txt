@@ -1,0 +1,167 @@
+Configuration on demand is an incubating feature.
+
+> Configure project :server-launcher
+The CopyProcessingSpec.setFileMode(Integer) method has been deprecated. This is scheduled to be removed in Gradle 9.0. Please use the filePermissions(Action) method instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.11.1/userguide/upgrading_version_8.html#unix_file_permissions_deprecated
+
+> Task :assemble UP-TO-DATE
+> Task :benchmarks:compileJava NO-SOURCE
+> Task :lsp-protocol:processResources NO-SOURCE
+> Task :checkErrorProneWarnings
+> Task :spotlessInternalRegisterDependencies UP-TO-DATE
+> Task :codenarc-lint:processResources UP-TO-DATE
+> Task :codenarc-lint:processTestResources UP-TO-DATE
+> Task :groovy-core:processResources NO-SOURCE
+> Task :benchmarks:compileGroovy NO-SOURCE
+> Task :formatting:processResources NO-SOURCE
+> Task :formatting:processTestResources UP-TO-DATE
+> Task :server-launcher:processResources UP-TO-DATE
+> Task :groovy-core:processTestResources NO-SOURCE
+> Task :lsp-protocol:processTestResources NO-SOURCE
+> Task :workspace-index:processResources NO-SOURCE
+> Task :workspace-index:processTestResources UP-TO-DATE
+> Task :integration-tests:compileJava NO-SOURCE
+> Task :server-launcher:processTestResources UP-TO-DATE
+> Task :integration-tests:compileGroovy NO-SOURCE
+> Task :benchmarks:processResources NO-SOURCE
+> Task :jdt-adapter:processResources NO-SOURCE
+> Task :benchmarks:classes UP-TO-DATE
+> Task :benchmarks:jar SKIPPED
+> Task :benchmarks:assemble UP-TO-DATE
+> Task :integration-tests:processResources NO-SOURCE
+> Task :integration-tests:classes UP-TO-DATE
+> Task :integration-tests:jar SKIPPED
+> Task :integration-tests:assemble UP-TO-DATE
+> Task :integration-tests:processTestResources NO-SOURCE
+> Task :jdt-adapter:sourcesJar UP-TO-DATE
+> Task :jdt-adapter:processTestResources NO-SOURCE
+> Task :benchmarks:compileTestJava NO-SOURCE
+> Task :benchmarks:compileTestGroovy NO-SOURCE
+> Task :benchmarks:processTestResources NO-SOURCE
+> Task :benchmarks:testClasses UP-TO-DATE
+> Task :benchmarks:test NO-SOURCE
+> Task :benchmarks:check UP-TO-DATE
+> Task :benchmarks:build UP-TO-DATE
+> Task :shared:compileJava UP-TO-DATE
+> Task :shared:compileGroovy NO-SOURCE
+> Task :shared:processResources NO-SOURCE
+> Task :shared:classes UP-TO-DATE
+> Task :shared:jar UP-TO-DATE
+> Task :shared:assemble UP-TO-DATE
+> Task :lsp-protocol:compileJava UP-TO-DATE
+> Task :lsp-protocol:compileGroovy NO-SOURCE
+> Task :lsp-protocol:classes UP-TO-DATE
+> Task :lsp-protocol:jar UP-TO-DATE
+> Task :lsp-protocol:assemble UP-TO-DATE
+> Task :lsp-protocol:compileTestJava NO-SOURCE
+> Task :lsp-protocol:compileTestGroovy NO-SOURCE
+> Task :lsp-protocol:testClasses UP-TO-DATE
+> Task :lsp-protocol:test NO-SOURCE
+> Task :lsp-protocol:check UP-TO-DATE
+> Task :lsp-protocol:build UP-TO-DATE
+> Task :groovy-core:compileJava UP-TO-DATE
+> Task :groovy-core:compileGroovy NO-SOURCE
+> Task :groovy-core:classes UP-TO-DATE
+> Task :groovy-core:jar UP-TO-DATE
+> Task :groovy-core:assemble UP-TO-DATE
+> Task :codenarc-lint:compileJava UP-TO-DATE
+> Task :codenarc-lint:compileGroovy NO-SOURCE
+> Task :codenarc-lint:classes UP-TO-DATE
+> Task :codenarc-lint:jar UP-TO-DATE
+> Task :codenarc-lint:assemble UP-TO-DATE
+> Task :formatting:compileJava UP-TO-DATE
+> Task :workspace-index:compileJava UP-TO-DATE
+> Task :formatting:compileGroovy NO-SOURCE
+> Task :formatting:classes UP-TO-DATE
+> Task :formatting:jar UP-TO-DATE
+> Task :formatting:assemble UP-TO-DATE
+> Task :groovy-core:compileTestJava UP-TO-DATE
+> Task :shared:compileTestJava UP-TO-DATE
+> Task :formatting:compileTestJava UP-TO-DATE
+> Task :jdt-adapter:compileJava UP-TO-DATE
+> Task :workspace-index:compileGroovy NO-SOURCE
+> Task :workspace-index:classes UP-TO-DATE
+> Task :groovy-core:compileTestGroovy NO-SOURCE
+> Task :shared:compileTestGroovy NO-SOURCE
+> Task :groovy-core:testClasses UP-TO-DATE
+> Task :formatting:compileTestGroovy NO-SOURCE
+> Task :jdt-adapter:compileGroovy NO-SOURCE
+> Task :formatting:testClasses UP-TO-DATE
+> Task :jdt-adapter:classes UP-TO-DATE
+> Task :jdt-adapter:jar UP-TO-DATE
+> Task :shared:processTestResources NO-SOURCE
+> Task :shared:testClasses UP-TO-DATE
+> Task :jdt-adapter:javadoc UP-TO-DATE
+> Task :workspace-index:jar UP-TO-DATE
+> Task :workspace-index:assemble UP-TO-DATE
+> Task :jdt-adapter:javadocJar UP-TO-DATE
+> Task :jdt-adapter:assemble UP-TO-DATE
+> Task :jdt-adapter:compileTestJava NO-SOURCE
+> Task :jdt-adapter:compileTestGroovy NO-SOURCE
+> Task :jdt-adapter:testClasses UP-TO-DATE
+> Task :workspace-index:compileTestJava UP-TO-DATE
+> Task :codenarc-lint:compileTestJava UP-TO-DATE
+> Task :jdt-adapter:test NO-SOURCE
+> Task :jdt-adapter:check UP-TO-DATE
+> Task :codenarc-lint:compileTestGroovy NO-SOURCE
+> Task :jdt-adapter:build UP-TO-DATE
+> Task :codenarc-lint:testClasses UP-TO-DATE
+> Task :workspace-index:compileTestGroovy NO-SOURCE
+> Task :workspace-index:testClasses UP-TO-DATE
+> Task :spotlessGroovy UP-TO-DATE
+> Task :spotlessGroovyCheck UP-TO-DATE
+> Task :server-launcher:compileJava UP-TO-DATE
+> Task :server-launcher:compileGroovy NO-SOURCE
+> Task :server-launcher:classes UP-TO-DATE
+> Task :formatting:test UP-TO-DATE
+> Task :formatting:check UP-TO-DATE
+> Task :formatting:build UP-TO-DATE
+> Task :server-launcher:jar UP-TO-DATE
+> Task :server-launcher:startScripts UP-TO-DATE
+> Task :codenarc-lint:test UP-TO-DATE
+> Task :workspace-index:test UP-TO-DATE
+> Task :workspace-index:check UP-TO-DATE
+> Task :workspace-index:build UP-TO-DATE
+> Task :shared:test UP-TO-DATE
+> Task :shared:check UP-TO-DATE
+> Task :shared:build UP-TO-DATE
+> Task :codenarc-lint:check UP-TO-DATE
+> Task :codenarc-lint:build UP-TO-DATE
+> Task :server-launcher:distTar UP-TO-DATE
+> Task :groovy-core:test UP-TO-DATE
+> Task :groovy-core:check UP-TO-DATE
+> Task :groovy-core:build UP-TO-DATE
+> Task :server-launcher:distZip UP-TO-DATE
+> Task :spotlessGroovyGradle UP-TO-DATE
+> Task :spotlessGroovyGradleCheck UP-TO-DATE
+> Task :integration-tests:compileTestJava UP-TO-DATE
+> Task :integration-tests:compileTestGroovy NO-SOURCE
+> Task :integration-tests:testClasses UP-TO-DATE
+> Task :integration-tests:test UP-TO-DATE
+> Task :integration-tests:integrationTest UP-TO-DATE
+> Task :integration-tests:check UP-TO-DATE
+> Task :integration-tests:build UP-TO-DATE
+> Task :spotlessJava UP-TO-DATE
+> Task :spotlessJavaCheck UP-TO-DATE
+> Task :spotlessMisc UP-TO-DATE
+> Task :spotlessMiscCheck UP-TO-DATE
+> Task :spotlessCheck
+> Task :check
+> Task :build
+
+> Task :server-launcher:shadowJar
+The FileTreeElement.getMode() method has been deprecated. This is scheduled to be removed in Gradle 9.0. Please use the getPermissions() method instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.11.1/userguide/upgrading_version_8.html#unix_file_permissions_deprecated
+
+> Task :server-launcher:startShadowScripts
+> Task :server-launcher:shadowDistTar
+> Task :server-launcher:shadowDistZip
+> Task :server-launcher:assemble
+> Task :server-launcher:compileTestJava UP-TO-DATE
+> Task :server-launcher:compileTestGroovy NO-SOURCE
+> Task :server-launcher:testClasses UP-TO-DATE
+> Task :server-launcher:test UP-TO-DATE
+> Task :server-launcher:check UP-TO-DATE
+> Task :server-launcher:build
+[Incubating] Problems report is available at: file:///home/shuma/workspace/programing/java/groovy-lsp/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 4s
+57 actionable tasks: 5 executed, 52 up-to-date

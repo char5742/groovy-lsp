@@ -146,10 +146,11 @@ public class GroovyFormatter {
         return source;
     }
 
-    private String restoreTripleQuotedStrings(String source) {
-        // TODO: Implement restoration of triple-quoted strings
-        return source;
-    }
+    // TODO: Implement when needed for preserving triple-quoted strings
+    // private String restoreTripleQuotedStrings(String source) {
+    //     // TODO: Implement restoration of triple-quoted strings
+    //     return source;
+    // }
 
     private String protectGStrings(String source) {
         // Simple protection: check if GStrings exist
@@ -159,10 +160,11 @@ public class GroovyFormatter {
         return source;
     }
 
-    private String restoreGStrings(String source) {
-        // TODO: Implement restoration of GStrings
-        return source;
-    }
+    // TODO: Implement when needed for preserving GStrings
+    // private String restoreGStrings(String source) {
+    //     // TODO: Implement restoration of GStrings
+    //     return source;
+    // }
 
     private String handleGroovyKeywords(String source) {
         // TODO: Handle def, in, as, etc.
@@ -192,7 +194,7 @@ public class GroovyFormatter {
      */
     private String applyBasicGroovyFormatting(String source) {
         // Basic formatting: normalize spaces and indentation
-        String[] lines = source.split("\n");
+        String[] lines = source.split("\n", -1); // Keep empty trailing strings
         StringBuilder formatted = new StringBuilder();
 
         for (String line : lines) {
@@ -225,7 +227,8 @@ public class GroovyFormatter {
 
     private int getIndentLevel(String line) {
         int spaces = 0;
-        for (char c : line.toCharArray()) {
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
             if (c == ' ') {
                 spaces++;
             } else if (c == '\t') {

@@ -4,8 +4,10 @@
  */
 module com.groovy.lsp.shared {
     // Required dependencies
-    requires transitive org.jmolecules.ddd;
-    requires transitive org.jmolecules.event;
+    // Note: org.jmolecules.ddd and org.jmolecules.event are automatic modules,
+    // so we avoid using 'transitive' with them to suppress warnings
+    requires org.jmolecules.ddd;
+    requires org.jmolecules.event;
     requires transitive org.jspecify;
     requires com.google.common;
     requires org.slf4j;

@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
  */
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 5007;
+
+    // Constants moved to ServerConstants to avoid duplication
 
     public static void main(String[] args) {
         try {
@@ -114,8 +114,10 @@ public class Main {
                 serverSocket.bind(new InetSocketAddress(host, port));
                 logger.info("Server socket listening on {}:{}", host, port);
             } catch (IOException e) {
-                if (e.getMessage().contains("Address already in use")
-                        || e.getMessage().contains("bind failed")) {
+                String errorMessage = e.getMessage();
+                if (errorMessage != null
+                        && (errorMessage.contains("Address already in use")
+                                || errorMessage.contains("bind failed"))) {
                     logger.error(
                             "Port {} is already in use. Please choose a different port or stop the"
                                     + " conflicting process.",
@@ -309,6 +311,8 @@ public class Main {
         LaunchType type = LaunchType.STDIO; // Default to STDIO mode
         String host = DEFAULT_SOCKET_HOST; // Default host
         int port = DEFAULT_SOCKET_PORT; // Default LSP port
+
+        @SuppressWarnings("NullAway") // Field will be initialized before use
         String workspaceRoot = null; // Workspace root directory
     }
 

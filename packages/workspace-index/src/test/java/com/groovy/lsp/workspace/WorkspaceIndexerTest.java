@@ -17,12 +17,15 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class WorkspaceIndexerTest {
 
-    @TempDir Path tempDir;
+    @SuppressWarnings("NullAway") // @TempDir is guaranteed to be initialized by JUnit
+    @TempDir
+    Path tempDir;
 
     private WorkspaceIndexService indexer;
 
     @BeforeEach
     void setUp() {
+        // @TempDir is guaranteed to be initialized before @BeforeEach
         indexer = WorkspaceIndexFactory.createWorkspaceIndexService(tempDir);
     }
 

@@ -8,6 +8,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.lsp4j.*;
@@ -36,7 +37,8 @@ class ServerIntegrationTest {
 
     @AfterAll
     void tearDown() {
-        server.shutdown();
+        @SuppressWarnings("FutureReturnValueIgnored")
+        var unused = server.shutdown();
     }
 
     @Test
@@ -125,7 +127,9 @@ class ServerIntegrationTest {
         // Initialize if not already done
         if (client.getDiagnostics().isEmpty()) {
             InitializeParams initParams = new InitializeParams();
-            initParams.setRootUri(Paths.get(new URI(uri)).getParent().toUri().toString());
+            Path parent = Paths.get(new URI(uri)).getParent();
+            assertThat(parent).isNotNull();
+            initParams.setRootUri(Objects.requireNonNull(parent).toUri().toString());
             server.initialize(initParams).get(5, TimeUnit.SECONDS);
             server.initialized(new InitializedParams());
         }
@@ -181,6 +185,8 @@ class ServerIntegrationTest {
             return new java.util.ArrayList<>(diagnostics);
         }
 
+        // TODO: Use when diagnostic clearing is needed
+        @SuppressWarnings("UnusedMethod")
         public void clearDiagnostics() {
             diagnostics.clear();
         }
