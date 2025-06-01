@@ -101,6 +101,39 @@ subprojects {
         }
     }
 
+    jacocoTestCoverageVerification {
+        dependsOn test
+        violationRules {
+            rule {
+                limit {
+                    minimum = 0.80 // 80% coverage goal
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                }
+            }
+            rule {
+                limit {
+                    minimum = 0.80 // 80% coverage goal
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                }
+            }
+        }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/*Launcher*',
+                    '**/*Module*',
+                    '**/*Constants*',
+                    '**/*Main*',
+                    '**/*Test*'
+                ])
+            }))
+        }
+    }
+
+    check.dependsOn jacocoTestCoverageVerification
+
     tasks.withType(JavaCompile) {
         options.errorprone {
             enabled = true

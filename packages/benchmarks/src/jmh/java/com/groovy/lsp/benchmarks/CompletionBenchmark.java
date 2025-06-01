@@ -131,8 +131,12 @@ public class CompletionBenchmark {
         // Compile and get completion suggestions
         var result = compilationService.compile(code, configService.getConfiguration()).get();
 
-        // In a real implementation, we would call the completion service here
-        // For benchmarking purposes, we simulate the completion process
+        // TODO: Implement actual completion service call
+        // In a real implementation, we would:
+        // 1. Extract the AST node at the cursor position
+        // 2. Call the completion service with the AST context
+        // 3. Generate and return completion suggestions
+        // For benchmarking purposes, we currently only compile the code
         return result;
     }
 

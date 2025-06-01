@@ -7,8 +7,7 @@ import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 import com.groovy.lsp.protocol.test.AbstractProtocolTest;
 import com.groovy.lsp.protocol.test.LSPTestHarness;
 import java.util.concurrent.CompletableFuture;
-import org.eclipse.lsp4j.InitializeResult;
-import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -65,16 +64,136 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
 
     @Test
     void testCompletion() throws Exception {
-        // Skip this test as the mock implementation returns null
-        // This is a protocol test to ensure compilation - actual functionality
-        // would be tested in the real implementation
+        // Open a document
+        openGroovyDocument(
+                "Completion.groovy",
+                """
+                class Person {
+                    String name
+                    int age
+                }
+
+                def person = new Person()
+                person.
+                """);
+
+        // Request completion at the dot position
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(textDocument("file://" + workspaceRoot + "/Completion.groovy"));
+        params.setPosition(new Position(6, 7)); // After "person."
+
+        var completions = server.getTextDocumentService().completion(params).get();
+        assertThat(completions).isNotNull();
+        assertThat(completions.isRight()).isTrue();
+
+        // Even though the mock returns an empty list, this tests the protocol handling
+        CompletionList list = completions.getRight();
+        assertThat(list).isNotNull();
+        assertThat(list.isIncomplete()).isFalse();
     }
 
     @Test
     void testHover() throws Exception {
-        // Skip this test as the mock implementation returns null
-        // This is a protocol test to ensure compilation - actual functionality
-        // would be tested in the real implementation
+        // Open a document
+        openGroovyDocument(
+                "Hover.groovy",
+                """
+                class Person {
+                    String name
+
+                    void greet() {
+                        println "Hello, $name"
+                    }
+                }
+                """);
+
+        // Request hover on "name" variable
+        HoverParams params = new HoverParams();
+        params.setTextDocument(textDocument("file://" + workspaceRoot + "/Hover.groovy"));
+        params.setPosition(new Position(1, 11)); // On "String name"
+
+        Hover hover = server.getTextDocumentService().hover(params).get();
+        // Mock implementation returns null, but this tests the protocol handling
+        // Real implementation would return hover information
+    }
+
+    @Test
+    void testDocumentSymbols() throws Exception {
+        // Open a document with various symbols
+        openGroovyDocument(
+                "Symbols.groovy",
+                """
+                package com.example
+
+                class Calculator {
+                    int add(int a, int b) {
+                        return a + b
+                    }
+
+                    int multiply(int a, int b) {
+                        return a * b
+                    }
+                }
+
+                interface MathOperations {
+                    int calculate(int x, int y)
+                }
+                """);
+
+        DocumentSymbolParams params = new DocumentSymbolParams();
+        params.setTextDocument(textDocument("file://" + workspaceRoot + "/Symbols.groovy"));
+
+        var symbols = server.getTextDocumentService().documentSymbol(params).get();
+        assertThat(symbols).isNotNull();
+        assertThat(symbols).isEmpty(); // Mock returns empty list
+    }
+
+    @Test
+    void testGoToDefinition() throws Exception {
+        // Open a document
+        openGroovyDocument(
+                "Definition.groovy",
+                """
+                class Book {
+                    String title
+                    String author
+                }
+
+                def myBook = new Book()
+                myBook.title = "Groovy in Action"
+                """);
+
+        DefinitionParams params = new DefinitionParams();
+        params.setTextDocument(textDocument("file://" + workspaceRoot + "/Definition.groovy"));
+        params.setPosition(new Position(6, 7)); // On "title" in myBook.title
+
+        var locations = server.getTextDocumentService().definition(params).get();
+        assertThat(locations).isNotNull();
+        assertThat(locations.isLeft()).isTrue();
+        assertThat(locations.getLeft()).isEmpty(); // Mock returns empty list
+    }
+
+    @Test
+    void testFormatting() throws Exception {
+        // Open an unformatted document
+        openGroovyDocument(
+                "Unformatted.groovy",
+                """
+                class  Messy   {
+                def   name
+                  void   doSomething( )  {
+                println   "hello"
+                  }
+                }
+                """);
+
+        DocumentFormattingParams params = new DocumentFormattingParams();
+        params.setTextDocument(textDocument("file://" + workspaceRoot + "/Unformatted.groovy"));
+        params.setOptions(new FormattingOptions(4, true)); // 4 spaces, insert spaces
+
+        var edits = server.getTextDocumentService().formatting(params).get();
+        assertThat(edits).isNotNull();
+        assertThat(edits).isEmpty(); // Mock returns empty list
     }
 
     /**
