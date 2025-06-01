@@ -35,7 +35,7 @@ nullaway = "0.11.1"
 errorprone-plugin = "4.2.0"
 nullaway-plugin = "2.2.0"
 jmh-plugin = "0.7.2"
-awaitility = "4.2.0"
+awaitility = "4.3.0"
 wiremock = "3.0.1"
 
 [libraries]
