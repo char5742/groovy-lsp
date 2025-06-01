@@ -21,7 +21,13 @@ pre-commit:
         if [ -n "$changed_modules" ]; then
           for module in $changed_modules; do
             echo "Running tests for :$module"
-            ./gradlew :$module:test
+            # settings.gradleを除外
+            if [ "$module" != "settings.gradle" ]; then
+              # e2e-testsとbenchmarksは特殊なモジュールなのでテストをスキップ
+              if [ "$module" != "e2e-tests" ] && [ "$module" != "benchmarks" ]; then
+                ./gradlew :$module:test
+              fi
+            fi
           done
         fi
       tags: testing

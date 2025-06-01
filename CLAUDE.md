@@ -1,0 +1,1 @@
+ - lefthookにおいて--no-verifyは絶対に使用しないでください

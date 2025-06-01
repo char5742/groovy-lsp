@@ -12,6 +12,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -49,8 +50,10 @@ public class LSPTestHarness implements AutoCloseable {
                 LSPLauncher.createClientLauncher(
                         testClient, clientInput, clientOutput, executorService, builder.wrapper);
 
-        this.client = clientLauncher.getRemoteProxy();
-        server.connect(serverLauncher.getRemoteProxy());
+        this.client = serverLauncher.getRemoteProxy();
+        if (server instanceof LanguageClientAware) {
+            ((LanguageClientAware) server).connect(serverLauncher.getRemoteProxy());
+        }
 
         // Start listening
         CompletableFuture.allOf(
@@ -75,8 +78,9 @@ public class LSPTestHarness implements AutoCloseable {
     }
 
     @NonNull
+    @SuppressWarnings("unchecked")
     public <T> CompletableFuture<T> request(String method, Object params) {
-        return serverLauncher.getRemoteEndpoint().request(method, params);
+        return (CompletableFuture<T>) serverLauncher.getRemoteEndpoint().request(method, params);
     }
 
     public void notify(String method, Object params) {

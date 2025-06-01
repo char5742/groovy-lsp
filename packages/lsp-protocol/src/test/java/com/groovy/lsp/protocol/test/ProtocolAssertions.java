@@ -102,7 +102,8 @@ public final class ProtocolAssertions {
             return this;
         }
 
-        public DiagnosticsAssertion satisfies(@NonNull Consumer<List<Diagnostic>> requirements) {
+        public DiagnosticsAssertion satisfies(
+                @NonNull Consumer<? super List<? extends Diagnostic>> requirements) {
             assertThat(diagnostics).isNotNull();
             assertThat(diagnostics.getDiagnostics()).satisfies(requirements);
             return this;
@@ -155,7 +156,8 @@ public final class ProtocolAssertions {
             return hasMessage(MessageType.Log, message);
         }
 
-        public MessagesAssertion satisfies(@NonNull Consumer<List<MessageParams>> requirements) {
+        public MessagesAssertion satisfies(
+                @NonNull Consumer<? super List<? extends MessageParams>> requirements) {
             assertThat(messages).satisfies(requirements);
             return this;
         }
