@@ -1,38 +1,28 @@
 plugins {
-    id 'groovy'
     id 'java-library'
 }
 
-group = 'com.groovy.lsp'
-version = '0.1.0'
-
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    // Groovy
-    implementation 'org.apache.groovy:groovy:4.0.15'
-    implementation 'org.apache.groovy:groovy-json:4.0.15'
-    implementation 'org.apache.groovy:groovy-xml:4.0.15'
+    // Groovy Core dependencies (required for compilation)
+    implementation libs.groovy
+    implementation libs.groovy.json
+    implementation libs.groovy.xml
+    implementation libs.groovy.templates
     
-    // Groovy compiler and AST
-    implementation 'org.apache.groovy:groovy-groovydoc:4.0.15'
-    implementation 'org.apache.groovy:groovy-ant:4.0.15'
-    
-    // Project dependencies
+    // Module dependencies
+    implementation project(':shared')  // Includes jMolecules transitively
     implementation project(':lsp-protocol')
     
-    // Testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'junit:junit:4.13.2'
+    // API Guardian for package visibility annotations
+    compileOnly libs.apiguardian.api
 }
 
-test {
-    useJUnitPlatform()
-}
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Groovy Core Module',
+            'Implementation-Version': version
+        )
+    }
 }

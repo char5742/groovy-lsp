@@ -1,5 +1,19 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'groovy-lsp'
 
+include ':shared'
 include ':server-launcher'
 include ':lsp-protocol'
 include ':groovy-core'
@@ -7,7 +21,10 @@ include ':jdt-adapter'
 include ':codenarc-lint'
 include ':workspace-index'
 include ':formatting'
+include ':integration-tests'
+include ':benchmarks'
 
+project(':shared').projectDir = file('packages/shared')
 project(':server-launcher').projectDir = file('packages/server-launcher')
 project(':lsp-protocol').projectDir = file('packages/lsp-protocol')
 project(':groovy-core').projectDir = file('packages/groovy-core')
@@ -15,3 +32,5 @@ project(':jdt-adapter').projectDir = file('packages/jdt-adapter')
 project(':codenarc-lint').projectDir = file('packages/codenarc-lint')
 project(':workspace-index').projectDir = file('packages/workspace-index')
 project(':formatting').projectDir = file('packages/formatting')
+project(':integration-tests').projectDir = file('packages/integration-tests')
+project(':benchmarks').projectDir = file('packages/benchmarks')

@@ -1,0 +1,137 @@
+[versions]
+java = "21"
+groovy = "4.0.25"
+lsp4j = "0.24.0"
+jdt-core = "3.41.0"
+eclipse-core-runtime = "3.33.0"
+eclipse-core-resources = "3.21.0"
+eclipse-text = "3.14.100"
+codenarc = "3.1.0-groovy-4.0"
+google-java-format = "1.27.0"
+junit = "5.13.0"
+mockk = "1.14.2"
+mockito = "5.18.0"
+gradle-shadow = "8.1.1"
+gradle-versions = "0.52.0"
+slf4j = "2.0.17"
+logback = "1.5.18"
+guice = "7.0.0"
+lmdb = "0.9.1"
+sentry = "8.12.0"
+jmh = "1.37"
+assertj = "3.27.3"
+gradle-tooling-api = "8.14.1"
+apiguardian = "1.1.2"
+guava = "33.4.8-jre"
+archunit = "1.4.1"
+jmolecules-bom = "2025.0.0-RC2"
+jmolecules-ddd = "1.10.0"
+jmolecules-events = "1.10.0"
+jmolecules-onion-architecture = "1.10.0"
+jmolecules-integrations-archunit = "0.26.0"
+jspecify = "1.0.0"
+errorprone-core = "2.38.0"
+nullaway = "0.11.1"
+errorprone-plugin = "4.2.0"
+nullaway-plugin = "2.2.0"
+jmh-plugin = "0.7.2"
+awaitility = "4.2.0"
+wiremock = "3.0.1"
+
+[libraries]
+# Groovy
+groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
+groovy-all = { module = "org.apache.groovy:groovy-all", version.ref = "groovy" }
+groovy-json = { module = "org.apache.groovy:groovy-json", version.ref = "groovy" }
+groovy-xml = { module = "org.apache.groovy:groovy-xml", version.ref = "groovy" }
+groovy-nio = { module = "org.apache.groovy:groovy-nio", version.ref = "groovy" }
+groovy-templates = { module = "org.apache.groovy:groovy-templates", version.ref = "groovy" }
+
+# LSP4J
+lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
+lsp4j-jsonrpc = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc", version.ref = "lsp4j" }
+lsp4j-generator = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j.generator", version.ref = "lsp4j" }
+lsp4j-debug = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j.debug", version.ref = "lsp4j" }
+
+# JDT Core (Groovy-Eclipse)
+jdt-core = { module = "org.eclipse.jdt:org.eclipse.jdt.core", version.ref = "jdt-core" }
+
+# Eclipse Platform
+eclipse-core-runtime = { module = "org.eclipse.platform:org.eclipse.core.runtime", version.ref = "eclipse-core-runtime" }
+eclipse-core-resources = { module = "org.eclipse.platform:org.eclipse.core.resources", version.ref = "eclipse-core-resources" }
+eclipse-text = { module = "org.eclipse.platform:org.eclipse.text", version.ref = "eclipse-text" }
+
+# CodeNarc
+codenarc = { module = "org.codenarc:CodeNarc", version.ref = "codenarc" }
+
+# Google Java Format
+google-java-format = { module = "com.google.googlejavaformat:google-java-format", version.ref = "google-java-format" }
+
+# Testing
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+# Logging
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+# Dependency Injection
+guice = { module = "com.google.inject:guice", version.ref = "guice" }
+
+# Database (for symbol indexing)
+lmdb-java = { module = "org.lmdbjava:lmdbjava", version.ref = "lmdb" }
+
+# Error Tracking
+sentry = { module = "io.sentry:sentry", version.ref = "sentry" }
+
+# Performance
+jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
+
+# Build Tools
+gradle-tooling-api = { module = "org.gradle:gradle-tooling-api", version.ref = "gradle-tooling-api" }
+
+# Architecture & Design
+apiguardian-api = { module = "org.apiguardian:apiguardian-api", version.ref = "apiguardian" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+
+# jMolecules
+jmolecules-bom = { module = "org.jmolecules:jmolecules-bom", version.ref = "jmolecules-bom" }
+jmolecules-ddd = { module = "org.jmolecules:jmolecules-ddd", version.ref = "jmolecules-ddd" }
+jmolecules-events = { module = "org.jmolecules:jmolecules-events", version.ref = "jmolecules-events" }
+jmolecules-onion-architecture = { module = "org.jmolecules:jmolecules-onion-architecture", version.ref = "jmolecules-onion-architecture" }
+jmolecules-integrations-archunit = { module = "org.jmolecules.integrations:jmolecules-archunit", version.ref = "jmolecules-integrations-archunit" }
+
+# Null Safety
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+
+# Static Analysis
+errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone-core" }
+nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+
+# Integration Testing
+awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
+wiremock-jre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
+
+[bundles]
+groovy = ["groovy", "groovy-json", "groovy-xml", "groovy-nio", "groovy-templates"]
+lsp4j = ["lsp4j", "lsp4j-jsonrpc"]
+testing = ["junit-jupiter", "junit-jupiter-params", "mockk", "assertj-core"]
+logging = ["slf4j-api", "logback-classic"]
+jmh = ["jmh-core", "jmh-generator-annprocess"]
+jmolecules = ["jmolecules-ddd", "jmolecules-events", "jmolecules-onion-architecture"]
+
+[plugins]
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "gradle-shadow" }
+versions = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions" }
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-plugin" }
+nullaway = { id = "net.ltgt.nullaway", version.ref = "nullaway-plugin" }
+jmh = { id = "me.champeau.jmh", version.ref = "jmh-plugin" }

@@ -1,0 +1,92 @@
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
+// 統合テスト専用のモジュールのため、JARは作成しない
+jar {
+    enabled = false
+}
+
+dependencies {
+    // すべてのモジュールに依存（統合テストのため）
+    testImplementation project(':shared')
+    testImplementation project(':server-launcher')
+    testImplementation project(':lsp-protocol')
+    testImplementation project(':groovy-core')
+    testImplementation project(':jdt-adapter')
+    testImplementation project(':codenarc-lint')
+    testImplementation project(':workspace-index')
+    testImplementation project(':formatting')
+    
+    // 統合テスト用の追加ライブラリ
+    testImplementation libs.lsp4j
+    testImplementation libs.google.java.format // For FormatterException
+    testImplementation libs.awaitility
+    testImplementation libs.wiremock.jre8
+}
+
+test {
+    useJUnitPlatform()
+    
+    // JVM arguments for LMDB
+    jvmArgs = [
+        '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+    ]
+    
+    // 統合テストの設定
+    systemProperty 'integration.test', 'true'
+    
+    // テストのタイムアウト設定
+    timeout = Duration.ofMinutes(10)
+    
+    // 並列実行を無効化（統合テストのため）
+    maxParallelForks = 1
+    
+    testLogging {
+        events 'started', 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+        showStandardStreams = false
+    }
+}
+
+// 統合テストを別タスクとして定義
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+    
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    
+    shouldRunAfter test
+    
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    
+    // JVM arguments for LMDB and other reflective access
+    jvmArgs = [
+        '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+    ]
+    
+    // 統合テストの設定
+    systemProperty 'integration.test', 'true'
+    
+    // テストのタイムアウト設定
+    timeout = Duration.ofMinutes(10)
+    
+    // 並列実行を無効化（統合テストのため）
+    maxParallelForks = 1
+    
+    testLogging {
+        events 'started', 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+        showStandardStreams = false
+    }
+}
+
+check.dependsOn integrationTest

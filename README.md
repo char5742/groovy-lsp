@@ -2,6 +2,10 @@
 
 Groovy Tier-3 Language Server implementation based on LSP4J.
 
+## JPMS (Java Platform Module System) Support
+
+This project has partial JPMS support for `shared` and `groovy-core` modules. Other modules use classpath due to automatic module dependencies. See [JPMS-STRATEGY.md](JPMS-STRATEGY.md) for details.
+
 ## Development Setup
 
 ### Using Dev Container (Recommended)

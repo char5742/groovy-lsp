@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    alias(libs.plugins.jmh)
+}
+
+// ベンチマーク専用モジュールのため、JARは作成しない
+jar {
+    enabled = false
+}
+
+jmh {
+    // JVM arguments
+    jvmArgs = ['-Xms2g', '-Xmx2g']
+    
+    // Benchmark mode: Throughput, AverageTime, SampleTime, SingleShotTime, All
+    benchmarkMode = ['Throughput', 'AverageTime']
+    
+    // Number of benchmark iterations
+    iterations = 10
+    
+    // Number of warmup iterations
+    warmupIterations = 5
+    
+    // Fork count
+    fork = 2
+    
+    // Fail on error
+    failOnError = true
+    
+    // Result format
+    resultFormat = 'JSON'
+    
+    // Output time unit
+    timeUnit = 'ms'
+}
+
+dependencies {
+    // JMH dependencies
+    jmh libs.bundles.jmh
+    
+    // Dependencies for benchmarking
+    jmh project(':groovy-core')
+    jmh project(':codenarc-lint')
+    jmh project(':formatting')
+    jmh project(':workspace-index')
+    jmh project(':lsp-protocol')
+}
+
+// カスタムベンチマークタスク
+task quickBenchmark {
+    description = 'Run quick benchmarks with reduced iterations'
+    group = 'benchmark'
+    
+    doLast {
+        jmh {
+            iterations = 3
+            warmupIterations = 2
+            fork = 1
+            include = ['.*QuickBenchmark']
+        }
+        tasks.jmh.execute()
+    }
+}
+
+task fullBenchmark {
+    description = 'Run full benchmarks with all iterations'
+    group = 'benchmark'
+    
+    doLast {
+        jmh {
+            iterations = 20
+            warmupIterations = 10
+            fork = 3
+        }
+        tasks.jmh.execute()
+    }
+}
+
+// ベンチマーク結果のレポート生成
+task generateBenchmarkReport {
+    description = 'Generate HTML report from benchmark results'
+    group = 'benchmark'
+    
+    doLast {
+        def resultsFile = file("${buildDir}/results/jmh/results.json")
+        if (resultsFile.exists()) {
+            println "Benchmark results available at: ${resultsFile.absolutePath}"
+            // ここにHTMLレポート生成ロジックを追加可能
+        } else {
+            println "No benchmark results found. Run 'jmh' task first."
+        }
+    }
+}
+
+tasks.jmh.finalizedBy generateBenchmarkReport

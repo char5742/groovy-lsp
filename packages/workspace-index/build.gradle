@@ -1,38 +1,37 @@
 plugins {
-    id 'groovy'
     id 'java-library'
 }
 
-group = 'com.groovy.lsp'
-version = '0.1.0'
-
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    // Groovy
-    implementation 'org.apache.groovy:groovy:4.0.15'
-    
-    // Apache Lucene for indexing
-    implementation 'org.apache.lucene:lucene-core:9.8.0'
-    implementation 'org.apache.lucene:lucene-queryparser:9.8.0'
-    implementation 'org.apache.lucene:lucene-analyzers-common:8.11.2'
-    
-    // Project dependencies
-    implementation project(':lsp-protocol')
+    // Module dependencies
+    implementation project(':shared')  // Includes jMolecules transitively
     implementation project(':groovy-core')
+    implementation project(':lsp-protocol')
     
-    // Testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'junit:junit:4.13.2'
+    // Gradle Tooling API for build system integration
+    implementation libs.gradle.tooling.api
+    
+    // LMDB for high-performance symbol indexing
+    implementation libs.lmdb.java
+    
+    // API Guardian for package visibility annotations
+    compileOnly libs.apiguardian.api
 }
 
 test {
     useJUnitPlatform()
+    
+    jvmArgs = [
+        '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+    ]
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+jar {
+    manifest {
+        attributes(
+            'Automatic-Module-Name': 'com.groovy.lsp.workspace'
+        )
+    }
 }

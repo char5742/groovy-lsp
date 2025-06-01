@@ -1,36 +1,40 @@
 plugins {
-    id 'groovy'
     id 'java-library'
 }
 
-group = 'com.groovy.lsp'
-version = '0.1.0'
-
-repositories {
-    mavenCentral()
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
+
 
 dependencies {
-    // Groovy
-    implementation 'org.apache.groovy:groovy:4.0.15'
+    // Groovy dependencies (required for AST classes)
+    implementation libs.groovy
     
-    // Eclipse JDT Core
-    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.36.0'
+    // JDT Core dependencies - using stable version
+    implementation libs.jdt.core
+    implementation libs.eclipse.core.runtime
+    implementation libs.eclipse.core.resources
+    implementation libs.eclipse.text
     
-    // Project dependencies
-    implementation project(':lsp-protocol')
+    // Groovy-Eclipse batch for enhanced Groovy support
+    // TODO: Add groovy-eclipse-batch when proper repository is found
+    // implementation libs.groovy.eclipse.batch
+    
+    // Internal module dependencies
+    implementation project(':shared')
     implementation project(':groovy-core')
-    
-    // Testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'junit:junit:4.13.2'
+    implementation project(':lsp-protocol')
 }
 
-test {
-    useJUnitPlatform()
-}
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Groovy JDT Adapter',
+            'Implementation-Version': project.version,
+            'Automatic-Module-Name': 'com.groovy.lsp.jdt.adapter'
+        )
+    }
 }

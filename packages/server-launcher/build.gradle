@@ -1,9 +1,11 @@
 plugins {
     id 'application'
-    id 'groovy'
+    alias(libs.plugins.shadow)
 }
 
 dependencies {
+    // Internal module dependencies
+    implementation project(':shared')
     implementation project(':lsp-protocol')
     implementation project(':groovy-core')
     implementation project(':jdt-adapter')
@@ -11,23 +13,53 @@ dependencies {
     implementation project(':workspace-index')
     implementation project(':formatting')
     
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1'
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.23.1'
-    implementation 'com.google.inject:guice:5.1.0'
-    implementation 'ch.qos.logback:logback-classic:1.4.14'
+    // LSP4J dependencies
+    implementation libs.bundles.lsp4j
+    
+    // Guice for dependency injection
+    implementation libs.guice
+    
+    // Error tracking
+    implementation libs.sentry
 }
 
 application {
-    mainClass = 'com.groovy.lsp.launcher.Main'
-    applicationDefaultJvmArgs = [
-        '-Xmx2g',
-        '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'
-    ]
+    mainClass = 'com.groovy.lsp.server.launcher.Main'
 }
 
-run {
-    standardInput = System.in
-    if (project.hasProperty('stdin')) {
-        standardInput = System.in
+shadowJar {
+    archiveBaseName = 'groovy-language-server'
+    archiveClassifier = ''
+    archiveVersion = project.version
+    
+    // Merge service files
+    mergeServiceFiles()
+    
+    manifest {
+        attributes(
+            'Main-Class': 'com.groovy.lsp.server.launcher.Main',
+            'Implementation-Title': 'Groovy Language Server',
+            'Implementation-Version': project.version,
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date().format('yyyy-MM-dd HH:mm:ss'),
+            'Built-JDK': System.getProperty('java.version')
+        )
     }
+}
+
+
+// Task to run the server
+task runServer(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.groovy.lsp.server.launcher.Main'
+    standardInput = System.in
+    standardOutput = System.out
+    
+    // JVM options for better performance
+    jvmArgs = [
+        '-Xms256m',
+        '-Xmx2g',
+        '-XX:+UseG1GC',
+        '-XX:+UseStringDeduplication'
+    ]
 }
