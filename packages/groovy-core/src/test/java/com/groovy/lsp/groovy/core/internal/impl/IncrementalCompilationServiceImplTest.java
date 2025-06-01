@@ -769,6 +769,7 @@ class IncrementalCompilationServiceImplTest {
 
         @Test
         @DisplayName("Should not leak memory when cache entries are evicted")
+        @SuppressWarnings("ThreadPriorityCheck") // Intentional use of Thread.yield() for testing
         void shouldNotLeakMemory() {
             // Create service with small cache
             service = new IncrementalCompilationServiceImpl(10, 30000);
@@ -811,6 +812,7 @@ class IncrementalCompilationServiceImplTest {
 
         @Test
         @DisplayName("Should clear references when cache is cleared")
+        @SuppressWarnings("ThreadPriorityCheck") // Intentional use of Thread.yield() for testing
         void shouldClearReferencesOnCacheClear() {
             CompilationUnit unit = service.createCompilationUnit(config);
 
