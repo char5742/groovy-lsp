@@ -22,9 +22,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.groovy.lsp.server.launcher.di.ServerConstants.*;
 
 /**
  * Guice module for configuring the Language Server dependencies.
@@ -36,18 +41,10 @@ public class ServerModule extends AbstractModule {
     
     private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
     
-    // Configuration keys
-    private static final String THREAD_POOL_SIZE_KEY = "groovy.lsp.scheduler.threads";
-    private static final String WORKSPACE_ROOT_KEY = "groovy.lsp.workspace.root";
-    
-    // Default values
-    private static final int DEFAULT_SCHEDULER_THREADS = 2;
-    private static final String DEFAULT_WORKSPACE_ROOT = ".";
-    
     private final String workspaceRoot;
     
     public ServerModule() {
-        this(System.getProperty(WORKSPACE_ROOT_KEY, DEFAULT_WORKSPACE_ROOT));
+        this(System.getProperty(WORKSPACE_ROOT_ENV_KEY, DEFAULT_WORKSPACE_ROOT));
     }
     
     public ServerModule(String workspaceRoot) {
@@ -112,16 +109,25 @@ public class ServerModule extends AbstractModule {
     @Singleton
     @ServerExecutor
     ExecutorService provideServerExecutor() {
-        return Executors.newCachedThreadPool(new NamedThreadFactory("groovy-lsp-server"));
+        int maxThreads = Integer.getInteger(MAX_THREADS_ENV_KEY, MAX_THREAD_POOL_SIZE);
+        logger.info("Creating thread pool with max {} threads", maxThreads);
+        
+        return new ThreadPoolExecutor(
+            CORE_THREAD_POOL_SIZE,
+            maxThreads,
+            THREAD_KEEP_ALIVE_TIME,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            new NamedThreadFactory(SERVER_THREAD_PREFIX));
     }
     
     @Provides
     @Singleton
     @ScheduledServerExecutor
     ScheduledExecutorService provideScheduledExecutor() {
-        int poolSize = Integer.getInteger(THREAD_POOL_SIZE_KEY, DEFAULT_SCHEDULER_THREADS);
+        int poolSize = Integer.getInteger(SCHEDULER_THREADS_ENV_KEY, DEFAULT_SCHEDULER_THREADS);
         logger.info("Creating scheduled thread pool with {} threads", poolSize);
-        return Executors.newScheduledThreadPool(poolSize, new NamedThreadFactory("groovy-lsp-scheduler"));
+        return Executors.newScheduledThreadPool(poolSize, new NamedThreadFactory(SCHEDULER_THREAD_PREFIX));
     }
     
     /**
