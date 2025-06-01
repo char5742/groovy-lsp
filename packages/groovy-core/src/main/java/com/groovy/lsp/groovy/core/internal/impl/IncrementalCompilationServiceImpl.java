@@ -47,6 +47,7 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         
         logger.debug("Compiling {} to phase {}", sourceName, phase);
         
+        CompilationUnit compilationUnit = null;
         try {
             // Check cache first
             CompilationCacheEntry cached = compilationCache.get(sourceName);
@@ -56,30 +57,51 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
                 return cached.moduleNode;
             }
             
+            // Create a new CompilationUnit for each compilation to avoid state issues
+            compilationUnit = new CompilationUnit(unit.getConfiguration());
+            
             // Create source unit
             SourceUnit sourceUnit = new SourceUnit(
                 sourceName,
-                new StringReaderSource(sourceCode, unit.getConfiguration()),
-                unit.getConfiguration(),
-                unit.getClassLoader(),
-                new ErrorCollector(unit.getConfiguration())
+                new StringReaderSource(sourceCode, compilationUnit.getConfiguration()),
+                compilationUnit.getConfiguration(),
+                compilationUnit.getClassLoader(),
+                new ErrorCollector(compilationUnit.getConfiguration())
             );
             
-            unit.addSource(sourceUnit);
+            compilationUnit.addSource(sourceUnit);
             
             // Compile to the requested phase
             int targetPhase = mapToGroovyPhase(phase);
-            unit.compile(targetPhase);
+            try {
+                compilationUnit.compile(targetPhase);
+            } catch (Exception compilationError) {
+                // If compilation fails with an exception, return null
+                logger.debug("Compilation of {} failed with exception: {}", sourceName, compilationError.getMessage());
+                return null;
+            }
             
+            // Get the module node from the source unit
             ModuleNode moduleNode = sourceUnit.getAST();
             
-            // Cache the result
-            compilationCache.put(sourceName, new CompilationCacheEntry(
-                sourceCode, moduleNode, phase, System.currentTimeMillis()
-            ));
+            // Check for compilation errors
+            ErrorCollector errorCollector = sourceUnit.getErrorCollector();
+            boolean hasErrors = errorCollector != null && errorCollector.hasErrors();
             
-            // Update dependency graph
-            updateDependencyGraph(sourceName, moduleNode);
+            if (hasErrors) {
+                logger.debug("Compilation of {} has errors", sourceName);
+                return null;
+            }
+            
+            if (moduleNode != null) {
+                // Cache the result only if there are no errors
+                compilationCache.put(sourceName, new CompilationCacheEntry(
+                    sourceCode, moduleNode, phase, System.currentTimeMillis()
+                ));
+                
+                // Update dependency graph
+                updateDependencyGraph(sourceName, moduleNode);
+            }
             
             return moduleNode;
             
@@ -110,12 +132,19 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         
         // Collect import dependencies
         for (ImportNode importNode : moduleNode.getImports()) {
-            dependencies.put(importNode.getClassName(), DependencyType.IMPORT);
+            String className = importNode.getClassName();
+            dependencies.put(className, DependencyType.IMPORT);
         }
         
         // Collect star imports
         for (ImportNode importNode : moduleNode.getStarImports()) {
-            dependencies.put(importNode.getPackageName() + ".*", DependencyType.IMPORT);
+            String packageName = importNode.getPackageName();
+            // Remove trailing dot if present
+            if (packageName.endsWith(".")) {
+                packageName = packageName.substring(0, packageName.length() - 1);
+            }
+            String starImport = packageName + ".*";
+            dependencies.put(starImport, DependencyType.IMPORT);
         }
         
         // Analyze classes
@@ -158,7 +187,11 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
             
             // Annotation dependencies
             for (AnnotationNode annotation : classNode.getAnnotations()) {
-                dependencies.put(annotation.getClassNode().getName(), DependencyType.ANNOTATION);
+                String annotationName = annotation.getClassNode().getName();
+                // Only add if not already in dependencies
+                if (!dependencies.containsKey(annotationName)) {
+                    dependencies.put(annotationName, DependencyType.ANNOTATION);
+                }
             }
         }
         
@@ -171,18 +204,39 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         Queue<String> toProcess = new LinkedList<>();
         toProcess.add(changedModule);
         
+        // Extract the class name from the changed module
+        String changedClassName = changedModule.replace(".groovy", "");
+        
+        logger.debug("Finding modules affected by changes to {}", changedModule);
+        logger.debug("Current dependency graph: {}", dependencyGraph);
+        
         while (!toProcess.isEmpty()) {
             String current = toProcess.poll();
+            String currentClassName = current.replace(".groovy", "");
+            
+            logger.debug("Processing: {} (className: {})", current, currentClassName);
             
             // Find modules that depend on the current module
             for (Map.Entry<String, Set<String>> entry : dependencyGraph.entrySet()) {
-                if (entry.getValue().contains(current) && !affected.contains(entry.getKey())) {
-                    affected.add(entry.getKey());
-                    toProcess.add(entry.getKey());
+                String moduleName = entry.getKey();
+                if (!affected.contains(moduleName) && !moduleName.equals(changedModule)) {
+                    // Check if this module depends on the current class
+                    for (String dependency : entry.getValue()) {
+                        logger.debug("  Checking if {} depends on {} (comparing with '{}')", 
+                                   moduleName, dependency, currentClassName);
+                        if (dependency.equals(currentClassName) || 
+                            dependency.equals(current)) {
+                            logger.debug("  -> Found dependency! {} is affected", moduleName);
+                            affected.add(moduleName);
+                            toProcess.add(moduleName);
+                            break;
+                        }
+                    }
                 }
             }
         }
         
+        logger.debug("Affected modules for {}: {}", changedModule, affected);
         return new ArrayList<>(affected);
     }
     
@@ -205,7 +259,8 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
             case INITIALIZATION:
                 return Phases.INITIALIZATION;
             case PARSING:
-                return Phases.PARSING;
+                // PARSING phase doesn't produce AST, need at least CONVERSION
+                return Phases.CONVERSION;
             case CONVERSION:
                 return Phases.CONVERSION;
             case SEMANTIC_ANALYSIS:
@@ -226,9 +281,20 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     }
     
     private void updateDependencyGraph(String sourceName, ModuleNode moduleNode) {
+        if (moduleNode == null) {
+            logger.warn("ModuleNode is null for {}, skipping dependency graph update", sourceName);
+            return;
+        }
+        
         Map<String, DependencyType> dependencies = getDependencies(moduleNode);
         Set<String> dependencyNames = dependencies.keySet().stream()
-            .map(this::normalizeClassName)
+            .map(className -> {
+                // Don't normalize star imports
+                if (className.endsWith(".*")) {
+                    return className;
+                }
+                return normalizeClassName(className);
+            })
             .collect(Collectors.toSet());
         
         dependencyGraph.put(sourceName, dependencyNames);
@@ -236,7 +302,8 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     }
     
     private String normalizeClassName(String className) {
-        // Remove package prefix for local classes
+        // For local classes in the same package, just return the simple name
+        // This allows matching between "A" and "A.groovy"
         int lastDot = className.lastIndexOf('.');
         return lastDot >= 0 ? className.substring(lastDot + 1) : className;
     }
