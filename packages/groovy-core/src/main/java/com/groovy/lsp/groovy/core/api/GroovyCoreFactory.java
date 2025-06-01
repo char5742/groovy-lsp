@@ -3,6 +3,7 @@ package com.groovy.lsp.groovy.core.api;
 import com.groovy.lsp.groovy.core.internal.impl.ASTServiceImpl;
 import com.groovy.lsp.groovy.core.internal.impl.CompilerFactoryImpl;
 import com.groovy.lsp.groovy.core.internal.impl.TypeInferenceServiceImpl;
+import com.groovy.lsp.groovy.core.internal.impl.IncrementalCompilationServiceImpl;
 import org.jmolecules.ddd.annotation.Factory;
 
 /**
@@ -20,11 +21,13 @@ public class GroovyCoreFactory {
     private final ASTService astService;
     private final CompilerConfigurationService compilerConfigurationService;
     private final TypeInferenceService typeInferenceService;
+    private final IncrementalCompilationService incrementalCompilationService;
     
     private GroovyCoreFactory() {
         this.astService = new ASTServiceImpl();
         this.compilerConfigurationService = new CompilerFactoryImpl();
         this.typeInferenceService = new TypeInferenceServiceImpl(this.astService);
+        this.incrementalCompilationService = new IncrementalCompilationServiceImpl();
     }
     
     /**
@@ -89,5 +92,23 @@ public class GroovyCoreFactory {
      */
     public TypeInferenceService getTypeInferenceService() {
         return typeInferenceService;
+    }
+    
+    /**
+     * Creates a new IncrementalCompilationService instance.
+     * 
+     * @return a new IncrementalCompilationService instance
+     */
+    public IncrementalCompilationService createIncrementalCompilationService() {
+        return new IncrementalCompilationServiceImpl();
+    }
+    
+    /**
+     * Gets the shared IncrementalCompilationService instance.
+     * 
+     * @return the shared IncrementalCompilationService instance
+     */
+    public IncrementalCompilationService getIncrementalCompilationService() {
+        return incrementalCompilationService;
     }
 }

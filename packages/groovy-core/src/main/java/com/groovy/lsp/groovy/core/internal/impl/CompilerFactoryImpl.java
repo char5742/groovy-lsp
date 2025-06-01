@@ -41,7 +41,7 @@ public class CompilerFactoryImpl implements CompilerConfigurationService {
         // Enable verbose error reporting for better diagnostics
         config.setVerbose(true);
         
-        // Set optimization options
+        // Set optimization options (including Parrot parser)
         config.setOptimizationOptions(createOptimizationOptions());
         
         // Add common import customizer
@@ -132,7 +132,8 @@ public class CompilerFactoryImpl implements CompilerConfigurationService {
         return java.util.Map.of(
             "indy", true,  // Use invokedynamic
             "groovydoc", true,  // Preserve groovydoc
-            "int", false  // Don't optimize int operations (for debugging)
+            "int", false,  // Don't optimize int operations (for debugging)
+            "parrot", true  // Use Parrot parser (Groovy 4.0+ default)
         );
     }
     
