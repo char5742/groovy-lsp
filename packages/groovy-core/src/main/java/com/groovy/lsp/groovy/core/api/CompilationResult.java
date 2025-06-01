@@ -147,8 +147,7 @@ public class CompilationResult {
             int column = 1;
             
             // Handle different message types
-            if (message instanceof SyntaxErrorMessage) {
-                SyntaxErrorMessage syntaxError = (SyntaxErrorMessage) message;
+            if (message instanceof SyntaxErrorMessage syntaxError) {
                 SyntaxException cause = syntaxError.getCause();
                 if (cause != null) {
                     msgText = cause.getMessage();
@@ -183,7 +182,10 @@ public class CompilationResult {
                 }
             }
             
-            return new CompilationError(msgText, line, column, sourceName, ErrorType.SYNTAX);
+            return new CompilationError(
+                msgText != null ? msgText : "Unknown error", 
+                line, column, sourceName, ErrorType.SYNTAX
+            );
         }
         
         public enum ErrorType {

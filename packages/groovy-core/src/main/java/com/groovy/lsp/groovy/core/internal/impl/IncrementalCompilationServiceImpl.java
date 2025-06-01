@@ -41,7 +41,6 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     private static final int DEFAULT_MAX_CACHE_SIZE = 1000;
     private static final long DEFAULT_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
     
-    private final int maxCacheSize;
     private final long cacheTtlMs;
     
     // Using LinkedHashMap with access order for LRU eviction
@@ -54,12 +53,12 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     }
     
     public IncrementalCompilationServiceImpl(int maxCacheSize, long cacheTtlMs) {
-        this.maxCacheSize = maxCacheSize;
         this.cacheTtlMs = cacheTtlMs;
+        final int maxSize = maxCacheSize;
         this.compilationCache = new LinkedHashMap<String, CompilationCacheEntry>(16, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, CompilationCacheEntry> eldest) {
-                boolean shouldRemove = size() > maxCacheSize;
+                boolean shouldRemove = size() > maxSize;
                 if (shouldRemove) {
                     logger.debug("Evicting oldest cache entry: {}", eldest.getKey());
                 }
@@ -90,7 +89,7 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
             try {
                 CompilationCacheEntry cached = compilationCache.get(sourceName);
                 if (cached != null && cached.sourceCode.equals(sourceCode) && 
-                    cached.phase.ordinal() >= phase.ordinal() &&
+                    isPhaseGreaterOrEqual(cached.phase, phase) &&
                     !isCacheEntryExpired(cached)) {
                     logger.debug("Using cached compilation result for {}", sourceName);
                     return cached.moduleNode;
@@ -173,7 +172,7 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
             try {
                 CompilationCacheEntry cached = compilationCache.get(sourceName);
                 if (cached != null && cached.sourceCode.equals(sourceCode) && 
-                    cached.phase.ordinal() >= phase.ordinal() &&
+                    isPhaseGreaterOrEqual(cached.phase, phase) &&
                     !isCacheEntryExpired(cached)) {
                     logger.debug("Using cached compilation result for {}", sourceName);
                     return CompilationResult.success(cached.moduleNode);
@@ -212,8 +211,9 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
                     }
                 } else {
                     // If no specific errors, create a generic error
+                    String errorMessage = compilationError.getMessage();
                     errors.add(new CompilationError(
-                        compilationError.getMessage(),
+                        errorMessage != null ? errorMessage : "Compilation failed",
                         1, 1, sourceName,
                         CompilationError.ErrorType.SYNTAX
                     ));
@@ -375,11 +375,8 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     @Override
     public List<String> getAffectedModules(String changedModule, Map<String, ModuleNode> allModules) {
         Set<String> affected = new HashSet<>();
-        Queue<String> toProcess = new LinkedList<>();
+        Queue<String> toProcess = new ArrayDeque<>();
         toProcess.add(changedModule);
-        
-        // Extract the class name from the changed module
-        String changedClassName = changedModule.replace(".groovy", "");
         
         logger.debug("Finding modules affected by changes to {}", changedModule);
         logger.debug("Current dependency graph: {}", dependencyGraph);
@@ -439,29 +436,17 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     }
     
     private int mapToGroovyPhase(CompilationPhase phase) {
-        switch (phase) {
-            case INITIALIZATION:
-                return Phases.INITIALIZATION;
-            case PARSING:
-                // PARSING phase doesn't produce AST, need at least CONVERSION
-                return Phases.CONVERSION;
-            case CONVERSION:
-                return Phases.CONVERSION;
-            case SEMANTIC_ANALYSIS:
-                return Phases.SEMANTIC_ANALYSIS;
-            case CANONICALIZATION:
-                return Phases.CANONICALIZATION;
-            case INSTRUCTION_SELECTION:
-                return Phases.INSTRUCTION_SELECTION;
-            case CLASS_GENERATION:
-                return Phases.CLASS_GENERATION;
-            case OUTPUT:
-                return Phases.OUTPUT;
-            case FINALIZATION:
-                return Phases.FINALIZATION;
-            default:
-                return Phases.SEMANTIC_ANALYSIS;
-        }
+        return switch (phase) {
+            case INITIALIZATION -> Phases.INITIALIZATION;
+            case PARSING -> Phases.CONVERSION; // PARSING phase doesn't produce AST, need at least CONVERSION
+            case CONVERSION -> Phases.CONVERSION;
+            case SEMANTIC_ANALYSIS -> Phases.SEMANTIC_ANALYSIS;
+            case CANONICALIZATION -> Phases.CANONICALIZATION;
+            case INSTRUCTION_SELECTION -> Phases.INSTRUCTION_SELECTION;
+            case CLASS_GENERATION -> Phases.CLASS_GENERATION;
+            case OUTPUT -> Phases.OUTPUT;
+            case FINALIZATION -> Phases.FINALIZATION;
+        };
     }
     
     private void updateDependencyGraph(String sourceName, ModuleNode moduleNode) {
@@ -498,6 +483,28 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
             logger.debug("Cache entry expired (age: {} ms)", currentTime - entry.timestamp);
         }
         return expired;
+    }
+    
+    private boolean isPhaseGreaterOrEqual(CompilationPhase phase1, CompilationPhase phase2) {
+        // Define phase ordering explicitly to avoid using ordinal()
+        Map<CompilationPhase, Integer> phaseOrder = Map.of(
+            CompilationPhase.INITIALIZATION, 0,
+            CompilationPhase.PARSING, 1,
+            CompilationPhase.CONVERSION, 2,
+            CompilationPhase.SEMANTIC_ANALYSIS, 3,
+            CompilationPhase.CANONICALIZATION, 4,
+            CompilationPhase.INSTRUCTION_SELECTION, 5,
+            CompilationPhase.CLASS_GENERATION, 6,
+            CompilationPhase.OUTPUT, 7,
+            CompilationPhase.FINALIZATION, 8
+        );
+        Integer order1 = phaseOrder.get(phase1);
+        Integer order2 = phaseOrder.get(phase2);
+        // All phases should be in the map, but be defensive
+        if (order1 == null || order2 == null) {
+            throw new IllegalArgumentException("Unknown compilation phase");
+        }
+        return order1 >= order2;
     }
     
     private static class CompilationCacheEntry {
