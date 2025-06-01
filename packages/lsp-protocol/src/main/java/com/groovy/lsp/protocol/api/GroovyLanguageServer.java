@@ -124,7 +124,7 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
     /**
      * Get the connected language client.
      * 
-     * @return the language client
+     * @return the language client, or null if not connected
      */
     public @Nullable LanguageClient getClient() {
         return client;
