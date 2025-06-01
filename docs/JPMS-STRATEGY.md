@@ -14,7 +14,7 @@
 ### JPMS非対応モジュール（外部ライブラリ制約）
 - `lsp-protocol`: Eclipse LSP4Jが自動モジュール
 - `workspace-index`: Gradle Tooling API、LMDBが自動モジュール
-- `codenarc-lint`: CodeNarcが自動モジュール  
+- `codenarc-lint`: CodeNarcが自動モジュール
 - `formatting`: Google Java Formatが自動モジュール
 - `jdt-adapter`: Eclipse JDT関連のスプリットパッケージ問題
 - `server-launcher`: 上記すべてのモジュールに依存
@@ -42,7 +42,7 @@ server-launcher (アプリケーションモジュール)
        requires transitive org.jmolecules.ddd;
        requires transitive org.jmolecules.architecture.onion.classical;
        requires com.google.common;
-       
+
        exports com.groovy.lsp.shared.event;
    }
    ```
@@ -57,7 +57,7 @@ server-launcher (アプリケーションモジュール)
        requires org.apache.groovy.templates;
        requires org.slf4j;
        requires static org.apiguardian.api;
-       
+
        exports com.groovy.lsp.groovy.core.api;
    }
    ```

@@ -36,7 +36,7 @@ configurations.all {
     resolutionStrategy {
         // Groovyバージョンの統一
         def groovyVersion = '4.0.25'
-        
+
         // Capability competition resolution
         capabilitiesResolution {
             // Groovy本体の競合解決
@@ -47,7 +47,7 @@ configurations.all {
                 select(candidates.find { it.version == groovyVersion })
             }
         }
-        
+
         // 強制的にバージョンを統一
         eachDependency { DependencyResolveDetails details ->
             if (details.requested.group == 'org.codehaus.groovy') {

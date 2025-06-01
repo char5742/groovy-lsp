@@ -1,26 +1,20 @@
 package com.groovy.lsp.workspace.api.dto;
 
-import org.jmolecules.ddd.annotation.ValueObject;
 import java.nio.file.Path;
+import org.jmolecules.ddd.annotation.ValueObject;
 
 /**
  * Represents information about a symbol in the workspace.
  * This is an immutable data transfer object used to communicate symbol information.
- * 
+ *
  * Marked as a ValueObject in DDD terms as it's immutable and represents
  * a descriptive aspect of the domain with no conceptual identity.
  */
 @ValueObject
-public record SymbolInfo(
-    String name,
-    SymbolKind kind,
-    Path location,
-    int line,
-    int column
-) {
+public record SymbolInfo(String name, SymbolKind kind, Path location, int line, int column) {
     /**
      * Creates a new SymbolInfo instance with validation.
-     * 
+     *
      * @param name the symbol name
      * @param kind the symbol kind
      * @param location the file path where the symbol is defined

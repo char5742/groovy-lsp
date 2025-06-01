@@ -3,7 +3,11 @@ plugins {
     alias(libs.plugins.shadow) apply false
     alias(libs.plugins.errorprone) apply false
     alias(libs.plugins.nullaway) apply false
+    alias(libs.plugins.spotless) apply false
 }
+
+// Spotless設定をすべてのプロジェクトに適用
+apply from: "${rootDir}/gradle/spotless.gradle"
 
 allprojects {
     repositories {
@@ -29,34 +33,34 @@ subprojects {
     apply plugin: 'groovy'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'net.ltgt.nullaway'
-    
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(23)
         }
-        
+
         // JPMS有効化設定
         // 現状では外部ライブラリの制約により、sharedとgroovy-coreのみJPMS対応可能
         def enableJpms = project.name in ['shared', 'groovy-core']
-        
+
         modularity.inferModulePath = enableJpms
-        
+
         if (!enableJpms) {
             logger.debug("JPMS disabled for module: ${project.name} (auto-module dependencies)")
         }
     }
-    
+
     dependencies {
         // Groovy dependencies
         implementation libs.bundles.groovy
-        
+
         // Logging
         implementation libs.bundles.logging
-        
+
         // Error Prone and NullAway
         errorprone libs.errorprone.core
         errorprone libs.nullaway
-        
+
         // Testing
         testImplementation libs.bundles.testing
         testImplementation libs.archunit
@@ -64,22 +68,22 @@ subprojects {
         testImplementation libs.jmolecules.onion.architecture
         testRuntimeOnly libs.junit.platform.launcher
     }
-    
+
     test {
         useJUnitPlatform()
     }
-    
+
     tasks.withType(JavaCompile) {
         options.errorprone {
             enabled = true
             disableWarningsInGeneratedCode = true
-            
+
             // NullAway configuration
             check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
             option("NullAway:AnnotatedPackages", "com.groovy.lsp")
             option("NullAway:TreatGeneratedAsUnannotated", "true")
             option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
         }
-        
+
     }
 }

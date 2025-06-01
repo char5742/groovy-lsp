@@ -9,7 +9,7 @@
     <root level="DEBUG">
         <appender-ref ref="CONSOLE" />
     </root>
-    
+
     <!-- Reduce noise from LMDB during tests -->
     <logger name="org.lmdbjava" level="WARN" />
 </configuration>

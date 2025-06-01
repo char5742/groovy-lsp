@@ -10,15 +10,15 @@ import java.util.List;
  * This event is published after parsing and indexing symbols from a file.
  */
 public class FileIndexedEvent extends DomainEvent {
-    
+
     private final Path filePath;
     private final List<SymbolInfo> symbols;
     private final boolean success;
     private final String errorMessage;
-    
+
     /**
      * Creates a successful FileIndexedEvent.
-     * 
+     *
      * @param filePath the path of the indexed file
      * @param symbols the symbols found in the file
      */
@@ -29,10 +29,10 @@ public class FileIndexedEvent extends DomainEvent {
         this.success = true;
         this.errorMessage = ""; // Empty string for successful indexing
     }
-    
+
     /**
      * Creates a failed FileIndexedEvent.
-     * 
+     *
      * @param filePath the path of the file that failed to index
      * @param errorMessage the error message
      */
@@ -43,51 +43,51 @@ public class FileIndexedEvent extends DomainEvent {
         this.success = false;
         this.errorMessage = errorMessage;
     }
-    
+
     /**
      * Gets the file path that was indexed.
-     * 
+     *
      * @return the file path
      */
     public Path getFilePath() {
         return filePath;
     }
-    
+
     /**
      * Gets the symbols found in the file.
-     * 
+     *
      * @return the list of symbols, empty if indexing failed
      */
     public List<SymbolInfo> getSymbols() {
         return symbols;
     }
-    
+
     /**
      * Checks if the indexing was successful.
-     * 
+     *
      * @return true if successful, false otherwise
      */
     public boolean isSuccess() {
         return success;
     }
-    
+
     /**
      * Gets the error message if indexing failed.
-     * 
+     *
      * @return the error message, or empty string if successful
      */
     public String getErrorMessage() {
         return errorMessage;
     }
-    
+
     @Override
     public String toString() {
         if (success) {
-            return String.format("FileIndexedEvent{file=%s, symbols=%d}", 
-                filePath, symbols.size());
+            return String.format("FileIndexedEvent{file=%s, symbols=%d}", filePath, symbols.size());
         } else {
-            return String.format("FileIndexedEvent{file=%s, error=%s}", 
-                filePath, errorMessage.isEmpty() ? "Unknown error" : errorMessage);
+            return String.format(
+                    "FileIndexedEvent{file=%s, error=%s}",
+                    filePath, errorMessage.isEmpty() ? "Unknown error" : errorMessage);
         }
     }
 }

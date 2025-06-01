@@ -24,7 +24,7 @@ updates:
       # Groovyのバージョンは慎重に管理
       - dependency-name: "org.apache.groovy:*"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
-        
+
   # GitHub Actionsの更新
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -41,7 +41,7 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "ci"
-      
+
   # Dockerイメージの更新（将来的に追加される場合）
   - package-ecosystem: "docker"
     directory: "/docker"

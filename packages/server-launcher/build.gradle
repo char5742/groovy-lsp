@@ -12,13 +12,13 @@ dependencies {
     implementation project(':codenarc-lint')
     implementation project(':workspace-index')
     implementation project(':formatting')
-    
+
     // LSP4J dependencies
     implementation libs.bundles.lsp4j
-    
+
     // Guice for dependency injection
     implementation libs.guice
-    
+
     // Error tracking
     implementation libs.sentry
 }
@@ -31,10 +31,10 @@ shadowJar {
     archiveBaseName = 'groovy-language-server'
     archiveClassifier = ''
     archiveVersion = project.version
-    
+
     // Merge service files
     mergeServiceFiles()
-    
+
     manifest {
         attributes(
             'Main-Class': 'com.groovy.lsp.server.launcher.Main',
@@ -54,7 +54,7 @@ task runServer(type: JavaExec) {
     mainClass = 'com.groovy.lsp.server.launcher.Main'
     standardInput = System.in
     standardOutput = System.out
-    
+
     // JVM options for better performance
     jvmArgs = [
         '-Xms256m',

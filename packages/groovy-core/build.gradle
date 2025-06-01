@@ -8,11 +8,11 @@ dependencies {
     implementation libs.groovy.json
     implementation libs.groovy.xml
     implementation libs.groovy.templates
-    
+
     // Module dependencies
     implementation project(':shared')  // Includes jMolecules transitively
     implementation project(':lsp-protocol')
-    
+
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
 }

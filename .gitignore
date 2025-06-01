@@ -40,3 +40,7 @@ target/
 
 # Dev Container
 .devcontainer/.env
+
+# Build output files
+build_output.txt
+build.log

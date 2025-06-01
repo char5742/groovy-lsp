@@ -18,7 +18,7 @@ dependencies {
     testImplementation project(':codenarc-lint')
     testImplementation project(':workspace-index')
     testImplementation project(':formatting')
-    
+
     // 統合テスト用の追加ライブラリ
     testImplementation libs.lsp4j
     testImplementation libs.google.java.format // For FormatterException
@@ -28,23 +28,23 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    
+
     // JVM arguments for LMDB
     jvmArgs = [
         '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
         '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
         '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
     ]
-    
+
     // 統合テストの設定
     systemProperty 'integration.test', 'true'
-    
+
     // テストのタイムアウト設定
     timeout = Duration.ofMinutes(10)
-    
+
     // 並列実行を無効化（統合テストのため）
     maxParallelForks = 1
-    
+
     testLogging {
         events 'started', 'passed', 'failed', 'skipped'
         exceptionFormat 'full'
@@ -56,32 +56,32 @@ test {
 task integrationTest(type: Test) {
     description = 'Runs integration tests.'
     group = 'verification'
-    
+
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
-    
+
     shouldRunAfter test
-    
+
     useJUnitPlatform {
         includeTags 'integration'
     }
-    
+
     // JVM arguments for LMDB and other reflective access
     jvmArgs = [
         '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
         '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
         '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
     ]
-    
+
     // 統合テストの設定
     systemProperty 'integration.test', 'true'
-    
+
     // テストのタイムアウト設定
     timeout = Duration.ofMinutes(10)
-    
+
     // 並列実行を無効化（統合テストのため）
     maxParallelForks = 1
-    
+
     testLogging {
         events 'started', 'passed', 'failed', 'skipped'
         exceptionFormat 'full'

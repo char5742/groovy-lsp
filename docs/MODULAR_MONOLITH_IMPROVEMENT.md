@@ -55,14 +55,14 @@ testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
 ```java
 @AnalyzeClasses(packages = "com.groovy.lsp")
 public class ModularArchitectureTest {
-    
+
     @ArchTest
-    static final ArchRule internalPackagesShouldNotBeAccessedFromOutside = 
+    static final ArchRule internalPackagesShouldNotBeAccessedFromOutside =
         noClasses()
             .that().resideOutsideOfPackage("..internal..")
             .should().accessClassesThat()
             .resideInAPackage("..internal..");
-    
+
     @ArchTest
     static final ArchRule modulesShouldOnlyAccessPublicAPIs =
         classes()
@@ -92,7 +92,7 @@ public interface EventBus {
 public abstract class DomainEvent {
     private final Instant occurredOn;
     private final String aggregateId;
-    
+
     protected DomainEvent(String aggregateId) {
         this.occurredOn = Instant.now();
         this.aggregateId = aggregateId;
@@ -107,7 +107,7 @@ public abstract class DomainEvent {
 public class WorkspaceIndexedEvent extends DomainEvent {
     private final String workspacePath;
     private final int symbolCount;
-    
+
     public WorkspaceIndexedEvent(String workspacePath, int symbolCount) {
         super(workspacePath);
         this.workspacePath = workspacePath;
