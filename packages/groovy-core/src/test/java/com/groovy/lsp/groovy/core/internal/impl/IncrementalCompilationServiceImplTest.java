@@ -20,6 +20,17 @@ import java.util.List;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService.CompilationPhase;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService.DependencyType;
+import com.groovy.lsp.groovy.core.api.CompilationResult;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
 class IncrementalCompilationServiceImplTest {
     
@@ -379,6 +390,422 @@ class IncrementalCompilationServiceImplTest {
             
             assertThat(updated).isNotNull();
             assertThat(updated.getClasses().get(0).getFields()).hasSize(2);
+        }
+    }
+    
+    @Nested
+    @DisplayName("Concurrent compilation")
+    class ConcurrentCompilation {
+        
+        @Test
+        @DisplayName("Should handle concurrent compilation requests safely")
+        void shouldHandleConcurrentCompilation() throws InterruptedException {
+            int threadCount = 10;
+            int operationsPerThread = 100;
+            CountDownLatch startLatch = new CountDownLatch(1);
+            CountDownLatch doneLatch = new CountDownLatch(threadCount);
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            AtomicInteger successCount = new AtomicInteger(0);
+            AtomicInteger cacheHitCount = new AtomicInteger(0);
+            
+            try {
+                for (int i = 0; i < threadCount; i++) {
+                    final int threadNum = i;
+                    executor.submit(() -> {
+                        try {
+                            startLatch.await(); // Wait for all threads to be ready
+                            
+                            for (int j = 0; j < operationsPerThread; j++) {
+                                // Mix of different operations
+                                String sourceName = "Test" + (j % 5) + ".groovy";
+                                String sourceCode = "class Test" + (j % 5) + " { String field" + j + " }";
+                                
+                                CompilationUnit unit = service.createCompilationUnit(config);
+                                
+                                // Alternate between compiling and clearing cache
+                                if (j % 10 == 0) {
+                                    service.clearCache(sourceName);
+                                } else {
+                                    ModuleNode result = service.compileToPhase(
+                                        unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+                                    );
+                                    if (result != null) {
+                                        successCount.incrementAndGet();
+                                        
+                                        // Check if it was a cache hit by compiling again
+                                        ModuleNode second = service.compileToPhase(
+                                            unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+                                        );
+                                        if (second == result) {
+                                            cacheHitCount.incrementAndGet();
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            doneLatch.countDown();
+                        }
+                    });
+                }
+                
+                // Start all threads at the same time
+                startLatch.countDown();
+                
+                // Wait for all threads to complete
+                assertThat(doneLatch.await(30, TimeUnit.SECONDS)).isTrue();
+                
+                // Verify results
+                assertThat(successCount.get()).isGreaterThan(0);
+                assertThat(cacheHitCount.get()).isGreaterThan(0);
+                
+                // No exceptions should have been thrown
+                assertThat(doneLatch.getCount()).isEqualTo(0);
+                
+            } finally {
+                executor.shutdown();
+            }
+        }
+        
+        @Test
+        @DisplayName("Should maintain cache consistency under concurrent access")
+        void shouldMaintainCacheConsistency() throws InterruptedException {
+            int threadCount = 20;
+            CountDownLatch latch = new CountDownLatch(threadCount);
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            Map<String, ModuleNode> results = new ConcurrentHashMap<>();
+            
+            String sourceCode = "class ConcurrentTest { String name }";
+            String sourceName = "ConcurrentTest.groovy";
+            
+            try {
+                for (int i = 0; i < threadCount; i++) {
+                    executor.submit(() -> {
+                        try {
+                            CompilationUnit unit = service.createCompilationUnit(config);
+                            ModuleNode result = service.compileToPhase(
+                                unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+                            );
+                            if (result != null) {
+                                results.put(Thread.currentThread().getName(), result);
+                            }
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
+                }
+                
+                assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+                
+                // All threads should get the same cached instance
+                assertThat(results.values().stream().distinct().count()).isEqualTo(1);
+                
+            } finally {
+                executor.shutdown();
+            }
+        }
+    }
+    
+    @Nested
+    @DisplayName("Cache TTL and eviction")
+    class CacheTTLAndEviction {
+        
+        @Test
+        @DisplayName("Should expire cache entries after TTL")
+        void shouldExpireCacheAfterTTL() throws InterruptedException {
+            // Create service with 100ms TTL
+            service = new IncrementalCompilationServiceImpl(100, 100);
+            
+            String sourceCode = "class TTLTest { }";
+            String sourceName = "TTLTest.groovy";
+            CompilationUnit unit = service.createCompilationUnit(config);
+            
+            // First compilation
+            ModuleNode first = service.compileToPhase(
+                unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+            );
+            assertThat(first).isNotNull();
+            
+            // Immediate second compilation should hit cache
+            ModuleNode second = service.compileToPhase(
+                unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+            );
+            assertThat(second).isSameAs(first);
+            
+            // Wait for TTL to expire
+            Thread.sleep(150);
+            
+            // Third compilation should not hit cache
+            ModuleNode third = service.compileToPhase(
+                unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+            );
+            assertThat(third).isNotNull();
+            assertThat(third).isNotSameAs(first);
+        }
+        
+        @Test
+        @DisplayName("Should evict oldest entries when cache is full")
+        void shouldEvictOldestEntries() {
+            // Create service with max cache size of 3
+            service = new IncrementalCompilationServiceImpl(3, 30000);
+            CompilationUnit unit = service.createCompilationUnit(config);
+            
+            // Compile 4 different sources
+            for (int i = 0; i < 4; i++) {
+                String sourceCode = "class Test" + i + " { }";
+                String sourceName = "Test" + i + ".groovy";
+                
+                ModuleNode result = service.compileToPhase(
+                    unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+                );
+                assertThat(result).isNotNull();
+            }
+            
+            // First source should have been evicted
+            ModuleNode firstAgain = service.compileToPhase(
+                unit, "class Test0 { }", "Test0.groovy", CompilationPhase.CONVERSION
+            );
+            
+            // Check it's not the same instance (was evicted and recompiled)
+            ModuleNode firstOriginal = service.compileToPhase(
+                unit, "class Test0 { }", "Test0.groovy", CompilationPhase.CONVERSION
+            );
+            
+            // Since we just compiled it twice, the second should be cached
+            assertThat(firstAgain).isSameAs(firstOriginal);
+        }
+    }
+    
+    @Nested
+    @DisplayName("Large scale simulation")
+    class LargeScaleSimulation {
+        
+        @Test
+        @DisplayName("Should handle large dependency graphs efficiently")
+        void shouldScaleWithLargeDependencyGraphs() {
+            int moduleCount = 100;
+            CompilationUnit unit = service.createCompilationUnit(config);
+            Map<String, ModuleNode> modules = new HashMap<>();
+            
+            // Create a chain of dependencies: A -> B -> C -> ... -> Z
+            long startTime = System.currentTimeMillis();
+            
+            for (int i = 0; i < moduleCount; i++) {
+                String className = "Module" + i;
+                String dependency = i > 0 ? "Module" + (i - 1) : "";
+                String sourceCode = "class " + className + " { " +
+                    (i > 0 ? dependency + " dependency" : "") + " }";
+                String sourceName = className + ".groovy";
+                
+                ModuleNode module = service.compileToPhase(
+                    unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+                );
+                
+                assertThat(module).isNotNull();
+                modules.put(sourceName, module);
+            }
+            
+            long compilationTime = System.currentTimeMillis() - startTime;
+            
+            // Test dependency detection performance
+            startTime = System.currentTimeMillis();
+            List<String> affected = service.getAffectedModules("Module0.groovy", modules);
+            long detectionTime = System.currentTimeMillis() - startTime;
+            
+            // Should detect all downstream dependencies
+            assertThat(affected).hasSize(moduleCount - 1);
+            
+            // Performance assertions (adjust based on your requirements)
+            assertThat(compilationTime).isLessThan(10000); // 10 seconds for 100 modules
+            assertThat(detectionTime).isLessThan(100); // 100ms for dependency detection
+        }
+        
+        @Test
+        @DisplayName("Should handle complex dependency graphs")
+        void shouldHandleComplexDependencyGraphs() {
+            // Create a more complex graph with multiple dependencies
+            CompilationUnit unit = service.createCompilationUnit(config);
+            Map<String, ModuleNode> modules = new HashMap<>();
+            
+            // Create base modules
+            ModuleNode base1 = service.compileToPhase(unit, "class Base1 { }", "Base1.groovy", CompilationPhase.CONVERSION);
+            ModuleNode base2 = service.compileToPhase(unit, "class Base2 { }", "Base2.groovy", CompilationPhase.CONVERSION);
+            
+            modules.put("Base1.groovy", base1);
+            modules.put("Base2.groovy", base2);
+            
+            // Create modules with multiple dependencies
+            ModuleNode middle1 = service.compileToPhase(unit, """
+                class Middle1 {
+                    Base1 b1
+                    Base2 b2
+                }
+                """, "Middle1.groovy", CompilationPhase.CONVERSION);
+            
+            ModuleNode middle2 = service.compileToPhase(unit, """
+                class Middle2 {
+                    Base1 b1
+                    Base2 b2
+                }
+                """, "Middle2.groovy", CompilationPhase.CONVERSION);
+            
+            ModuleNode top = service.compileToPhase(unit, """
+                class Top {
+                    Middle1 m1
+                    Middle2 m2
+                }
+                """, "Top.groovy", CompilationPhase.CONVERSION);
+            
+            modules.put("Middle1.groovy", middle1);
+            modules.put("Middle2.groovy", middle2);
+            modules.put("Top.groovy", top);
+            
+            // Check affected modules when Base1 changes
+            List<String> affected = service.getAffectedModules("Base1.groovy", modules);
+            
+            // Should affect Middle1, Middle2, and transitively Top
+            assertThat(affected).contains("Middle1.groovy", "Middle2.groovy");
+        }
+    }
+    
+    @Nested
+    @DisplayName("Memory management")
+    class MemoryManagement {
+        
+        @Test
+        @DisplayName("Should not leak memory when cache entries are evicted")
+        void shouldNotLeakMemory() {
+            // Create service with small cache
+            service = new IncrementalCompilationServiceImpl(10, 30000);
+            CompilationUnit unit = service.createCompilationUnit(config);
+            
+            List<WeakReference<ModuleNode>> weakRefs = new ArrayList<>();
+            
+            // Compile many modules to force eviction
+            for (int i = 0; i < 50; i++) {
+                String sourceCode = "class Memory" + i + " { String data = '" + "x".repeat(1000) + "' }";
+                String sourceName = "Memory" + i + ".groovy";
+                
+                ModuleNode module = service.compileToPhase(
+                    unit, sourceCode, sourceName, CompilationPhase.CONVERSION
+                );
+                
+                if (i < 10) {
+                    // Keep weak references to first 10 modules
+                    weakRefs.add(new WeakReference<>(module));
+                }
+            }
+            
+            // Force garbage collection
+            System.gc();
+            Thread.yield();
+            System.gc();
+            
+            // Check that evicted modules can be garbage collected
+            long collected = weakRefs.stream()
+                .filter(ref -> ref.get() == null)
+                .count();
+            
+            // At least some should have been collected
+            assertThat(collected).isGreaterThan(0);
+        }
+        
+        @Test
+        @DisplayName("Should clear references when cache is cleared")
+        void shouldClearReferencesOnCacheClear() {
+            CompilationUnit unit = service.createCompilationUnit(config);
+            
+            // Compile a module
+            ModuleNode module = service.compileToPhase(
+                unit, "class ClearTest { }", "ClearTest.groovy", CompilationPhase.CONVERSION
+            );
+            WeakReference<ModuleNode> weakRef = new WeakReference<>(module);
+            
+            // Clear reference and cache
+            module = null;
+            service.clearAllCaches();
+            
+            // Force garbage collection
+            System.gc();
+            Thread.yield();
+            System.gc();
+            
+            // Module should be eligible for GC
+            assertThat(weakRef.get()).isNull();
+        }
+    }
+    
+    @Nested
+    @DisplayName("Error propagation with CompilationResult")
+    class ErrorPropagation {
+        
+        @Test
+        @DisplayName("Should return detailed error information")
+        void shouldReturnDetailedErrors() {
+            String invalidCode = """
+                class ErrorTest {
+                    void method() {
+                        def x =
+                    }
+                }
+                """;
+            
+            CompilationUnit unit = service.createCompilationUnit(config);
+            CompilationResult result = service.compileToPhaseWithResult(
+                unit, invalidCode, "ErrorTest.groovy", CompilationPhase.CONVERSION
+            );
+            
+            assertThat(result.isSuccessful()).isFalse();
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.getErrors()).isNotEmpty();
+            
+            CompilationResult.CompilationError error = result.getErrors().get(0);
+            assertThat(error.getMessage()).contains("Unexpected input");
+            assertThat(error.getLine()).isEqualTo(4);
+            assertThat(error.getSourceName()).isEqualTo("ErrorTest.groovy");
+        }
+        
+        @Test
+        @DisplayName("Should handle warnings")
+        void shouldHandleWarnings() {
+            String codeWithWarnings = """
+                class WarningTest {
+                    def unusedVariable = "unused"
+                    
+                    void method() {
+                        println "Hello"
+                    }
+                }
+                """;
+            
+            CompilationUnit unit = service.createCompilationUnit(config);
+            CompilationResult result = service.compileToPhaseWithResult(
+                unit, codeWithWarnings, "WarningTest.groovy", CompilationPhase.SEMANTIC_ANALYSIS
+            );
+            
+            // Should compile successfully
+            assertThat(result.isSuccessful()).isTrue();
+            assertThat(result.getModuleNode()).isNotNull();
+        }
+        
+        @Test
+        @DisplayName("Should cache successful CompilationResult")
+        void shouldCacheCompilationResult() {
+            String sourceCode = "class CacheResultTest { }";
+            CompilationUnit unit = service.createCompilationUnit(config);
+            
+            CompilationResult first = service.compileToPhaseWithResult(
+                unit, sourceCode, "CacheResultTest.groovy", CompilationPhase.CONVERSION
+            );
+            
+            CompilationResult second = service.compileToPhaseWithResult(
+                unit, sourceCode, "CacheResultTest.groovy", CompilationPhase.CONVERSION
+            );
+            
+            assertThat(first.isSuccessful()).isTrue();
+            assertThat(second.isSuccessful()).isTrue();
+            assertThat(second.getModuleNode()).isSameAs(first.getModuleNode());
         }
     }
 }

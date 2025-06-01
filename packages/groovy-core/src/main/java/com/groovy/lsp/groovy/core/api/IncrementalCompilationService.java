@@ -40,6 +40,22 @@ public interface IncrementalCompilationService {
     );
     
     /**
+     * Compiles a source file up to the specified phase with detailed error information.
+     * 
+     * @param unit the compilation unit
+     * @param sourceCode the source code to compile
+     * @param sourceName the name of the source file
+     * @param phase the target compilation phase
+     * @return the compilation result including AST and any errors
+     */
+    CompilationResult compileToPhaseWithResult(
+        CompilationUnit unit,
+        String sourceCode,
+        String sourceName,
+        CompilationPhase phase
+    );
+    
+    /**
      * Incrementally updates a previously compiled module.
      * 
      * @param unit the compilation unit

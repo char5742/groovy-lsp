@@ -14,23 +14,59 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.io.StringReaderSource;
+import org.codehaus.groovy.control.messages.Message;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
+import com.groovy.lsp.groovy.core.api.CompilationResult;
+import com.groovy.lsp.groovy.core.api.CompilationResult.CompilationError;
 
 /**
  * Implementation of IncrementalCompilationService for phase-based compilation.
+ * This implementation includes:
+ * - LRU cache with configurable size limit
+ * - Thread-safe operations for concurrent access
+ * - TTL (Time To Live) for cache entries
  */
 public class IncrementalCompilationServiceImpl implements IncrementalCompilationService {
     private static final Logger logger = LoggerFactory.getLogger(IncrementalCompilationServiceImpl.class);
     
-    private final Map<String, CompilationCacheEntry> compilationCache = new ConcurrentHashMap<>();
+    private static final int DEFAULT_MAX_CACHE_SIZE = 1000;
+    private static final long DEFAULT_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+    
+    private final int maxCacheSize;
+    private final long cacheTtlMs;
+    
+    // Using LinkedHashMap with access order for LRU eviction
+    private final Map<String, CompilationCacheEntry> compilationCache;
     private final Map<String, Set<String>> dependencyGraph = new ConcurrentHashMap<>();
+    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+    
+    public IncrementalCompilationServiceImpl() {
+        this(DEFAULT_MAX_CACHE_SIZE, DEFAULT_CACHE_TTL_MS);
+    }
+    
+    public IncrementalCompilationServiceImpl(int maxCacheSize, long cacheTtlMs) {
+        this.maxCacheSize = maxCacheSize;
+        this.cacheTtlMs = cacheTtlMs;
+        this.compilationCache = new LinkedHashMap<String, CompilationCacheEntry>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, CompilationCacheEntry> eldest) {
+                boolean shouldRemove = size() > maxCacheSize;
+                if (shouldRemove) {
+                    logger.debug("Evicting oldest cache entry: {}", eldest.getKey());
+                }
+                return shouldRemove;
+            }
+        };
+    }
     
     @Override
     public CompilationUnit createCompilationUnit(CompilerConfiguration config) {
@@ -49,12 +85,18 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         
         CompilationUnit compilationUnit = null;
         try {
-            // Check cache first
-            CompilationCacheEntry cached = compilationCache.get(sourceName);
-            if (cached != null && cached.sourceCode.equals(sourceCode) && 
-                cached.phase.ordinal() >= phase.ordinal()) {
-                logger.debug("Using cached compilation result for {}", sourceName);
-                return cached.moduleNode;
+            // Check cache first with read lock
+            cacheLock.readLock().lock();
+            try {
+                CompilationCacheEntry cached = compilationCache.get(sourceName);
+                if (cached != null && cached.sourceCode.equals(sourceCode) && 
+                    cached.phase.ordinal() >= phase.ordinal() &&
+                    !isCacheEntryExpired(cached)) {
+                    logger.debug("Using cached compilation result for {}", sourceName);
+                    return cached.moduleNode;
+                }
+            } finally {
+                cacheLock.readLock().unlock();
             }
             
             // Create a new CompilationUnit for each compilation to avoid state issues
@@ -95,9 +137,14 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
             
             if (moduleNode != null) {
                 // Cache the result only if there are no errors
-                compilationCache.put(sourceName, new CompilationCacheEntry(
-                    sourceCode, moduleNode, phase, System.currentTimeMillis()
-                ));
+                cacheLock.writeLock().lock();
+                try {
+                    compilationCache.put(sourceName, new CompilationCacheEntry(
+                        sourceCode, moduleNode, phase, System.currentTimeMillis()
+                    ));
+                } finally {
+                    cacheLock.writeLock().unlock();
+                }
                 
                 // Update dependency graph
                 updateDependencyGraph(sourceName, moduleNode);
@@ -108,6 +155,133 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         } catch (Exception e) {
             logger.error("Failed to compile {} to phase {}", sourceName, phase, e);
             return null;
+        }
+    }
+    
+    @Override
+    public CompilationResult compileToPhaseWithResult(
+            CompilationUnit unit,
+            String sourceCode,
+            String sourceName,
+            CompilationPhase phase) {
+        
+        logger.debug("Compiling {} to phase {} with detailed results", sourceName, phase);
+        
+        try {
+            // Check cache first with read lock
+            cacheLock.readLock().lock();
+            try {
+                CompilationCacheEntry cached = compilationCache.get(sourceName);
+                if (cached != null && cached.sourceCode.equals(sourceCode) && 
+                    cached.phase.ordinal() >= phase.ordinal() &&
+                    !isCacheEntryExpired(cached)) {
+                    logger.debug("Using cached compilation result for {}", sourceName);
+                    return CompilationResult.success(cached.moduleNode);
+                }
+            } finally {
+                cacheLock.readLock().unlock();
+            }
+            
+            // Create a new CompilationUnit for each compilation
+            CompilationUnit compilationUnit = new CompilationUnit(unit.getConfiguration());
+            
+            // Create source unit with error collector
+            ErrorCollector errorCollector = new ErrorCollector(compilationUnit.getConfiguration());
+            SourceUnit sourceUnit = new SourceUnit(
+                sourceName,
+                new StringReaderSource(sourceCode, compilationUnit.getConfiguration()),
+                compilationUnit.getConfiguration(),
+                compilationUnit.getClassLoader(),
+                errorCollector
+            );
+            
+            compilationUnit.addSource(sourceUnit);
+            
+            // Compile to the requested phase
+            int targetPhase = mapToGroovyPhase(phase);
+            List<CompilationError> errors = new ArrayList<>();
+            
+            try {
+                compilationUnit.compile(targetPhase);
+            } catch (Exception compilationError) {
+                // Collect errors from the error collector
+                if (errorCollector.hasErrors()) {
+                    List<? extends Message> messages = errorCollector.getErrors();
+                    for (Message msg : messages) {
+                        errors.add(CompilationError.fromGroovyMessage(msg, sourceName));
+                    }
+                } else {
+                    // If no specific errors, create a generic error
+                    errors.add(new CompilationError(
+                        compilationError.getMessage(),
+                        1, 1, sourceName,
+                        CompilationError.ErrorType.SYNTAX
+                    ));
+                }
+                
+                logger.debug("Compilation of {} failed with {} errors", sourceName, errors.size());
+                return CompilationResult.failure(errors);
+            }
+            
+            // Get the module node
+            ModuleNode moduleNode = sourceUnit.getAST();
+            
+            // Check for errors even if compilation succeeded
+            if (errorCollector.hasErrors()) {
+                List<? extends Message> messages = errorCollector.getErrors();
+                for (Message msg : messages) {
+                    errors.add(CompilationError.fromGroovyMessage(msg, sourceName));
+                }
+            }
+            
+            // Check for warnings
+            if (errorCollector.hasWarnings()) {
+                List<? extends Message> warnings = errorCollector.getWarnings();
+                for (Message warning : warnings) {
+                    CompilationError warningError = CompilationError.fromGroovyMessage(warning, sourceName);
+                    errors.add(new CompilationError(
+                        warningError.getMessage(),
+                        warningError.getLine(),
+                        warningError.getColumn(),
+                        warningError.getSourceName(),
+                        CompilationError.ErrorType.WARNING
+                    ));
+                }
+            }
+            
+            if (moduleNode != null && errors.isEmpty()) {
+                // Cache successful result
+                cacheLock.writeLock().lock();
+                try {
+                    compilationCache.put(sourceName, new CompilationCacheEntry(
+                        sourceCode, moduleNode, phase, System.currentTimeMillis()
+                    ));
+                } finally {
+                    cacheLock.writeLock().unlock();
+                }
+                
+                // Update dependency graph
+                updateDependencyGraph(sourceName, moduleNode);
+                
+                return CompilationResult.success(moduleNode);
+            } else if (moduleNode != null) {
+                // Partial success - has AST but also errors
+                return CompilationResult.partial(moduleNode, errors);
+            } else {
+                // Complete failure
+                return CompilationResult.failure(errors);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Unexpected error compiling {} to phase {}", sourceName, phase, e);
+            List<CompilationError> errors = Collections.singletonList(
+                new CompilationError(
+                    "Internal compilation error: " + e.getMessage(),
+                    1, 1, sourceName,
+                    CompilationError.ErrorType.SYNTAX
+                )
+            );
+            return CompilationResult.failure(errors);
         }
     }
     
@@ -242,14 +416,24 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     
     @Override
     public void clearCache(String sourceName) {
-        compilationCache.remove(sourceName);
+        cacheLock.writeLock().lock();
+        try {
+            compilationCache.remove(sourceName);
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
         dependencyGraph.remove(sourceName);
         logger.debug("Cleared cache for {}", sourceName);
     }
     
     @Override
     public void clearAllCaches() {
-        compilationCache.clear();
+        cacheLock.writeLock().lock();
+        try {
+            compilationCache.clear();
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
         dependencyGraph.clear();
         logger.debug("Cleared all compilation caches");
     }
@@ -302,10 +486,18 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
     }
     
     private String normalizeClassName(String className) {
-        // For local classes in the same package, just return the simple name
-        // This allows matching between "A" and "A.groovy"
-        int lastDot = className.lastIndexOf('.');
-        return lastDot >= 0 ? className.substring(lastDot + 1) : className;
+        // Return the full class name for proper dependency tracking
+        // This ensures accurate dependency resolution across packages
+        return className;
+    }
+    
+    private boolean isCacheEntryExpired(CompilationCacheEntry entry) {
+        long currentTime = System.currentTimeMillis();
+        boolean expired = (currentTime - entry.timestamp) > cacheTtlMs;
+        if (expired) {
+            logger.debug("Cache entry expired (age: {} ms)", currentTime - entry.timestamp);
+        }
+        return expired;
     }
     
     private static class CompilationCacheEntry {
