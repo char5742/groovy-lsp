@@ -55,3 +55,32 @@ Run the language server with hot reload enabled:
 - `codenarc-lint` - CodeNarc integration for linting
 - `workspace-index` - Workspace indexing and symbol management
 - `formatting` - Code formatting based on google-java-format
+- `packages/protocol-tests` - Protocol-level tests using ts-lsp-client
+- `packages/e2e` - End-to-end tests with VS Code
+- `tests/` - Python-based tests using pytest-lsp
+
+## Testing
+
+This project uses a modern multi-language testing approach:
+
+### Java Tests
+```bash
+./gradlew test
+```
+
+### Protocol Tests (Node.js)
+```bash
+pnpm install
+pnpm run test:protocol
+```
+
+### E2E Tests (VS Code)
+```bash
+pnpm run test:e2e
+```
+
+### Python Tests
+```bash
+pip install -r tests/requirements.txt
+pytest tests/
+```

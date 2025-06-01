@@ -1,0 +1,25 @@
+{
+  "name": "groovy-lsp",
+  "version": "0.0.1",
+  "description": "Groovy Tier-3 Language Server implementation based on LSP4J",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "packages/protocol-tests",
+    "packages/e2e"
+  ],
+  "scripts": {
+    "test": "pnpm run test:protocol && pnpm run test:e2e",
+    "test:protocol": "pnpm --filter protocol-tests test",
+    "test:e2e": "pnpm --filter e2e test",
+    "install:all": "pnpm install && ./gradlew build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.3.0"
+  }
+}

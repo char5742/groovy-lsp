@@ -40,3 +40,23 @@ target/
 
 # Dev Container
 .devcontainer/.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+.npm
+*.tsbuildinfo
+packages/*/out/
+packages/*/dist/
+.pnpm-store/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# VS Code Extension
+*.vsix

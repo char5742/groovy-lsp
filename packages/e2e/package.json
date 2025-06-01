@@ -1,0 +1,22 @@
+{
+  "name": "@groovy-lsp/e2e",
+  "version": "0.0.1",
+  "description": "End-to-end tests for Groovy LSP in VS Code",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node ./src/runTests.js",
+    "compile": "tsc",
+    "pretest": "pnpm compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.8",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=22.0.0"
+  }
+}

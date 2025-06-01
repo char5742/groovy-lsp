@@ -1,0 +1,22 @@
+{
+  "name": "@groovy-lsp/protocol-tests",
+  "version": "0.0.1",
+  "description": "Protocol-level tests for Groovy LSP using ts-lsp-client",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test --watch=false src/**/*.test.ts",
+    "test:watch": "node --test --watch src/**/*.test.ts",
+    "test:coverage": "node --test --experimental-test-coverage src/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-lsp-client": "^0.1.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
