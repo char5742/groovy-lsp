@@ -10,10 +10,10 @@ module com.groovy.lsp.groovy.core {
     requires org.apache.groovy.xml;
     requires org.apache.groovy.templates;
     requires org.slf4j;
-    
+
     // Compile-only dependencies
     requires static org.apiguardian.api;
-    
+
     // Exports public API
     exports com.groovy.lsp.groovy.core.api;
 }

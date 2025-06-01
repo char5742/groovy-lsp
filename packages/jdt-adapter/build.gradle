@@ -11,17 +11,17 @@ java {
 dependencies {
     // Groovy dependencies (required for AST classes)
     implementation libs.groovy
-    
+
     // JDT Core dependencies - using stable version
     implementation libs.jdt.core
     implementation libs.eclipse.core.runtime
     implementation libs.eclipse.core.resources
     implementation libs.eclipse.text
-    
+
     // Groovy-Eclipse batch for enhanced Groovy support
     // TODO: Add groovy-eclipse-batch when proper repository is found
     // implementation libs.groovy.eclipse.batch
-    
+
     // Internal module dependencies
     implementation project(':shared')
     implementation project(':groovy-core')

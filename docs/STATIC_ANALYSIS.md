@@ -34,7 +34,7 @@ tasks.withType(JavaCompile) {
     options.errorprone {
         enabled = true
         disableWarningsInGeneratedCode = true
-        
+
         // Groovyとの相性を考慮して無効化
         disable("UnusedVariable")
         disable("StringSplitter")
@@ -121,7 +121,7 @@ private java.lang.reflect.Method findSetter(Class<?> clazz, String name) {
 
 警告メッセージが表示されます：
 ```
-Error Prone is disabled for Java 23 due to compatibility issues. 
+Error Prone is disabled for Java 23 due to compatibility issues.
 Consider using Java 21 for full static analysis support.
 ```
 
@@ -140,7 +140,7 @@ java.lang.NoSuchFieldError: Class com.sun.tools.javac.parser.Tokens$Comment$Comm
 
 動的に生成されるコードや、モックオブジェクトでfalse positiveが発生する場合：
 
-**解決策**: 
+**解決策**:
 - `@SuppressWarnings("NullAway")`を使用
 - 設定で除外：`option("NullAway:ExcludedClasses", "...")`
 

@@ -65,11 +65,11 @@ QuickFixMapper quickFixMapper = new QuickFixMapper();
 LintEngine lintEngine = new LintEngine(ruleSetProvider, quickFixMapper);
 
 // Analyze a single file
-CompletableFuture<List<Diagnostic>> diagnostics = 
+CompletableFuture<List<Diagnostic>> diagnostics =
     lintEngine.analyzeFile("/path/to/file.groovy");
 
 // Analyze a directory
-CompletableFuture<List<FileAnalysisResult>> results = 
+CompletableFuture<List<FileAnalysisResult>> results =
     lintEngine.analyzeDirectory("/project", "**/*.groovy", "**/test/**");
 ```
 

@@ -5,10 +5,10 @@ plugins {
 dependencies {
     // Module dependencies
     implementation project(':shared')  // Includes jMolecules transitively
-    
+
     // LSP4J - Language Server Protocol for Java
     api libs.bundles.lsp4j
-    
+
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
 }

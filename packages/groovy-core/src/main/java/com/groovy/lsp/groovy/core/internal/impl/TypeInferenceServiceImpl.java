@@ -1,35 +1,28 @@
 package com.groovy.lsp.groovy.core.internal.impl;
 
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
+import java.util.*;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
-import org.codehaus.groovy.classgen.VariableScopeVisitor;
-import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
-
-import com.groovy.lsp.groovy.core.api.ASTService;
-import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 
 /**
  * Internal implementation of TypeInferenceService.
  * Wraps Groovy's type inference capabilities for LSP usage.
  */
 public class TypeInferenceServiceImpl implements TypeInferenceService {
-    
+
     private final ASTService astService;
-    
+
     public TypeInferenceServiceImpl(ASTService astService) {
         this.astService = Objects.requireNonNull(astService, "ASTService cannot be null");
     }
-    
+
     /**
      * Infers the type of an expression at a specific position.
-     * 
+     *
      * @param sourceCode the source code
      * @param sourceName the source name
      * @param line the line number (1-based)
@@ -37,23 +30,24 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @return the inferred ClassNode or null if type cannot be determined
      */
     @Override
-    public ClassNode inferTypeAtPosition(String sourceCode, String sourceName, int line, int column) {
+    public ClassNode inferTypeAtPosition(
+            String sourceCode, String sourceName, int line, int column) {
         ModuleNode moduleNode = astService.parseSource(sourceCode, sourceName);
         if (moduleNode == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         ASTNode node = astService.findNodeAtPosition(moduleNode, line, column);
         if (node instanceof Expression expression) {
             return inferExpressionType(expression, moduleNode);
         }
-        
+
         return ClassHelper.OBJECT_TYPE;
     }
-    
+
     /**
      * Infers the type of an expression.
-     * 
+     *
      * @param expression the expression to analyze
      * @param moduleNode the module context
      * @return the inferred ClassNode or null
@@ -63,13 +57,13 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         if (expression == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         // Check if type is already set
         ClassNode existingType = expression.getType();
         if (existingType != null && !existingType.equals(ClassHelper.OBJECT_TYPE)) {
             return existingType;
         }
-        
+
         // Handle different expression types
         if (expression instanceof VariableExpression variableExpression) {
             return inferVariableType(variableExpression, moduleNode);
@@ -86,45 +80,45 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         } else if (expression instanceof MapExpression) {
             return ClassHelper.MAP_TYPE;
         }
-        
+
         // Default to Object type
         return ClassHelper.OBJECT_TYPE;
     }
-    
+
     /**
      * Infers the type of a variable.
-     * 
+     *
      * @param varExpr the variable expression
      * @param moduleNode the module context
      * @return the inferred type or null
      */
     private ClassNode inferVariableType(VariableExpression varExpr, ModuleNode moduleNode) {
         String varName = varExpr.getName();
-        
+
         // Check if it's a special variable
         if ("this".equals(varName)) {
             ClassNode classNode = findEnclosingClass(varExpr, moduleNode);
             return classNode != null ? classNode : ClassHelper.OBJECT_TYPE;
         }
-        
+
         // Look for variable declaration
         Variable accessedVar = varExpr.getAccessedVariable();
         if (accessedVar != null && accessedVar.getType() != null) {
             return accessedVar.getType();
         }
-        
+
         // Try to find declaration in scope
         ClassNode declarationType = findVariableDeclarationType(varName, moduleNode);
         if (declarationType != null) {
             return declarationType;
         }
-        
+
         return ClassHelper.OBJECT_TYPE;
     }
-    
+
     /**
      * Infers the type of a constant expression.
-     * 
+     *
      * @param constExpr the constant expression
      * @return the inferred type
      */
@@ -133,7 +127,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         if (value == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         if (value instanceof String) {
             return ClassHelper.STRING_TYPE;
         } else if (value instanceof Integer) {
@@ -147,13 +141,13 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         } else if (value instanceof Boolean) {
             return ClassHelper.boolean_TYPE;
         }
-        
+
         return ClassHelper.make(value.getClass());
     }
-    
+
     /**
      * Infers the type of a method call.
-     * 
+     *
      * @param call the method call expression
      * @param moduleNode the module context
      * @return the inferred return type or null
@@ -161,38 +155,39 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
     private ClassNode inferMethodCallType(MethodCallExpression call, ModuleNode moduleNode) {
         Expression objectExpr = call.getObjectExpression();
         ClassNode receiverType = inferExpressionType(objectExpr, moduleNode);
-        
+
         if (receiverType == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         String methodName = call.getMethodAsString();
         if (methodName == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         // Look for method in receiver type
         List<MethodNode> methods = receiverType.getMethods(methodName);
         if (!methods.isEmpty()) {
             // Return type of first matching method
             return methods.get(0).getReturnType();
         }
-        
+
         // Check for getter/setter patterns
         if (methodName.startsWith("get") && methodName.length() > 3) {
-            String propertyName = Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+            String propertyName =
+                    Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
             PropertyNode property = receiverType.getProperty(propertyName);
             if (property != null) {
                 return property.getType();
             }
         }
-        
+
         return ClassHelper.OBJECT_TYPE;
     }
-    
+
     /**
      * Infers the type of a property expression.
-     * 
+     *
      * @param propExpr the property expression
      * @param moduleNode the module context
      * @return the inferred type or null
@@ -200,77 +195,78 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
     private ClassNode inferPropertyType(PropertyExpression propExpr, ModuleNode moduleNode) {
         Expression objectExpr = propExpr.getObjectExpression();
         ClassNode receiverType = inferExpressionType(objectExpr, moduleNode);
-        
+
         if (receiverType == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         String propertyName = propExpr.getPropertyAsString();
         if (propertyName == null) {
             return ClassHelper.OBJECT_TYPE;
         }
-        
+
         // Look for property in receiver type
         PropertyNode property = receiverType.getProperty(propertyName);
         if (property != null) {
             return property.getType();
         }
-        
+
         // Look for field
         FieldNode field = receiverType.getField(propertyName);
         if (field != null) {
             return field.getType();
         }
-        
+
         // Look for getter method
-        String getterName = "get" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+        String getterName =
+                "get" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
         List<MethodNode> getters = receiverType.getMethods(getterName);
         if (!getters.isEmpty()) {
             return getters.get(0).getReturnType();
         }
-        
+
         return ClassHelper.OBJECT_TYPE;
     }
-    
+
     /**
      * Infers the type of a binary expression.
-     * 
+     *
      * @param binExpr the binary expression
      * @param moduleNode the module context
      * @return the inferred type
      */
     private ClassNode inferBinaryExpressionType(BinaryExpression binExpr, ModuleNode moduleNode) {
         int op = binExpr.getOperation().getType();
-        
+
         // Comparison operators return boolean
         if (isComparisonOperator(op)) {
             return ClassHelper.boolean_TYPE;
         }
-        
+
         // For arithmetic operators, return the type of the left operand
         // (simplified - real type inference would be more complex)
         Expression leftExpr = binExpr.getLeftExpression();
         return inferExpressionType(leftExpr, moduleNode);
     }
-    
+
     /**
      * Checks if an operator is a comparison operator.
-     * 
+     *
      * @param operatorType the operator type
      * @return true if it's a comparison operator
      */
     private boolean isComparisonOperator(int operatorType) {
-        return operatorType == org.codehaus.groovy.syntax.Types.COMPARE_EQUAL ||
-               operatorType == org.codehaus.groovy.syntax.Types.COMPARE_NOT_EQUAL ||
-               operatorType == org.codehaus.groovy.syntax.Types.COMPARE_LESS_THAN ||
-               operatorType == org.codehaus.groovy.syntax.Types.COMPARE_LESS_THAN_EQUAL ||
-               operatorType == org.codehaus.groovy.syntax.Types.COMPARE_GREATER_THAN ||
-               operatorType == org.codehaus.groovy.syntax.Types.COMPARE_GREATER_THAN_EQUAL;
+        return operatorType == org.codehaus.groovy.syntax.Types.COMPARE_EQUAL
+                || operatorType == org.codehaus.groovy.syntax.Types.COMPARE_NOT_EQUAL
+                || operatorType == org.codehaus.groovy.syntax.Types.COMPARE_LESS_THAN
+                || operatorType == org.codehaus.groovy.syntax.Types.COMPARE_LESS_THAN_EQUAL
+                || operatorType == org.codehaus.groovy.syntax.Types.COMPARE_GREATER_THAN
+                || operatorType == org.codehaus.groovy.syntax.Types.COMPARE_GREATER_THAN_EQUAL;
     }
-    
+
     /**
      * Finds the enclosing class of a node.
-     * 
+     *
      * @param node the AST node
      * @param moduleNode the module node
      * @return the enclosing ClassNode or null
@@ -283,22 +279,22 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         }
         return ClassHelper.OBJECT_TYPE;
     }
-    
+
     /**
      * Checks if a node is within a class.
-     * 
+     *
      * @param node the AST node
      * @param classNode the class node
      * @return true if the node is within the class
      */
     private boolean isNodeWithinClass(ASTNode node, ClassNode classNode) {
-        return node.getLineNumber() >= classNode.getLineNumber() &&
-               node.getLineNumber() <= classNode.getLastLineNumber();
+        return node.getLineNumber() >= classNode.getLineNumber()
+                && node.getLineNumber() <= classNode.getLastLineNumber();
     }
-    
+
     /**
      * Finds the declaration type of a variable.
-     * 
+     *
      * @param varName the variable name
      * @param moduleNode the module node
      * @return the declaration type or null
@@ -308,25 +304,25 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
         moduleNode.visit(finder);
         return finder.getVariableType();
     }
-    
+
     /**
      * Visitor for finding variable declarations.
      */
     private static class VariableDeclarationFinder extends ClassCodeVisitorSupport {
         private final String targetVarName;
         private ClassNode variableType = ClassHelper.OBJECT_TYPE;
-        
+
         public VariableDeclarationFinder(String varName) {
             this.targetVarName = varName;
         }
-        
+
         @Override
         protected SourceUnit getSourceUnit() {
             // This method is not called in the context of this visitor
             // as we're only traversing the AST without compilation
             throw new UnsupportedOperationException("SourceUnit not available in this context");
         }
-        
+
         @Override
         public void visitDeclarationExpression(DeclarationExpression expression) {
             Expression leftExpr = expression.getLeftExpression();
@@ -344,7 +340,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
             }
             super.visitDeclarationExpression(expression);
         }
-        
+
         public ClassNode getVariableType() {
             return variableType;
         }

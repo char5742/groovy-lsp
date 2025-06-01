@@ -9,13 +9,14 @@ module com.groovy.lsp.shared {
     requires transitive org.jspecify;
     requires com.google.common;
     requires org.slf4j;
-    
+
     // Compile-only dependencies
     requires static org.apiguardian.api;
-    
+
     // Exports
     exports com.groovy.lsp.shared.event;
-    
+
     // Opens for reflection (if needed by Guava EventBus)
-    opens com.groovy.lsp.shared.internal.event to com.google.common;
+    opens com.groovy.lsp.shared.internal.event to
+            com.google.common;
 }

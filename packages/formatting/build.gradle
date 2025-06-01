@@ -5,19 +5,19 @@ plugins {
 dependencies {
     // Google Java Format for code formatting
     implementation libs.google.java.format
-    
+
     // Internal module dependencies
     implementation project(':shared')
     implementation project(':groovy-core')
     implementation project(':lsp-protocol')
-    
+
     // LSP4J dependencies (for formatting types)
     implementation libs.lsp4j
 }
 
 test {
     useJUnitPlatform()
-    
+
     jvmArgs = [
         '--add-opens', 'jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED',
         '--add-opens', 'jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED',

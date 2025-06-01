@@ -7,13 +7,13 @@ description = 'Shared components for Groovy LSP modular architecture'
 dependencies {
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
-    
+
     // jMolecules for DDD and architecture patterns
     api libs.bundles.jmolecules
-    
+
     // Null Safety annotations
     api libs.jspecify
-    
+
     // Guava for event bus implementation
     implementation libs.guava
 }

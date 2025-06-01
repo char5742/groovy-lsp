@@ -16,10 +16,10 @@ import org.slf4j.LoggerFactory;
  */
 public class GroovyJdtAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GroovyJdtAdapter.class);
-    
+
     private final AstConverter astConverter;
     private final TypeConverter typeConverter;
-    
+
     /**
      * Constructs a new GroovyJdtAdapter with default converters.
      */
@@ -27,7 +27,7 @@ public class GroovyJdtAdapter {
         this.astConverter = new AstConverter();
         this.typeConverter = new TypeConverter();
     }
-    
+
     /**
      * Converts a Groovy ModuleNode to a JDT CompilationUnit.
      * This enables JDT-based tools to work with Groovy code.
@@ -36,45 +36,59 @@ public class GroovyJdtAdapter {
      * @return the corresponding JDT compilation unit
      */
     public CompilationUnit convertToJdt(ModuleNode moduleNode) {
-        logger.debug("Converting Groovy ModuleNode to JDT CompilationUnit: {}", 
-                    moduleNode.getContext().getName());
-        
+        logger.debug(
+                "Converting Groovy ModuleNode to JDT CompilationUnit: {}",
+                moduleNode.getContext().getName());
+
         try {
             AST ast = AST.newAST(AST.JLS17);
             CompilationUnit compilationUnit = ast.newCompilationUnit();
-            
+
             // Convert package declaration
             if (moduleNode.getPackage() != null) {
                 astConverter.convertPackage(moduleNode.getPackage(), compilationUnit);
             }
-            
+
             // Convert imports
-            moduleNode.getImports().forEach(importNode -> 
-                astConverter.convertImport(importNode, compilationUnit));
-            
+            moduleNode
+                    .getImports()
+                    .forEach(importNode -> astConverter.convertImport(importNode, compilationUnit));
+
             // Convert star imports
-            moduleNode.getStarImports().forEach(starImport ->
-                astConverter.convertStarImport(starImport, compilationUnit));
-            
+            moduleNode
+                    .getStarImports()
+                    .forEach(
+                            starImport ->
+                                    astConverter.convertStarImport(starImport, compilationUnit));
+
             // Convert static imports
-            moduleNode.getStaticImports().forEach((alias, importNode) ->
-                astConverter.convertStaticImport(importNode, alias, compilationUnit));
-            
+            moduleNode
+                    .getStaticImports()
+                    .forEach(
+                            (alias, importNode) ->
+                                    astConverter.convertStaticImport(
+                                            importNode, alias, compilationUnit));
+
             // Convert static star imports
-            moduleNode.getStaticStarImports().forEach((alias, importNode) ->
-                astConverter.convertStaticStarImport(importNode, alias, compilationUnit));
-            
+            moduleNode
+                    .getStaticStarImports()
+                    .forEach(
+                            (alias, importNode) ->
+                                    astConverter.convertStaticStarImport(
+                                            importNode, alias, compilationUnit));
+
             // Convert classes
-            moduleNode.getClasses().forEach(classNode ->
-                astConverter.convertClass(classNode, compilationUnit));
-            
+            moduleNode
+                    .getClasses()
+                    .forEach(classNode -> astConverter.convertClass(classNode, compilationUnit));
+
             return compilationUnit;
         } catch (Exception e) {
             logger.error("Failed to convert Groovy AST to JDT AST", e);
             throw new AdapterException("Conversion failed", e);
         }
     }
-    
+
     /**
      * Converts a JDT CompilationUnit back to a Groovy ModuleNode.
      * This is useful for round-trip conversions and applying JDT-based
@@ -86,30 +100,30 @@ public class GroovyJdtAdapter {
      */
     public ModuleNode convertToGroovy(CompilationUnit compilationUnit, CompileUnit compileUnit) {
         logger.debug("Converting JDT CompilationUnit to Groovy ModuleNode");
-        
+
         try {
             ModuleNode moduleNode = new ModuleNode(compileUnit);
-            
+
             // Convert package
             if (compilationUnit.getPackage() != null) {
                 astConverter.convertJdtPackage(compilationUnit.getPackage(), moduleNode);
             }
-            
+
             // Convert imports
-            compilationUnit.imports().forEach(importDecl ->
-                astConverter.convertJdtImport(importDecl, moduleNode));
-            
+            compilationUnit
+                    .imports()
+                    .forEach(importDecl -> astConverter.convertJdtImport(importDecl, moduleNode));
+
             // Convert types
-            compilationUnit.types().forEach(type ->
-                astConverter.convertJdtType(type, moduleNode));
-            
+            compilationUnit.types().forEach(type -> astConverter.convertJdtType(type, moduleNode));
+
             return moduleNode;
         } catch (Exception e) {
             logger.error("Failed to convert JDT AST to Groovy AST", e);
             throw new AdapterException("Conversion failed", e);
         }
     }
-    
+
     /**
      * Gets the type converter for converting between Groovy and JDT types.
      *
@@ -118,7 +132,7 @@ public class GroovyJdtAdapter {
     public TypeConverter getTypeConverter() {
         return typeConverter;
     }
-    
+
     /**
      * Gets the AST converter for converting between Groovy and JDT AST nodes.
      *
@@ -127,7 +141,7 @@ public class GroovyJdtAdapter {
     public AstConverter getAstConverter() {
         return astConverter;
     }
-    
+
     /**
      * Exception thrown when adapter operations fail.
      */
@@ -139,7 +153,7 @@ public class GroovyJdtAdapter {
         public AdapterException(String message) {
             super(message);
         }
-        
+
         /**
          * Constructs a new AdapterException with the specified message and cause.
          * @param message the error message

@@ -12,25 +12,25 @@ jar {
 jmh {
     // JVM arguments
     jvmArgs = ['-Xms2g', '-Xmx2g']
-    
+
     // Benchmark mode: Throughput, AverageTime, SampleTime, SingleShotTime, All
     benchmarkMode = ['Throughput', 'AverageTime']
-    
+
     // Number of benchmark iterations
     iterations = 10
-    
+
     // Number of warmup iterations
     warmupIterations = 5
-    
+
     // Fork count
     fork = 2
-    
+
     // Fail on error
     failOnError = true
-    
+
     // Result format
     resultFormat = 'JSON'
-    
+
     // Output time unit
     timeUnit = 'ms'
 }
@@ -38,7 +38,7 @@ jmh {
 dependencies {
     // JMH dependencies
     jmh libs.bundles.jmh
-    
+
     // Dependencies for benchmarking
     jmh project(':groovy-core')
     jmh project(':codenarc-lint')
@@ -51,7 +51,7 @@ dependencies {
 task quickBenchmark {
     description = 'Run quick benchmarks with reduced iterations'
     group = 'benchmark'
-    
+
     doLast {
         jmh {
             iterations = 3
@@ -66,7 +66,7 @@ task quickBenchmark {
 task fullBenchmark {
     description = 'Run full benchmarks with all iterations'
     group = 'benchmark'
-    
+
     doLast {
         jmh {
             iterations = 20
@@ -81,7 +81,7 @@ task fullBenchmark {
 task generateBenchmarkReport {
     description = 'Generate HTML report from benchmark results'
     group = 'benchmark'
-    
+
     doLast {
         def resultsFile = file("${buildDir}/results/jmh/results.json")
         if (resultsFile.exists()) {

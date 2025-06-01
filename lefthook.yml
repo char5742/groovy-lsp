@@ -1,0 +1,115 @@
+# Lefthook configuration for Git hooks
+# https://github.com/evilmartians/lefthook
+
+# 並列実行を有効化
+parallel: true
+
+# コミット前のフック
+pre-commit:
+  parallel: true
+  commands:
+    # Spotlessによるコードフォーマットチェック
+    spotless:
+      run: ./gradlew spotlessCheck
+      tags: formatting linting
+      stage_fixed: true
+
+    # 変更されたモジュールのテスト実行
+    test:
+      run: |
+        changed_modules=$(git diff --cached --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
+        if [ -n "$changed_modules" ]; then
+          for module in $changed_modules; do
+            echo "Running tests for :$module"
+            ./gradlew :$module:test
+          done
+        fi
+      tags: testing
+
+# プッシュ前のフック
+pre-push:
+  parallel: false
+  commands:
+    # Spotlessによるコードフォーマットチェック
+    spotless:
+      run: ./gradlew spotlessCheck
+      tags: formatting
+
+    # Error-proneの警告チェック
+    errorprone-check:
+      run: |
+        echo "Checking for Error-prone warnings..."
+        # クリーンビルドして警告を確認
+        ./gradlew clean build --no-build-cache 2>&1 | tee build.log
+
+        # 警告をカウント
+        warning_count=$(grep -c "警告:" build.log || true)
+
+        # Error-prone関連の警告を抽出
+        errorprone_warnings=$(grep -E "(errorprone|NullAway|UnusedVariable|EnumOrdinal|JdkObsolete|StatementSwitch|PatternMatching)" build.log || true)
+
+        # クリーンアップ
+        rm -f build.log
+
+        if [ "$warning_count" -gt 0 ]; then
+          echo "❌ Found $warning_count compiler warnings!"
+          if [ -n "$errorprone_warnings" ]; then
+            echo "Error-prone warnings detected:"
+            echo "$errorprone_warnings"
+          fi
+          echo "Please fix all warnings before pushing."
+          exit 1
+        else
+          echo "✅ No Error-prone warnings found!"
+        fi
+      tags: quality static-analysis
+
+    # 全体のテスト実行
+    test-all:
+      run: ./gradlew test
+      tags: testing
+
+    # ビルド検証
+    build:
+      run: ./gradlew build
+      tags: build
+
+# コミットメッセージのフック
+commit-msg:
+  commands:
+    # Conventional Commitsフォーマットのチェック
+    conventional:
+      run: |
+        commit_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,}$'
+        if ! grep -qE "$commit_regex" "$1"; then
+          echo "❌ コミットメッセージがConventional Commits形式に従っていません!"
+          echo "形式: <type>(<scope>): <subject>"
+          echo "例: feat(groovy-core): Add incremental compilation support"
+          exit 1
+        fi
+
+# カスタムコマンド
+commands:
+  # コード品質チェック
+  quality:
+    run: |
+      echo "Running quality checks..."
+      ./gradlew spotlessCheck
+      ./gradlew clean build --no-build-cache 2>&1 | grep -c "警告:" | xargs -I {} test {} -eq 0
+    description: Run all quality checks (formatting + warnings)
+
+  # クリーンビルド
+  clean-build:
+    run: ./gradlew clean build
+    description: Clean and build the project
+
+  # 依存関係の更新確認
+  deps:
+    run: ./gradlew dependencyUpdates
+    description: Check for dependency updates
+
+# Skip条件
+skip:
+  - merge: master
+  - merge: main
+  - rebase

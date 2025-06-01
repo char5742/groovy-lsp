@@ -7,15 +7,15 @@ dependencies {
     implementation(libs.codenarc) {
         exclude group: 'org.codehaus.groovy'
     }
-    
+
     // Internal module dependencies
     implementation project(':shared')
     implementation project(':groovy-core')
     implementation project(':lsp-protocol')
-    
+
     // LSP4J dependencies (for Diagnostic classes)
     implementation libs.lsp4j
-    
+
     // Test dependencies (additional to parent)
     testImplementation libs.mockito.core
     testImplementation libs.mockito.junit.jupiter

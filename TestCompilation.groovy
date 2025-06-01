@@ -7,7 +7,7 @@ def unit = new CompilationUnit(config)
 def sourceCode = '''
 class TestClass {
     String name
-    
+
     void sayHello() {
         println "Hello, $name"
     }
