@@ -1,11 +1,22 @@
 package com.groovy.lsp.server.launcher.di;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.groovy.lsp.codenarc.LintEngine;
+import com.groovy.lsp.formatting.service.FormattingService;
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.shared.event.EventBus;
+import com.groovy.lsp.workspace.api.WorkspaceIndexService;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -46,6 +57,131 @@ class ServerModuleTest {
     }
 
     @Test
+    void serverModule_shouldProvideLanguageServerInterface() {
+        // given
+        String workspaceRoot = tempDir.toString();
+        ServerModule module = new ServerModule(workspaceRoot);
+        Injector injector = Guice.createInjector(module);
+
+        // when
+        LanguageServer server = injector.getInstance(LanguageServer.class);
+
+        // then
+        assertThat(server).isNotNull();
+        assertThat(server).isInstanceOf(GroovyLanguageServer.class);
+    }
+
+    @Test
+    void serverModule_shouldProvideAllServices() {
+        // given
+        String workspaceRoot = tempDir.toString();
+        ServerModule module = new ServerModule(workspaceRoot);
+        Injector injector = Guice.createInjector(module);
+
+        // when/then - All services should be available
+        assertThat(injector.getInstance(EventBus.class)).isNotNull();
+        assertThat(injector.getInstance(ASTService.class)).isNotNull();
+        assertThat(injector.getInstance(CompilerConfigurationService.class)).isNotNull();
+        assertThat(injector.getInstance(TypeInferenceService.class)).isNotNull();
+        assertThat(injector.getInstance(WorkspaceIndexService.class)).isNotNull();
+        assertThat(injector.getInstance(FormattingService.class)).isNotNull();
+        assertThat(injector.getInstance(LintEngine.class)).isNotNull();
+        assertThat(injector.getInstance(ServiceRouter.class)).isNotNull();
+    }
+
+    @Test
+    void serverModule_shouldProvideSingletonServices() {
+        // given
+        String workspaceRoot = tempDir.toString();
+        ServerModule module = new ServerModule(workspaceRoot);
+        Injector injector = Guice.createInjector(module);
+
+        // when/then - All services should be singletons
+        assertThat(injector.getInstance(EventBus.class))
+                .isSameAs(injector.getInstance(EventBus.class));
+        assertThat(injector.getInstance(ASTService.class))
+                .isSameAs(injector.getInstance(ASTService.class));
+        assertThat(injector.getInstance(CompilerConfigurationService.class))
+                .isSameAs(injector.getInstance(CompilerConfigurationService.class));
+        assertThat(injector.getInstance(TypeInferenceService.class))
+                .isSameAs(injector.getInstance(TypeInferenceService.class));
+        assertThat(injector.getInstance(WorkspaceIndexService.class))
+                .isSameAs(injector.getInstance(WorkspaceIndexService.class));
+        assertThat(injector.getInstance(FormattingService.class))
+                .isSameAs(injector.getInstance(FormattingService.class));
+        assertThat(injector.getInstance(LintEngine.class))
+                .isSameAs(injector.getInstance(LintEngine.class));
+    }
+
+    @Test
+    void serverModule_shouldProvideExecutorServices() {
+        // given
+        String workspaceRoot = tempDir.toString();
+        ServerModule module = new ServerModule(workspaceRoot);
+        Injector injector = Guice.createInjector(module);
+
+        // when
+        ExecutorService serverExecutor =
+                injector.getInstance(
+                        com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+        ScheduledExecutorService scheduledExecutor =
+                injector.getInstance(
+                        com.google.inject.Key.get(
+                                ScheduledExecutorService.class, ScheduledServerExecutor.class));
+
+        // then
+        assertThat(serverExecutor).isNotNull();
+        assertThat(scheduledExecutor).isNotNull();
+
+        // Clean up
+        serverExecutor.shutdown();
+        scheduledExecutor.shutdown();
+    }
+
+    @Test
+    void serverModule_shouldUseSystemPropertyForDefaultWorkspace() {
+        // given
+        String expectedWorkspace = tempDir.toString();
+        String originalProperty = System.getProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY);
+        try {
+            System.setProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY, expectedWorkspace);
+            ServerModule module = new ServerModule();
+            Injector injector = Guice.createInjector(module);
+
+            // when
+            WorkspaceIndexService service = injector.getInstance(WorkspaceIndexService.class);
+
+            // then
+            assertThat(service).isNotNull();
+        } finally {
+            // Restore original property
+            if (originalProperty != null) {
+                System.setProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY, originalProperty);
+            } else {
+                System.clearProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY);
+            }
+        }
+    }
+
+    @Test
+    void serverModule_shouldUseDefaultWorkspaceWhenNoSystemProperty() {
+        // given
+        String originalProperty = System.getProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY);
+        try {
+            System.clearProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY);
+            ServerModule module = new ServerModule();
+
+            // when/then - Should not throw during construction
+            assertThatCode(() -> Guice.createInjector(module)).doesNotThrowAnyException();
+        } finally {
+            // Restore original property
+            if (originalProperty != null) {
+                System.setProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY, originalProperty);
+            }
+        }
+    }
+
+    @Test
     void serverModule_shouldHandleNullWorkspaceRoot() {
         // given
         ServerModule module = new ServerModule(null);
@@ -78,5 +214,64 @@ class ServerModuleTest {
         assertThat(ServerConstants.EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS).isEqualTo(5);
         assertThat(ServerConstants.SERVER_THREAD_PREFIX).isEqualTo("groovy-lsp-server");
         assertThat(ServerConstants.SCHEDULER_THREAD_PREFIX).isEqualTo("groovy-lsp-scheduler");
+        assertThat(ServerConstants.DEFAULT_WORKSPACE_ROOT).isEqualTo(".");
+        assertThat(ServerConstants.MAX_THREADS_ENV_KEY).isEqualTo("groovy.lsp.server.max.threads");
+    }
+
+    @Test
+    void serverModule_shouldRespectMaxThreadsSystemProperty() {
+        // given
+        String originalProperty = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
+        try {
+            System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "100");
+            ServerModule module = new ServerModule(tempDir.toString());
+            Injector injector = Guice.createInjector(module);
+
+            // when
+            ExecutorService serverExecutor =
+                    injector.getInstance(
+                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+
+            // then
+            assertThat(serverExecutor).isNotNull();
+            // Clean up
+            serverExecutor.shutdown();
+        } finally {
+            // Restore original property
+            if (originalProperty != null) {
+                System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, originalProperty);
+            } else {
+                System.clearProperty(ServerConstants.MAX_THREADS_ENV_KEY);
+            }
+        }
+    }
+
+    @Test
+    void serverModule_shouldRespectSchedulerThreadsSystemProperty() {
+        // given
+        String originalProperty = System.getProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
+        try {
+            System.setProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY, "4");
+            ServerModule module = new ServerModule(tempDir.toString());
+            Injector injector = Guice.createInjector(module);
+
+            // when
+            ScheduledExecutorService scheduledExecutor =
+                    injector.getInstance(
+                            com.google.inject.Key.get(
+                                    ScheduledExecutorService.class, ScheduledServerExecutor.class));
+
+            // then
+            assertThat(scheduledExecutor).isNotNull();
+            // Clean up
+            scheduledExecutor.shutdown();
+        } finally {
+            // Restore original property
+            if (originalProperty != null) {
+                System.setProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY, originalProperty);
+            } else {
+                System.clearProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
+            }
+        }
     }
 }
