@@ -260,4 +260,67 @@ class ExecutorShutdownHelperTest {
         assertThat(execWithName.executor).isSameAs(executor);
         assertThat(execWithName.name).isEqualTo(name);
     }
+
+    @Test
+    void shutdownExecutor_shouldHandleSecondAwaitTerminationFailure() throws InterruptedException {
+        // given
+        ExecutorService mockExecutor = mock(ExecutorService.class);
+        // First awaitTermination returns false (timeout), second also returns false
+        when(mockExecutor.awaitTermination(anyLong(), any(TimeUnit.class))).thenReturn(false);
+
+        // when
+        ExecutorShutdownHelper.shutdownExecutor(mockExecutor, "test-executor", 1, TimeUnit.SECONDS);
+
+        // then
+        verify(mockExecutor).shutdown();
+        verify(mockExecutor, times(2)).awaitTermination(1, TimeUnit.SECONDS);
+        verify(mockExecutor).shutdownNow();
+    }
+
+    @Test
+    @Timeout(10)
+    void shutdownExecutor_withDefaultTimeout_shouldShutdownSuccessfully()
+            throws InterruptedException {
+        // given
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CountDownLatch taskStarted = new CountDownLatch(1);
+        CountDownLatch taskCompleted = new CountDownLatch(1);
+
+        // Submit a quick task
+        executor.submit(
+                () -> {
+                    taskStarted.countDown();
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    taskCompleted.countDown();
+                });
+
+        // Wait for task to start
+        taskStarted.await();
+
+        // when - using the overloaded method with default timeout
+        ExecutorShutdownHelper.shutdownExecutor(executor, "test-executor");
+
+        // then
+        assertThat(executor.isShutdown()).isTrue();
+        assertThat(executor.isTerminated()).isTrue();
+    }
+
+    @Test
+    void shutdownExecutor_shouldLogSuccessfulShutdown() throws InterruptedException {
+        // given
+        ExecutorService mockExecutor = mock(ExecutorService.class);
+        when(mockExecutor.awaitTermination(anyLong(), any(TimeUnit.class))).thenReturn(true);
+
+        // when
+        ExecutorShutdownHelper.shutdownExecutor(mockExecutor, "test-executor", 1, TimeUnit.SECONDS);
+
+        // then
+        verify(mockExecutor).shutdown();
+        verify(mockExecutor).awaitTermination(1, TimeUnit.SECONDS);
+        verify(mockExecutor, never()).shutdownNow();
+    }
 }

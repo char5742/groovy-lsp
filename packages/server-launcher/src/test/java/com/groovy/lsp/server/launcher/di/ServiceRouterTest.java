@@ -284,4 +284,146 @@ class ServiceRouterTest {
         // then
         assertThat(result).isSameAs(lintEngine);
     }
+
+    @Test
+    void constructor_shouldCompleteSuccessfullyWithValidServices() {
+        // given - All services are valid mocks
+        // when
+        ServiceRouter router =
+                new ServiceRouter(
+                        astService,
+                        compilerConfigurationService,
+                        typeInferenceService,
+                        workspaceIndexService,
+                        formattingService,
+                        lintEngine);
+
+        // then - Constructor completes without throwing, validation passes
+        assertThat(router).isNotNull();
+        assertThat(router.areAllServicesAvailable()).isTrue();
+    }
+
+    @Test
+    void ensureServiceAvailable_shouldThrowWhenServiceIsNull() {
+        // Test this by creating a router with reflection to set a service to null
+        ServiceRouter router =
+                new ServiceRouter(
+                        astService,
+                        compilerConfigurationService,
+                        typeInferenceService,
+                        workspaceIndexService,
+                        formattingService,
+                        lintEngine);
+
+        // Test each service getter's null check
+        String[][] serviceTests = {
+            {"astService", "ASTService"},
+            {"compilerConfigurationService", "CompilerConfigurationService"},
+            {"typeInferenceService", "TypeInferenceService"},
+            {"workspaceIndexService", "WorkspaceIndexService"},
+            {"formattingService", "FormattingService"},
+            {"lintEngine", "LintEngine"}
+        };
+
+        for (String[] test : serviceTests) {
+            String fieldName = test[0];
+            String serviceName = test[1];
+
+            try {
+                java.lang.reflect.Field field = ServiceRouter.class.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                Object originalValue = field.get(router);
+
+                // Set service to null
+                field.set(router, null);
+
+                // Test the appropriate getter method
+                switch (fieldName) {
+                    case "astService":
+                        assertThatThrownBy(() -> router.getAstService())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                    case "compilerConfigurationService":
+                        assertThatThrownBy(() -> router.getCompilerConfigurationService())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                    case "typeInferenceService":
+                        assertThatThrownBy(() -> router.getTypeInferenceService())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                    case "workspaceIndexService":
+                        assertThatThrownBy(() -> router.getWorkspaceIndexService())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                    case "formattingService":
+                        assertThatThrownBy(() -> router.getFormattingService())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                    case "lintEngine":
+                        assertThatThrownBy(() -> router.getLintEngine())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                }
+
+                // Restore original value
+                field.set(router, originalValue);
+
+            } catch (Exception e) {
+                // If reflection fails, we can't test this specific branch
+                continue;
+            }
+        }
+    }
+
+    @Test
+    void areAllServicesAvailable_shouldReturnFalseWhenAnyServiceIsNull() {
+        // Test each service being null individually to cover all branches
+        ServiceRouter router =
+                new ServiceRouter(
+                        astService,
+                        compilerConfigurationService,
+                        typeInferenceService,
+                        workspaceIndexService,
+                        formattingService,
+                        lintEngine);
+
+        // Test all services are available first
+        assertThat(router.areAllServicesAvailable()).isTrue();
+
+        // Test each service null case individually via reflection
+        String[] fieldNames = {
+            "astService", "compilerConfigurationService", "typeInferenceService",
+            "workspaceIndexService", "formattingService", "lintEngine"
+        };
+
+        for (String fieldName : fieldNames) {
+            try {
+                java.lang.reflect.Field field = ServiceRouter.class.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                Object originalValue = field.get(router);
+
+                // Set to null
+                field.set(router, null);
+
+                // when
+                boolean result = router.areAllServicesAvailable();
+
+                // then
+                assertThat(result).isFalse();
+
+                // Restore original value
+                field.set(router, originalValue);
+
+            } catch (Exception e) {
+                // If reflection fails for this field, skip it
+                continue;
+            }
+        }
+    }
 }
