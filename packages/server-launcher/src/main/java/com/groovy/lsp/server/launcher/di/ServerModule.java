@@ -52,8 +52,11 @@ public class ServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        // Bind GroovyLanguageServer as singleton
+        bind(GroovyLanguageServer.class).in(Singleton.class);
+
         // Bind LanguageServer interface to our implementation
-        bind(LanguageServer.class).to(GroovyLanguageServer.class).in(Singleton.class);
+        bind(LanguageServer.class).to(GroovyLanguageServer.class);
 
         // Bind service router
         bind(ServiceRouter.class).in(Singleton.class);

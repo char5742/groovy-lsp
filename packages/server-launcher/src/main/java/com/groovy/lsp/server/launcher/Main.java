@@ -37,38 +37,47 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            logger.info("Starting Groovy Language Server...");
-
-            // Parse command line arguments
-            LaunchMode mode = parseArguments(args);
-
-            // Get workspace root (from command line or current directory)
-            String workspaceRoot =
-                    mode.workspaceRoot != null
-                            ? mode.workspaceRoot
-                            : System.getProperty("user.dir");
-            logger.info("Using workspace root: {}", workspaceRoot);
-
-            // Create Guice injector with workspace root
-            Injector injector = Guice.createInjector(new ServerModule(workspaceRoot));
-            logger.info("Dependency injection container initialized");
-
-            // Create the server instance through DI
-            GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
-
-            // Launch the server based on the mode
-            switch (mode.type) {
-                case STDIO -> launchStdio(server);
-                case SOCKET -> launchSocket(server, mode.host, mode.port);
-                default -> throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
-            }
+            runServer(args);
+        } catch (HelpRequestedException e) {
+            // Help was printed, exit normally
+            System.exit(0);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid arguments: {}", e.getMessage());
-            // Re-throw for tests
-            throw e;
+            System.exit(1);
         } catch (Exception e) {
             logger.error("Failed to start Groovy Language Server", e);
             System.exit(1);
+        }
+    }
+
+    /**
+     * Run the server without calling System.exit() - for testing purposes.
+     * @param args command line arguments
+     * @throws Exception if server fails to start
+     */
+    static void runServer(String[] args) throws Exception {
+        logger.info("Starting Groovy Language Server...");
+
+        // Parse command line arguments
+        LaunchMode mode = parseArguments(args);
+
+        // Get workspace root (from command line or current directory)
+        String workspaceRoot =
+                mode.workspaceRoot != null ? mode.workspaceRoot : System.getProperty("user.dir");
+        logger.info("Using workspace root: {}", workspaceRoot);
+
+        // Create Guice injector with workspace root
+        Injector injector = Guice.createInjector(new ServerModule(workspaceRoot));
+        logger.info("Dependency injection container initialized");
+
+        // Create the server instance through DI
+        GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
+
+        // Launch the server based on the mode
+        switch (mode.type) {
+            case STDIO -> launchStdio(server);
+            case SOCKET -> launchSocket(server, mode.host, mode.port);
+            default -> throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
         }
     }
 
@@ -187,7 +196,7 @@ public class Main {
      * and handle multiple statements with side effects in some cases.
      */
     @SuppressWarnings("StatementSwitchToExpressionSwitch")
-    private static LaunchMode parseArguments(String[] args) {
+    private static LaunchMode parseArguments(String[] args) throws HelpRequestedException {
         LaunchMode mode = new LaunchMode();
         mode.type = LaunchType.STDIO; // Default to stdio
 
@@ -214,6 +223,10 @@ public class Main {
                     if (i + 1 < args.length) {
                         try {
                             mode.port = Integer.parseInt(args[++i]);
+                            if (mode.port <= 0 || mode.port > 65535) {
+                                throw new IllegalArgumentException(
+                                        "Port number must be between 1 and 65535: " + mode.port);
+                            }
                         } catch (NumberFormatException e) {
                             throw new IllegalArgumentException("Invalid port number: " + args[i]);
                         }
@@ -233,8 +246,8 @@ public class Main {
 
                 case "--help":
                     printHelp();
-                    System.exit(0);
-                    break;
+                    throw new HelpRequestedException();
+                // Note: HelpRequestedException is handled in main() method
 
                 default:
                     logger.warn("Unknown argument: {}", arg);
@@ -325,5 +338,14 @@ public class Main {
     private enum LaunchType {
         STDIO,
         SOCKET
+    }
+
+    /**
+     * Exception thrown when help is requested.
+     */
+    static class HelpRequestedException extends Exception {
+        HelpRequestedException() {
+            super("Help requested");
+        }
     }
 }

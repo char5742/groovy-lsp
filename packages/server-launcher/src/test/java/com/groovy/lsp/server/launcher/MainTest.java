@@ -38,15 +38,12 @@ class MainTest {
     @Test
     void testHelpOption() {
         // Test that --help prints usage information
-        try {
-            Main.main(new String[] {"--help"});
-        } catch (SecurityException e) {
-            // Expected when System.exit is called
-        }
+        assertThrows(
+                Main.HelpRequestedException.class, () -> Main.runServer(new String[] {"--help"}));
 
-        String output = errContent.toString(java.nio.charset.StandardCharsets.UTF_8);
+        String output = outContent.toString(java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(
-                output.contains("Groovy Language Server") || output.contains("Usage:"),
+                output.contains("Groovy Language Server") && output.contains("Usage:"),
                 "Help output should contain usage information");
     }
 
@@ -56,7 +53,7 @@ class MainTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    Main.main(new String[] {"--socket", "--port", "invalid"});
+                    Main.runServer(new String[] {"--socket", "--port", "invalid"});
                 });
     }
 
@@ -66,7 +63,7 @@ class MainTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    Main.main(new String[] {"--socket", "--port"});
+                    Main.runServer(new String[] {"--socket", "--port"});
                 });
     }
 
@@ -76,7 +73,7 @@ class MainTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    Main.main(new String[] {"--socket", "--host"});
+                    Main.runServer(new String[] {"--socket", "--host"});
                 });
     }
 
@@ -88,7 +85,7 @@ class MainTest {
         // This will try to launch the server, which will fail in test environment
         // but we're testing argument parsing
         try {
-            Main.main(args);
+            Main.runServer(args);
         } catch (Exception e) {
             // Expected - server launch will fail in test
             // But argument parsing should succeed
@@ -104,7 +101,7 @@ class MainTest {
         String[] args = {"--socket"};
 
         try {
-            Main.main(args);
+            Main.runServer(args);
         } catch (Exception e) {
             // Expected - server launch will fail in test
             if (e instanceof IllegalArgumentException) {
@@ -122,7 +119,7 @@ class MainTest {
         String[] args = {"--workspace", validWorkspace.toString()};
 
         try {
-            Main.main(args);
+            Main.runServer(args);
         } catch (Exception e) {
             // Expected - server launch will fail in test
             if (e instanceof IllegalArgumentException && e.getMessage().contains("workspace")) {
@@ -137,7 +134,7 @@ class MainTest {
         String[] args = {};
 
         try {
-            Main.main(args);
+            Main.runServer(args);
         } catch (Exception e) {
             // Expected - server launch will fail in test
             if (e instanceof IllegalArgumentException) {
@@ -151,12 +148,12 @@ class MainTest {
         // Test port at boundaries
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Main.main(new String[] {"--socket", "--port", "0"}),
+                () -> Main.runServer(new String[] {"--socket", "--port", "0"}),
                 "Port 0 should be invalid");
 
         // Port 65535 should be valid (max port)
         try {
-            Main.main(new String[] {"--socket", "--port", "65535"});
+            Main.runServer(new String[] {"--socket", "--port", "65535"});
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("port")) {
                 fail("Port 65535 should be valid");
@@ -171,7 +168,7 @@ class MainTest {
         // Test that missing workspace value throws exception
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Main.main(new String[] {"--workspace"}),
+                () -> Main.runServer(new String[] {"--workspace"}),
                 "Missing workspace value should throw exception");
     }
 }
