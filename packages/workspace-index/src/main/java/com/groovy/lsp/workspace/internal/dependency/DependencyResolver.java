@@ -5,6 +5,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -65,14 +70,38 @@ public class DependencyResolver {
     private List<Path> resolveGradleDependencies() {
         List<Path> dependencies = new ArrayList<>();
 
+        // Check if this is a valid Gradle project
+        if (!isValidGradleProject()) {
+            logger.debug(
+                    "Not a valid Gradle project or missing gradle wrapper at: {}", workspaceRoot);
+            return Collections.emptyList();
+        }
+
         GradleConnector connector = GradleConnector.newConnector();
         connector.forProjectDirectory(workspaceRoot.toFile());
 
-        try (ProjectConnection connection = connector.connect()) {
+        // Use gradle wrapper if available, otherwise use gradle distribution
+        if (hasGradleWrapper()) {
+            logger.debug("Using Gradle wrapper for project at: {}", workspaceRoot);
+        } else {
+            logger.debug(
+                    "No Gradle wrapper found, using Gradle distribution for project at: {}",
+                    workspaceRoot);
+            // Let Gradle Tooling API use its default distribution
+        }
+
+        ProjectConnection connection = null;
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            connection = connector.connect();
             logger.info("Connected to Gradle project at: {}", workspaceRoot);
 
-            // Get the IDEA model which includes dependency information
-            IdeaProject ideaProject = connection.getModel(IdeaProject.class);
+            // Get the IDEA model with timeout using ExecutorService
+            final ProjectConnection finalConnection = connection;
+            Future<IdeaProject> future =
+                    executor.submit(() -> finalConnection.getModel(IdeaProject.class));
+
+            IdeaProject ideaProject = future.get(10, TimeUnit.SECONDS);
 
             // Extract dependencies from all modules
             ideaProject
@@ -107,8 +136,40 @@ public class DependencyResolver {
                 logger.warn("Failed to get additional classpath information", e);
             }
 
+        } catch (TimeoutException e) {
+            logger.warn(
+                    "Timeout while resolving Gradle dependencies for project at {}: {}",
+                    workspaceRoot,
+                    e.getMessage());
+            logger.debug(
+                    "Gradle connection timeout - this may indicate an incomplete or invalid project"
+                            + " structure");
+            return Collections.emptyList();
         } catch (Exception e) {
-            logger.error("Failed to resolve Gradle dependencies", e);
+            logger.warn(
+                    "Failed to resolve Gradle dependencies for project at {}: {}",
+                    workspaceRoot,
+                    e.getMessage());
+            logger.debug("Full stack trace for Gradle dependency resolution failure", e);
+            // Return empty list instead of letting the exception bubble up
+            return Collections.emptyList();
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (Exception e) {
+                    logger.debug("Error closing Gradle connection", e);
+                }
+            }
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
 
         return dependencies.stream().distinct().filter(Files::exists).collect(Collectors.toList());
@@ -137,6 +198,34 @@ public class DependencyResolver {
         }
 
         return classpath;
+    }
+
+    /**
+     * Check if this is a valid Gradle project with proper structure.
+     */
+    private boolean isValidGradleProject() {
+        // Must have at least one Gradle build file
+        boolean hasBuildFile =
+                Files.exists(workspaceRoot.resolve("build.gradle"))
+                        || Files.exists(workspaceRoot.resolve("build.gradle.kts"))
+                        || Files.exists(workspaceRoot.resolve("settings.gradle"))
+                        || Files.exists(workspaceRoot.resolve("settings.gradle.kts"));
+
+        if (!hasBuildFile) {
+            return false;
+        }
+
+        // For test scenarios, we might have build files but not a properly initialized project
+        // In such cases, we should still try to connect but be prepared for failures
+        return true;
+    }
+
+    /**
+     * Check if the project has Gradle wrapper files.
+     */
+    private boolean hasGradleWrapper() {
+        return Files.exists(workspaceRoot.resolve("gradlew"))
+                || Files.exists(workspaceRoot.resolve("gradlew.bat"));
     }
 
     /**
