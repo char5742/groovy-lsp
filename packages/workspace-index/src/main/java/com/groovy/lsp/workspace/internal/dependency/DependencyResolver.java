@@ -2,7 +2,9 @@ package com.groovy.lsp.workspace.internal.dependency;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
