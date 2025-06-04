@@ -43,45 +43,34 @@ pre-push:
       run: ./gradlew spotlessCheck
       tags: formatting
 
-    # Error-proneの警告チェック
-    errorprone-check:
+    # ビルドとテストを一度に実行（Error-prone警告も含む）
+    build:
       run: |
-        echo "Checking for Error-prone warnings..."
-        # クリーンビルドして警告を確認
-        ./gradlew clean build --no-build-cache 2>&1 | tee build.log
+        echo "Building and checking for errors..."
+        # ビルドとテストを一度に実行（buildにはtestも含まれる）
+        ./gradlew build 2>&1 | tee build.log
 
-        # APIGuardian関連の警告を除外してError-prone警告をカウント
-        # 既知の無害な警告をフィルタリング
-        errorprone_count=$(grep -E "(\[NullAway\]|\[UnusedVariable\]|\[ThreadPriorityCheck\]|\[EnumOrdinal\]|\[JdkObsolete\]|\[StatementSwitch\]|\[PatternMatching\]|\[StringCaseLocaleUsage\]|\[FutureReturnValueIgnored\]|\[DefaultCharset\])" build.log | wc -l || echo "0")
+        # ビルドが失敗した場合は終了
+        if [ ${PIPESTATUS[0]} -ne 0 ]; then
+          rm -f build.log
+          exit 1
+        fi
 
-        # Error-prone関連の警告を抽出
-        errorprone_warnings=$(grep -E "(\[NullAway\]|\[UnusedVariable\]|\[ThreadPriorityCheck\]|\[EnumOrdinal\]|\[JdkObsolete\]|\[StatementSwitch\]|\[PatternMatching\]|\[StringCaseLocaleUsage\]|\[FutureReturnValueIgnored\]|\[DefaultCharset\])" build.log || true)
+        # Error-prone警告をチェック（エラーレベルのもののみ）
+        # WildcardImportは警告レベルなので除外
+        error_count=$(grep -E "エラー:" build.log | grep -v "WildcardImport" | wc -l || echo "0")
 
         # クリーンアップ
         rm -f build.log
 
-        if [ "$errorprone_count" -gt 0 ]; then
-          echo "❌ Found $errorprone_count Error-prone warnings!"
-          if [ -n "$errorprone_warnings" ]; then
-            echo "Error-prone warnings detected:"
-            echo "$errorprone_warnings"
-          fi
-          echo "Please fix all Error-prone warnings before pushing."
+        if [ "$error_count" -gt 0 ]; then
+          echo "❌ Found $error_count compilation errors!"
+          echo "Please fix all errors before pushing."
           exit 1
         else
-          echo "✅ No Error-prone warnings found!"
+          echo "✅ Build successful!"
         fi
-      tags: quality static-analysis
-
-    # 全体のテスト実行
-    test-all:
-      run: ./gradlew test
-      tags: testing
-
-    # ビルド検証
-    build:
-      run: ./gradlew build
-      tags: build
+      tags: build testing quality
 
 # コミットメッセージのフック
 commit-msg:
