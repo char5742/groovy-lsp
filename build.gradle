@@ -146,6 +146,12 @@ subprojects {
             option("NullAway:AnnotatedPackages", "com.groovy.lsp")
             option("NullAway:TreatGeneratedAsUnannotated", "true")
             option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
+
+            // BadImport: FQDNを短縮するための設定
+            check("BadImport", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+
+            // WildcardImport: ワイルドカードインポートを禁止
+            check("WildcardImport", net.ltgt.gradle.errorprone.CheckSeverity.WARN)
         }
 
     }
