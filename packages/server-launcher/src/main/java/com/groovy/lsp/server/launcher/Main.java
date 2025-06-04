@@ -61,6 +61,22 @@ public class Main {
         // Parse command line arguments
         LaunchMode mode = parseArguments(args);
 
+        // If dry-run mode, just return after parsing
+        if (mode.dryRun) {
+            logger.info("Dry run mode - arguments parsed successfully:");
+            logger.info("  Launch type: {}", mode.type);
+            logger.info(
+                    "  Workspace: {}",
+                    mode.workspaceRoot != null
+                            ? mode.workspaceRoot
+                            : System.getProperty("user.dir"));
+            if (mode.type == LaunchType.SOCKET) {
+                logger.info("  Host: {}", mode.host);
+                logger.info("  Port: {}", mode.port);
+            }
+            return;
+        }
+
         // Get workspace root (from command line or current directory)
         String workspaceRoot =
                 mode.workspaceRoot != null ? mode.workspaceRoot : System.getProperty("user.dir");
@@ -196,7 +212,7 @@ public class Main {
      * and handle multiple statements with side effects in some cases.
      */
     @SuppressWarnings("StatementSwitchToExpressionSwitch")
-    private static LaunchMode parseArguments(String[] args) throws HelpRequestedException {
+    static LaunchMode parseArguments(String[] args) throws HelpRequestedException {
         LaunchMode mode = new LaunchMode();
         mode.type = LaunchType.STDIO; // Default to stdio
 
@@ -249,6 +265,11 @@ public class Main {
                     throw new HelpRequestedException();
                 // Note: HelpRequestedException is handled in main() method
 
+                case "--dry-run":
+                    mode.dryRun = true;
+                    logger.info("Dry run mode enabled - will parse arguments only");
+                    break;
+
                 default:
                     logger.warn("Unknown argument: {}", arg);
             }
@@ -296,10 +317,11 @@ public class Main {
         System.out.println("Options:");
         System.out.println("  --socket, -s              Use socket mode instead of stdio");
         System.out.println("  --host, -h <host>         Host for socket mode (default: localhost)");
-        System.out.println("  --port, -p <port>         Port for socket mode (default: 5007)");
+        System.out.println("  --port, -p <port>         Port for socket mode (default: 4389)");
         System.out.println(
                 "  --workspace, -w <path>    Workspace root directory (default: current"
                         + " directory)");
+        System.out.println("  --dry-run                 Parse arguments only, don't start server");
         System.out.println("  --help                    Show this help message");
         System.out.println();
         System.out.println("Environment variables:");
@@ -314,7 +336,7 @@ public class Main {
         System.out.println("  groovy-language-server                    # Start in stdio mode");
         System.out.println(
                 "  groovy-language-server --socket           # Start in socket mode on"
-                        + " localhost:5007");
+                        + " localhost:4389");
         System.out.println(
                 "  groovy-language-server -s -h 0.0.0.0 -p 8080  # Start on all interfaces, port"
                         + " 8080");
@@ -323,10 +345,11 @@ public class Main {
     /**
      * Launch mode configuration.
      */
-    private static class LaunchMode {
+    static class LaunchMode {
         LaunchType type = LaunchType.STDIO; // Default to STDIO mode
         String host = DEFAULT_SOCKET_HOST; // Default host
         int port = DEFAULT_SOCKET_PORT; // Default LSP port
+        boolean dryRun = false; // Dry run mode - parse arguments only, don't start server
 
         @Nullable String workspaceRoot =
                 null; // Workspace root directory (null = use current directory)
@@ -335,7 +358,7 @@ public class Main {
     /**
      * Launch type enumeration.
      */
-    private enum LaunchType {
+    enum LaunchType {
         STDIO,
         SOCKET
     }

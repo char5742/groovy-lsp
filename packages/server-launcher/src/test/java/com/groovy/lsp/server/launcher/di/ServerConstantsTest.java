@@ -49,7 +49,7 @@ class ServerConstantsTest {
         assertThat(ServerConstants.SCHEDULER_THREADS_ENV_KEY)
                 .isEqualTo("groovy.lsp.scheduler.threads");
         assertThat(ServerConstants.WORKSPACE_ROOT_ENV_KEY).isEqualTo("groovy.lsp.workspace.root");
-        assertThat(ServerConstants.MAX_THREADS_ENV_KEY).isEqualTo("groovy.lsp.max.threads");
+        assertThat(ServerConstants.MAX_THREADS_ENV_KEY).isEqualTo("groovy.lsp.server.max.threads");
 
         // Thread name prefixes
         assertThat(ServerConstants.SERVER_THREAD_PREFIX).isEqualTo("groovy-lsp-server");

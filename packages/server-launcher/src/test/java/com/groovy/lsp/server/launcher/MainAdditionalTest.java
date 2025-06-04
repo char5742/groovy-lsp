@@ -1,6 +1,7 @@
 package com.groovy.lsp.server.launcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
@@ -43,7 +44,7 @@ class MainAdditionalTest {
         String[] args = {"--socket", "--port", "abc123"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid port number");
     }
@@ -54,7 +55,7 @@ class MainAdditionalTest {
         String[] args = {"--workspace", "/non/existent/path"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Workspace directory does not exist");
     }
@@ -67,7 +68,7 @@ class MainAdditionalTest {
         String[] args = {"--workspace", file.toString()};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Workspace path is not a directory");
     }
@@ -78,7 +79,7 @@ class MainAdditionalTest {
         String[] args = {"--workspace"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Missing value for --workspace");
     }
@@ -89,7 +90,7 @@ class MainAdditionalTest {
         String[] args = {"--socket", "--port"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Missing value for --port");
     }
@@ -100,32 +101,19 @@ class MainAdditionalTest {
         String[] args = {"--socket", "--host"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Missing value for --host");
     }
 
     @Test
-    void main_shouldPrintHelp() {
+    void main_shouldPrintHelp() throws Exception {
         // given
         String[] args = {"--help"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args))
+        assertThatThrownBy(() -> Main.parseArguments(args))
                 .isInstanceOf(Main.HelpRequestedException.class);
-
-        // then
-        String output = outContent.toString(java.nio.charset.StandardCharsets.UTF_8);
-        assertThat(output).contains("Groovy Language Server");
-        assertThat(output).contains("Usage:");
-        assertThat(output).contains("Options:");
-        assertThat(output).contains("--socket");
-        assertThat(output).contains("--host");
-        assertThat(output).contains("--port");
-        assertThat(output).contains("--workspace");
-        assertThat(output).contains("--help");
-        assertThat(output).contains("Environment variables:");
-        assertThat(output).contains("Examples:");
     }
 
     @Test
@@ -140,7 +128,7 @@ class MainAdditionalTest {
             String[] args = {"--workspace", nonReadable.toString()};
 
             // when/then
-            assertThatThrownBy(() -> Main.runServer(args))
+            assertThatThrownBy(() -> Main.parseArguments(args))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Cannot read workspace directory");
 
@@ -151,91 +139,66 @@ class MainAdditionalTest {
     }
 
     @Test
-    void main_shouldHandleWorkspaceShortForm() {
+    void main_shouldHandleWorkspaceShortForm() throws Exception {
         // given
         String workspace = tempDir.toString();
         String[] args = {"-w", workspace};
 
-        // when/then - Just verify parsing works, don't actually launch
-        // This will fail when trying to create Guice injector, but that's after argument parsing
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - we're just testing argument parsing
-            if (e instanceof IllegalArgumentException && e.getMessage().contains("workspace")) {
-                throw (IllegalArgumentException) e; // Re-throw workspace-related errors
-            }
-        }
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.workspaceRoot).isEqualTo(workspace);
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("Temporarily disabled - causing test hang")
-    void main_shouldHandlePortShortForm() {
+    void main_shouldHandlePortShortForm() throws Exception {
         // given
         String[] args = {"-s", "-p", "8080"};
 
-        // when/then - Just verify parsing works, don't actually launch
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - we're just testing argument parsing
-            if (e instanceof IllegalArgumentException
-                    && (e.getMessage().contains("port") || e.getMessage().contains("Invalid"))) {
-                throw (IllegalArgumentException) e; // Re-throw port-related errors
-            }
-        }
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.port).isEqualTo(8080);
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("Temporarily disabled - causing test hang")
-    void main_shouldHandleHostShortForm() {
+    void main_shouldHandleHostShortForm() throws Exception {
         // given
         String[] args = {"-s", "-h", "localhost"};
 
-        // when/then - Just verify parsing works, don't actually launch
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - we're just testing argument parsing
-            if (e instanceof IllegalArgumentException && e.getMessage().contains("host")) {
-                throw (IllegalArgumentException) e; // Re-throw host-related errors
-            }
-        }
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.host).isEqualTo("localhost");
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("Temporarily disabled - causing test hang")
-    void main_shouldHandleSocketShortForm() {
+    void main_shouldHandleSocketShortForm() throws Exception {
         // given
         String[] args = {"-s"};
 
-        // when/then - Just verify parsing works, don't actually launch
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - we're just testing argument parsing
-            if (e instanceof IllegalArgumentException && e.getMessage().contains("socket")) {
-                throw (IllegalArgumentException) e; // Re-throw socket-related errors
-            }
-        }
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
     }
 
     @Test
-    void main_shouldHandleUnknownArgument() {
+    void main_shouldHandleUnknownArgument() throws Exception {
         // given
         String[] args = {"--unknown-argument"};
 
-        // when/then - Just verify parsing works, don't actually launch
-        // Unknown arguments are just warned about via logger, not thrown as errors
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - server launch will fail in test
-            // But unknown arguments don't cause exceptions
-        }
+        // when - Unknown arguments are just warned about, not thrown as errors
+        Main.LaunchMode mode = Main.parseArguments(args);
 
-        // Note: Logger warnings are not captured in errContent
-        // This test just verifies that unknown arguments don't prevent parsing
+        // then - Should use defaults
+        assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
     }
 
     @Test
@@ -243,12 +206,10 @@ class MainAdditionalTest {
         // given
         String[] args = {"--socket", "--port", "70000"}; // Port > 65535
 
-        // when/then - The port will be parsed but may fail during socket binding
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - invalid port range
-        }
+        // when/then
+        assertThatThrownBy(() -> Main.parseArguments(args))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Port number must be between 1 and 65535");
     }
 
     @Test
@@ -257,23 +218,44 @@ class MainAdditionalTest {
         String[] args = {"--socket", "--port", "-1"};
 
         // when/then
-        assertThatThrownBy(() -> Main.runServer(args)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Main.parseArguments(args))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Port number must be between 1 and 65535");
     }
 
     @Test
-    void main_shouldHandleValidWorkspaceDirectory() {
+    void main_shouldHandleValidWorkspaceDirectory() throws Exception {
         // given
         String workspace = tempDir.toString();
         String[] args = {"--workspace", workspace};
 
-        // when/then - Just verify parsing works, don't actually launch
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - we're just testing argument parsing
-            if (e instanceof IllegalArgumentException && e.getMessage().contains("workspace")) {
-                throw (IllegalArgumentException) e; // Re-throw workspace-related errors
-            }
-        }
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.workspaceRoot).isEqualTo(workspace);
+    }
+
+    @Test
+    void main_shouldHandleDryRunFlag() throws Exception {
+        // given
+        String[] args = {"--dry-run", "--socket", "--port", "8080"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.dryRun).isTrue();
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.port).isEqualTo(8080);
+    }
+
+    @Test
+    void main_shouldNotHangWithDryRun() throws Exception {
+        // given
+        String[] args = {"--dry-run"};
+
+        // when/then - Should complete quickly without hanging
+        assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
     }
 }

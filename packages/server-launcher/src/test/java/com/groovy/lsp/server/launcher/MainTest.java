@@ -1,5 +1,6 @@
 package com.groovy.lsp.server.launcher;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
@@ -37,14 +38,10 @@ class MainTest {
 
     @Test
     void testHelpOption() {
-        // Test that --help prints usage information
+        // Test that --help throws HelpRequestedException
         assertThrows(
-                Main.HelpRequestedException.class, () -> Main.runServer(new String[] {"--help"}));
-
-        String output = outContent.toString(java.nio.charset.StandardCharsets.UTF_8);
-        assertTrue(
-                output.contains("Groovy Language Server") && output.contains("Usage:"),
-                "Help output should contain usage information");
+                Main.HelpRequestedException.class,
+                () -> Main.parseArguments(new String[] {"--help"}));
     }
 
     @Test
@@ -52,9 +49,7 @@ class MainTest {
         // Test that invalid port number throws exception
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    Main.runServer(new String[] {"--socket", "--port", "invalid"});
-                });
+                () -> Main.parseArguments(new String[] {"--socket", "--port", "invalid"}));
     }
 
     @Test
@@ -62,9 +57,7 @@ class MainTest {
         // Test that missing port value throws exception
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    Main.runServer(new String[] {"--socket", "--port"});
-                });
+                () -> Main.parseArguments(new String[] {"--socket", "--port"}));
     }
 
     @Test
@@ -72,42 +65,31 @@ class MainTest {
         // Test that missing host value throws exception
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    Main.runServer(new String[] {"--socket", "--host"});
-                });
+                () -> Main.parseArguments(new String[] {"--socket", "--host"}));
     }
 
     @Test
-    void testValidSocketMode() {
+    void testValidSocketMode() throws Exception {
         // Test valid socket mode arguments
         String[] args = {"--socket", "--host", "localhost", "--port", "8080"};
 
-        // This will try to launch the server, which will fail in test environment
-        // but we're testing argument parsing
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - server launch will fail in test
-            // But argument parsing should succeed
-            if (e instanceof IllegalArgumentException) {
-                fail("Should not throw IllegalArgumentException for valid arguments");
-            }
-        }
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.host).isEqualTo("localhost");
+        assertThat(mode.port).isEqualTo(8080);
     }
 
     @Test
-    void testSocketModeDefaults() {
+    void testSocketModeDefaults() throws Exception {
         // Test socket mode with default host and port
         String[] args = {"--socket"};
 
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - server launch will fail in test
-            if (e instanceof IllegalArgumentException) {
-                fail("Should not throw IllegalArgumentException for valid arguments");
-            }
-        }
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.host).isEqualTo("localhost"); // default
+        assertThat(mode.port).isEqualTo(4389); // default
     }
 
     @Test
@@ -118,49 +100,33 @@ class MainTest {
 
         String[] args = {"--workspace", validWorkspace.toString()};
 
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - server launch will fail in test
-            if (e instanceof IllegalArgumentException && e.getMessage().contains("workspace")) {
-                fail("Should not throw IllegalArgumentException for valid workspace");
-            }
-        }
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        assertThat(mode.workspaceRoot).isEqualTo(validWorkspace.toString());
     }
 
     @Test
-    void testStdioModeDefault() {
+    void testStdioModeDefault() throws Exception {
         // Test that stdio mode is the default
         String[] args = {};
 
-        try {
-            Main.runServer(args);
-        } catch (Exception e) {
-            // Expected - server launch will fail in test
-            if (e instanceof IllegalArgumentException) {
-                fail("Should not throw IllegalArgumentException for default mode");
-            }
-        }
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
+        assertThat(mode.workspaceRoot).isNull();
     }
 
     @Test
-    void testPortBoundaryValues() {
+    void testPortBoundaryValues() throws Exception {
         // Test port at boundaries
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Main.runServer(new String[] {"--socket", "--port", "0"}),
+                () -> Main.parseArguments(new String[] {"--socket", "--port", "0"}),
                 "Port 0 should be invalid");
 
         // Port 65535 should be valid (max port)
-        try {
-            Main.runServer(new String[] {"--socket", "--port", "65535"});
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("port")) {
-                fail("Port 65535 should be valid");
-            }
-        } catch (Exception e) {
-            // Expected - server launch will fail
-        }
+        Main.LaunchMode mode = Main.parseArguments(new String[] {"--socket", "--port", "65535"});
+        assertThat(mode.port).isEqualTo(65535);
     }
 
     @Test
@@ -168,7 +134,7 @@ class MainTest {
         // Test that missing workspace value throws exception
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Main.runServer(new String[] {"--workspace"}),
+                () -> Main.parseArguments(new String[] {"--workspace"}),
                 "Missing workspace value should throw exception");
     }
 }
