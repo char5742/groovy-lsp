@@ -671,4 +671,428 @@ class TypeInferenceServiceImplTest {
         // then - Should return OBJECT_TYPE when not in any class
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
+
+    @Test
+    void inferConstantType_shouldHandleAllPrimitiveTypes() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        // Test null value
+        ConstantExpression nullExpr = new ConstantExpression(null);
+        // Don't set type - let inferConstantType handle it
+        ClassNode nullType = typeInferenceService.inferExpressionType(nullExpr, moduleNode);
+        assertThat(nullType).isEqualTo(ClassHelper.OBJECT_TYPE);
+
+        // Test String
+        ConstantExpression stringExpr = new ConstantExpression("hello");
+        ClassNode stringType = typeInferenceService.inferExpressionType(stringExpr, moduleNode);
+        assertThat(stringType).isEqualTo(ClassHelper.STRING_TYPE);
+
+        // Test Integer - when using primitive value, it gets autoboxed
+        ConstantExpression intExpr = new ConstantExpression(42);
+        ClassNode intType = typeInferenceService.inferExpressionType(intExpr, moduleNode);
+        assertThat(intType.getName()).isEqualTo("java.lang.Integer");
+
+        // Test Long
+        ConstantExpression longExpr = new ConstantExpression(123456789L);
+        ClassNode longType = typeInferenceService.inferExpressionType(longExpr, moduleNode);
+        assertThat(longType.getName()).isEqualTo("java.lang.Long");
+
+        // Test Double
+        ConstantExpression doubleExpr = new ConstantExpression(3.14);
+        ClassNode doubleType = typeInferenceService.inferExpressionType(doubleExpr, moduleNode);
+        assertThat(doubleType.getName()).isEqualTo("java.lang.Double");
+
+        // Test Float
+        ConstantExpression floatExpr = new ConstantExpression(2.5f);
+        ClassNode floatType = typeInferenceService.inferExpressionType(floatExpr, moduleNode);
+        assertThat(floatType.getName()).isEqualTo("java.lang.Float");
+
+        // Test Boolean
+        ConstantExpression boolExpr = new ConstantExpression(true);
+        ClassNode boolType = typeInferenceService.inferExpressionType(boolExpr, moduleNode);
+        assertThat(boolType.getName()).isEqualTo("java.lang.Boolean");
+    }
+
+    @Test
+    void inferConstantType_shouldHandleOtherTypeWithExpressionType() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        // Test with a BigDecimal that has a specific type set
+        ConstantExpression bigDecimalExpr =
+                new ConstantExpression(new java.math.BigDecimal("123.45"));
+        ClassNode customType = ClassHelper.make(java.math.BigDecimal.class);
+        bigDecimalExpr.setType(customType);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(bigDecimalExpr, moduleNode);
+
+        // then - should use the expression's type
+        assertThat(type.getName()).isEqualTo("java.math.BigDecimal");
+    }
+
+    @Test
+    void inferConstantType_shouldUseValueClassForOtherTypes() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        // Test with various object types without setting expression type
+
+        // Test with Date
+        ConstantExpression dateExpr = new ConstantExpression(new java.util.Date());
+        ClassNode dateType = typeInferenceService.inferExpressionType(dateExpr, moduleNode);
+        assertThat(dateType.getName()).isEqualTo("java.util.Date");
+
+        // Test with ArrayList
+        ConstantExpression listExpr = new ConstantExpression(new java.util.ArrayList<>());
+        ClassNode listType = typeInferenceService.inferExpressionType(listExpr, moduleNode);
+        assertThat(listType.getName()).isEqualTo("java.util.ArrayList");
+
+        // Test with custom object
+        ConstantExpression customExpr = new ConstantExpression(new StringBuilder("test"));
+        ClassNode customType = typeInferenceService.inferExpressionType(customExpr, moduleNode);
+        assertThat(customType.getName()).isEqualTo("java.lang.StringBuilder");
+    }
+
+    @Test
+    void inferConstantType_shouldHandleByteAndShort() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        // Test Byte (should fall through to value.getClass())
+        ConstantExpression byteExpr = new ConstantExpression(Byte.valueOf((byte) 127));
+        ClassNode byteType = typeInferenceService.inferExpressionType(byteExpr, moduleNode);
+        assertThat(byteType.getName()).isEqualTo("java.lang.Byte");
+
+        // Test Short (should fall through to value.getClass())
+        ConstantExpression shortExpr = new ConstantExpression(Short.valueOf((short) 32767));
+        ClassNode shortType = typeInferenceService.inferExpressionType(shortExpr, moduleNode);
+        assertThat(shortType.getName()).isEqualTo("java.lang.Short");
+
+        // Test Character (should fall through to value.getClass())
+        ConstantExpression charExpr = new ConstantExpression(Character.valueOf('A'));
+        ClassNode charType = typeInferenceService.inferExpressionType(charExpr, moduleNode);
+        assertThat(charType.getName()).isEqualTo("java.lang.Character");
+    }
+
+    @Test
+    void inferConstantType_shouldHandleObjectTypeInExpression() throws Exception {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        // Test when expression has OBJECT_TYPE set - should use value.getClass()
+        ConstantExpression expr = new ConstantExpression(new java.net.URL("http://example.com"));
+        expr.setType(ClassHelper.OBJECT_TYPE); // Set to OBJECT_TYPE explicitly
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(expr, moduleNode);
+
+        // then - should fall through to value.getClass()
+        assertThat(type.getName()).isEqualTo("java.net.URL");
+    }
+
+    @Test
+    void inferMethodCallType_shouldReturnObjectTypeForGetterWithoutMatchingProperty() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        ClassNode testClass = new ClassNode("TestClass", 1, ClassHelper.OBJECT_TYPE);
+        // Don't add any property named "nonExistent"
+
+        VariableExpression objectExpr = new VariableExpression("obj");
+        objectExpr.setType(testClass);
+        MethodCallExpression getterCall =
+                new MethodCallExpression(
+                        objectExpr, "getNonExistent", ArgumentListExpression.EMPTY_ARGUMENTS);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(getterCall, moduleNode);
+
+        // then - Should return OBJECT_TYPE when getter pattern doesn't match any property
+        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+    }
+
+    @Test
+    void inferMethodCallType_shouldHandleGetterWithShortName() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        ClassNode testClass = new ClassNode("TestClass", 1, ClassHelper.OBJECT_TYPE);
+
+        VariableExpression objectExpr = new VariableExpression("obj");
+        objectExpr.setType(testClass);
+        // Method name "get" is too short (length <= 3)
+        MethodCallExpression getterCall =
+                new MethodCallExpression(objectExpr, "get", ArgumentListExpression.EMPTY_ARGUMENTS);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(getterCall, moduleNode);
+
+        // then - Should return OBJECT_TYPE when method name is too short for getter pattern
+        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+    }
+
+    @Test
+    void inferPropertyType_shouldReturnObjectTypeWhenPropertyNotFound() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        ClassNode testClass = new ClassNode("TestClass", 1, ClassHelper.OBJECT_TYPE);
+        // Don't add any property, field, or getter method
+
+        VariableExpression objectExpr = new VariableExpression("obj");
+        objectExpr.setType(testClass);
+        PropertyExpression propExpr = new PropertyExpression(objectExpr, "nonExistentProperty");
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(propExpr, moduleNode);
+
+        // then - Should return OBJECT_TYPE when property is not found
+        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+    }
+
+    @Test
+    void inferBinaryExpressionType_shouldReturnLeftTypeForAssignmentOperator() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        ConstantExpression leftExpr = new ConstantExpression("left");
+        leftExpr.setType(ClassHelper.STRING_TYPE);
+        ConstantExpression rightExpr = new ConstantExpression("right");
+
+        // Test assignment operator (not a comparison)
+        BinaryExpression assignExpr =
+                new BinaryExpression(
+                        leftExpr,
+                        Token.newSymbol(org.codehaus.groovy.syntax.Types.ASSIGN, 0, 0),
+                        rightExpr);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(assignExpr, moduleNode);
+
+        // then - Should return the left expression type for non-comparison operators
+        assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
+    }
+
+    @Test
+    void inferBinaryExpressionType_shouldReturnLeftTypeForBitwiseOperator() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        ConstantExpression leftExpr = new ConstantExpression(10);
+        leftExpr.setType(ClassHelper.int_TYPE);
+        ConstantExpression rightExpr = new ConstantExpression(5);
+
+        // Test bitwise AND operator (not a comparison)
+        BinaryExpression bitwiseExpr =
+                new BinaryExpression(
+                        leftExpr,
+                        Token.newSymbol(org.codehaus.groovy.syntax.Types.BITWISE_AND, 0, 0),
+                        rightExpr);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(bitwiseExpr, moduleNode);
+
+        // then - Should return the left expression type for non-comparison operators
+        assertThat(type).isEqualTo(ClassHelper.int_TYPE);
+    }
+
+    @Test
+    void inferVariableType_shouldReturnObjectTypeForThisOutsideClass() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        // Don't add any classes to the module
+
+        VariableExpression thisExpr = new VariableExpression("this");
+        thisExpr.setLineNumber(1);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(thisExpr, moduleNode);
+
+        // then - Should return OBJECT_TYPE when "this" is used outside any class
+        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+    }
+
+    @Test
+    void inferExpressionType_shouldInferTypeFromVariableInClassField() {
+        // given - Test variable declaration finder with field initialization
+        ASTService realAstService = new ASTServiceImpl();
+        TypeInferenceServiceImpl realTypeInference = new TypeInferenceServiceImpl(realAstService);
+
+        String sourceCode =
+                """
+                class TestClass {
+                    def myField = "Hello"
+
+                    def method() {
+                        def local = myField
+                    }
+                }
+                """;
+
+        ModuleNode moduleNode = realAstService.parseSource(sourceCode, "test.groovy");
+
+        // Create a variable expression for 'myField' inside the method
+        VariableExpression fieldVar = new VariableExpression("myField");
+        fieldVar.setLineNumber(5);
+
+        // when
+        ClassNode type = realTypeInference.inferExpressionType(fieldVar, moduleNode);
+
+        // then - Should find the field type
+        assertThat(type.getName()).isEqualTo("java.lang.Object"); // def defaults to Object
+    }
+
+    @Test
+    void inferVariableType_shouldHandleVariableWithNullAccessedVariable() {
+        // given
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        VariableExpression varExpr = new VariableExpression("myVar");
+        // Don't set accessed variable (it's null by default)
+        // Don't add any declaration in the module
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(varExpr, moduleNode);
+
+        // then - Should return OBJECT_TYPE when variable is not found
+        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+    }
+
+    @Test
+    void inferExpressionType_shouldInferTypeFromNonConstantRightExpression() {
+        // given - Test VariableDeclarationFinder with non-constant right expression
+        ASTService realAstService = new ASTServiceImpl();
+        TypeInferenceServiceImpl realTypeInference = new TypeInferenceServiceImpl(realAstService);
+
+        String sourceCode =
+                """
+                def list = []
+                def myVar = list
+                """;
+
+        ModuleNode moduleNode = realAstService.parseSource(sourceCode, "test.groovy");
+
+        // Create a variable expression for 'myVar'
+        VariableExpression varExpr = new VariableExpression("myVar");
+        varExpr.setLineNumber(2);
+
+        // when
+        ClassNode type = realTypeInference.inferExpressionType(varExpr, moduleNode);
+
+        // then - Should infer type from the right expression
+        assertThat(type.getName()).isEqualTo("java.lang.Object"); // def defaults to Object
+    }
+
+    @Test
+    void inferMethodCallType_shouldHandleGetterPatternCaseSensitivity() {
+        // given - Test getter pattern with different case scenarios
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+        ClassNode testClass = new ClassNode("TestClass", 1, ClassHelper.OBJECT_TYPE);
+
+        // Add property with lowercase name
+        PropertyNode property =
+                new PropertyNode("value", 1, ClassHelper.int_TYPE, testClass, null, null, null);
+        testClass.addProperty(property);
+
+        VariableExpression objectExpr = new VariableExpression("obj");
+        objectExpr.setType(testClass);
+
+        // Test getter with correct case
+        MethodCallExpression getterCall =
+                new MethodCallExpression(
+                        objectExpr, "getValue", ArgumentListExpression.EMPTY_ARGUMENTS);
+
+        // when
+        ClassNode type = typeInferenceService.inferExpressionType(getterCall, moduleNode);
+
+        // then
+        assertThat(type).isEqualTo(ClassHelper.int_TYPE);
+    }
+
+    @Test
+    void inferConstantType_shouldReturnPrimitiveTypesDirectly() {
+        // given - Force the branches for primitive type checks to be covered
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        // Use reflection to directly call inferConstantType
+        try {
+            java.lang.reflect.Method inferConstantTypeMethod =
+                    TypeInferenceServiceImpl.class.getDeclaredMethod(
+                            "inferConstantType", ConstantExpression.class);
+            inferConstantTypeMethod.setAccessible(true);
+
+            // Test Integer primitive branch
+            ConstantExpression intExpr = new ConstantExpression(Integer.valueOf(42));
+            // Force value to be primitive int
+            java.lang.reflect.Field valueField = ConstantExpression.class.getDeclaredField("value");
+            valueField.setAccessible(true);
+            valueField.set(intExpr, 42); // Primitive int
+
+            ClassNode intType =
+                    (ClassNode) inferConstantTypeMethod.invoke(typeInferenceService, intExpr);
+            assertThat(intType).isEqualTo(ClassHelper.int_TYPE);
+
+            // Test Long primitive branch
+            ConstantExpression longExpr = new ConstantExpression(123L);
+            valueField.set(longExpr, 123L); // Primitive long
+            ClassNode longType =
+                    (ClassNode) inferConstantTypeMethod.invoke(typeInferenceService, longExpr);
+            assertThat(longType).isEqualTo(ClassHelper.long_TYPE);
+
+            // Test Double primitive branch
+            ConstantExpression doubleExpr = new ConstantExpression(3.14);
+            valueField.set(doubleExpr, 3.14); // Primitive double
+            ClassNode doubleType =
+                    (ClassNode) inferConstantTypeMethod.invoke(typeInferenceService, doubleExpr);
+            assertThat(doubleType).isEqualTo(ClassHelper.double_TYPE);
+
+            // Test Float primitive branch
+            ConstantExpression floatExpr = new ConstantExpression(2.5f);
+            valueField.set(floatExpr, 2.5f); // Primitive float
+            ClassNode floatType =
+                    (ClassNode) inferConstantTypeMethod.invoke(typeInferenceService, floatExpr);
+            assertThat(floatType).isEqualTo(ClassHelper.float_TYPE);
+
+            // Test Boolean primitive branch
+            ConstantExpression boolExpr = new ConstantExpression(true);
+            valueField.set(boolExpr, true); // Primitive boolean
+            ClassNode boolType =
+                    (ClassNode) inferConstantTypeMethod.invoke(typeInferenceService, boolExpr);
+            assertThat(boolType).isEqualTo(ClassHelper.boolean_TYPE);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Test failed", e);
+        }
+    }
+
+    @Test
+    void inferConstantType_shouldUseExpressionTypeWhenNotObjectType() {
+        // given - Test the branch where expression has a non-OBJECT_TYPE set
+        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
+
+        try {
+            java.lang.reflect.Method inferConstantTypeMethod =
+                    TypeInferenceServiceImpl.class.getDeclaredMethod(
+                            "inferConstantType", ConstantExpression.class);
+            inferConstantTypeMethod.setAccessible(true);
+
+            // Create a constant expression with a custom object type that won't match any
+            // instanceof checks
+            Object customObject =
+                    new Object() {
+                        @Override
+                        public String toString() {
+                            return "CustomObject";
+                        }
+                    };
+            ConstantExpression expr = new ConstantExpression(customObject);
+            ClassNode customType = new ClassNode("CustomType", 1, ClassHelper.OBJECT_TYPE);
+            expr.setType(customType);
+
+            // when
+            ClassNode type = (ClassNode) inferConstantTypeMethod.invoke(typeInferenceService, expr);
+
+            // then - Should return the custom type from the expression
+            assertThat(type).isEqualTo(customType);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Test failed", e);
+        }
+    }
 }

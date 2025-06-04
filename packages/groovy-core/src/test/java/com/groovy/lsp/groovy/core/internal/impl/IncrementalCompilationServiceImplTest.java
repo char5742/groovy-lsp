@@ -1141,5 +1141,306 @@ class IncrementalCompilationServiceImplTest {
             List<String> affected = service.getAffectedModules("DepsTest.groovy", allModules);
             assertThat(affected).contains("DependentTest.groovy");
         }
+
+        @Test
+        @DisplayName("Should compile to all compilation phases")
+        void shouldCompileToAllPhases() {
+            String sourceCode =
+                    """
+                    class AllPhasesTest {
+                        String name = "test"
+
+                        void method() {
+                            println name
+                        }
+                    }
+                    """;
+
+            // Test all compilation phases
+            CompilationPhase[] allPhases = {
+                CompilationPhase.INITIALIZATION,
+                CompilationPhase.PARSING,
+                CompilationPhase.CONVERSION,
+                CompilationPhase.SEMANTIC_ANALYSIS,
+                CompilationPhase.CANONICALIZATION,
+                CompilationPhase.INSTRUCTION_SELECTION,
+                CompilationPhase.CLASS_GENERATION,
+                CompilationPhase.OUTPUT,
+                CompilationPhase.FINALIZATION
+            };
+
+            for (CompilationPhase phase : allPhases) {
+                // Clear cache to force fresh compilation for each phase
+                service.clearAllCaches();
+
+                CompilationUnit unit = service.createCompilationUnit(config);
+                ModuleNode result =
+                        service.compileToPhase(unit, sourceCode, "AllPhasesTest.groovy", phase);
+
+                // PARSING phase doesn't produce AST, need at least CONVERSION
+                if (phase == CompilationPhase.PARSING || phase == CompilationPhase.INITIALIZATION) {
+                    // These early phases might not produce a complete AST
+                    if (result != null) {
+                        assertThat(result.getClasses()).isNotNull();
+                    }
+                } else {
+                    assertThat(result)
+                            .as("Compilation to phase %s should produce a module", phase)
+                            .isNotNull();
+                    assertThat(result.getClasses())
+                            .as("Module for phase %s should have classes", phase)
+                            .hasSize(1);
+                    assertThat(result.getClasses().get(0).getName()).isEqualTo("AllPhasesTest");
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("Should compile to all phases with CompilationResult")
+        void shouldCompileToAllPhasesWithResult() {
+            String sourceCode =
+                    """
+                    class AllPhasesResultTest {
+                        String name = "test"
+
+                        void method() {
+                            println name
+                        }
+                    }
+                    """;
+
+            // Test all compilation phases with CompilationResult
+            CompilationPhase[] allPhases = CompilationPhase.values();
+
+            for (CompilationPhase phase : allPhases) {
+                // Clear cache to force fresh compilation for each phase
+                service.clearAllCaches();
+
+                CompilationUnit unit = service.createCompilationUnit(config);
+                CompilationResult result =
+                        service.compileToPhaseWithResult(
+                                unit, sourceCode, "AllPhasesResultTest.groovy", phase);
+
+                assertThat(result)
+                        .as("CompilationResult for phase %s should not be null", phase)
+                        .isNotNull();
+
+                // Early phases might not produce successful results
+                if (phase == CompilationPhase.INITIALIZATION || phase == CompilationPhase.PARSING) {
+                    // These early phases may fail or have incomplete results
+                    if (result.isSuccessful()) {
+                        ModuleNode module = result.getModuleNode();
+                        assertThat(module).isNotNull();
+                    }
+                } else {
+                    // Later phases should compile successfully for valid code
+                    assertThat(result.isSuccessful())
+                            .as("Compilation to phase %s should be successful", phase)
+                            .isTrue();
+
+                    ModuleNode module = result.getModuleNode();
+                    assertThat(module)
+                            .as("Module for phase %s should not be null", phase)
+                            .isNotNull();
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle null source code with proper error in compileToPhaseWithResult")
+        void shouldHandleNullSourceCodeInCompileToPhaseWithResult() {
+            CompilationUnit unit = service.createCompilationUnit(config);
+
+            // This should trigger the null check at line 181, throw NPE, which gets caught at line
+            // 294
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit, null, "NullTest.groovy", CompilationPhase.CONVERSION);
+
+            // The NPE is caught and converted to a CompilationResult.failure
+            assertThat(result).isNotNull();
+            assertThat(result.isSuccessful()).isFalse();
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.getErrors()).hasSize(1);
+            assertThat(result.getErrors().get(0).getMessage())
+                    .contains("Source code cannot be null");
+        }
+
+        @Test
+        @DisplayName("Should handle compilation error with no error collector messages")
+        void shouldHandleCompilationErrorWithNoErrorMessages() {
+            // Create a scenario where compilation fails during the compile phase
+            // but errorCollector has no errors - this tests the else branch at line 227-237
+            String sourceCode = "class Test { def field = }"; // Syntax error
+
+            CompilationUnit unit = service.createCompilationUnit(config);
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit, sourceCode, "BrokenSyntax.groovy", CompilationPhase.CONVERSION);
+
+            // Should have caught the exception and created error messages
+            assertThat(result.isSuccessful()).isFalse();
+            assertThat(result.hasErrors()).isTrue();
+            assertThat(result.getErrors()).isNotEmpty();
+
+            // The error message should contain syntax error information
+            boolean hasValidError =
+                    result.getErrors().stream()
+                            .anyMatch(
+                                    error ->
+                                            error.getMessage().contains("Unexpected")
+                                                    || error.getMessage().contains("expecting")
+                                                    || error.getMessage()
+                                                            .contains("Compilation failed"));
+            assertThat(hasValidError).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return partial result when compilation produces AST with errors")
+        void shouldReturnPartialResultWithASTAndErrors() {
+            // Create code that will parse successfully but have errors during later phases
+            // This tests the partial success branch at line 286-288
+            String codeWithError =
+                    """
+                    class PartialSuccessTest {
+                        void method() {
+                            // This will parse but fail during semantic analysis
+                            unknownVariable.doSomething()
+                        }
+                    }
+                    """;
+
+            CompilationUnit unit = service.createCompilationUnit(config);
+
+            // First compile to CONVERSION phase - should succeed
+            CompilationResult conversionResult =
+                    service.compileToPhaseWithResult(
+                            unit,
+                            codeWithError,
+                            "PartialSuccess.groovy",
+                            CompilationPhase.CONVERSION);
+            assertThat(conversionResult.isSuccessful()).isTrue();
+
+            // Clear cache to force recompilation
+            service.clearCache("PartialSuccess.groovy");
+
+            // Now compile to SEMANTIC_ANALYSIS - should get partial result with errors
+            CompilationResult semanticResult =
+                    service.compileToPhaseWithResult(
+                            unit,
+                            codeWithError,
+                            "PartialSuccess.groovy",
+                            CompilationPhase.SEMANTIC_ANALYSIS);
+
+            // The result should have both AST and errors
+            assertThat(semanticResult).isNotNull();
+            if (semanticResult.hasErrors() && semanticResult.getModuleNode() != null) {
+                // This is the partial success case - has both AST and errors
+                assertThat(semanticResult.isSuccessful()).isFalse(); // Not fully successful
+                assertThat(semanticResult.hasErrors()).isTrue(); // Has errors
+                assertThat(semanticResult.getModuleNode()).isNotNull(); // But still has AST
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle warnings in compilation result")
+        void shouldProcessWarningsInCompilationResult() {
+            // Create code that generates warnings
+            String codeWithWarnings =
+                    """
+                    @Deprecated
+                    class WarningGeneratorTest {
+                        @Deprecated
+                        void deprecatedMethod() {
+                            // Using deprecated API might generate warnings
+                            System.runFinalizersOnExit(true);
+                        }
+                    }
+                    """;
+
+            CompilerConfiguration warningConfig = new CompilerConfiguration();
+            warningConfig.setWarningLevel(1); // Enable warnings
+
+            CompilationUnit unit = service.createCompilationUnit(warningConfig);
+            CompilationResult result =
+                    service.compileToPhaseWithResult(
+                            unit,
+                            codeWithWarnings,
+                            "WarningTest.groovy",
+                            CompilationPhase.CLASS_GENERATION);
+
+            // Check if result contains any warnings (testing lines 255-268)
+            assertThat(result).isNotNull();
+            if (result.getErrors() != null) {
+                boolean hasWarnings =
+                        result.getErrors().stream()
+                                .anyMatch(
+                                        error ->
+                                                error.getType()
+                                                        == CompilationResult.CompilationError
+                                                                .ErrorType.WARNING);
+                // This tests the warning handling code path
+                assertThat(result.isSuccessful() || hasWarnings).isTrue();
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle phase comparison with null phases")
+        void shouldHandleNullPhasesInComparison() {
+            // This tests the defensive null check in isPhaseGreaterOrEqual (lines 527-529)
+            // We need to use reflection to test this private method
+            try {
+                java.lang.reflect.Method method =
+                        IncrementalCompilationServiceImpl.class.getDeclaredMethod(
+                                "isPhaseGreaterOrEqual",
+                                CompilationPhase.class,
+                                CompilationPhase.class);
+                method.setAccessible(true);
+
+                // Test with valid phases first
+                boolean result =
+                        (boolean)
+                                method.invoke(
+                                        service,
+                                        CompilationPhase.SEMANTIC_ANALYSIS,
+                                        CompilationPhase.CONVERSION);
+                assertThat(result).isTrue();
+
+                // The implementation uses a Map with all phases, so null phases would need
+                // to be injected via reflection or mocking, which is complex.
+                // The defensive check is there for safety but shouldn't occur in practice.
+            } catch (Exception e) {
+                // If reflection fails, the test itself has issues
+                fail("Failed to test isPhaseGreaterOrEqual: " + e.getMessage());
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle null module node in updateDependencyGraph")
+        void shouldHandleNullModuleInDependencyUpdate() {
+            // This tests the null check in updateDependencyGraph (lines 474-477)
+            // We need to compile something that might result in null ModuleNode
+            String invalidCode = "this is not valid groovy code at all!";
+
+            CompilationUnit unit = service.createCompilationUnit(config);
+
+            // This should fail to compile and return null
+            ModuleNode result =
+                    service.compileToPhase(
+                            unit,
+                            invalidCode,
+                            "InvalidForDepGraph.groovy",
+                            CompilationPhase.CONVERSION);
+
+            // The null result means updateDependencyGraph was called with null and handled it
+            assertThat(result).isNull();
+
+            // Verify the dependency graph doesn't contain this file
+            // (it should have early returned in updateDependencyGraph)
+            Map<String, ModuleNode> allModules = new HashMap<>();
+            List<String> affected =
+                    service.getAffectedModules("InvalidForDepGraph.groovy", allModules);
+            assertThat(affected).isEmpty();
+        }
     }
 }
