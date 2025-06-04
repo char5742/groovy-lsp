@@ -46,7 +46,6 @@ public class GuavaEventBus implements EventBus {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T extends DomainEvent> void subscribe(Class<T> eventType, EventHandler<T> handler) {
         EventHandlerAdapter<T> adapter = new EventHandlerAdapter<>(eventType, handler);
         adapters.put(handler, adapter);
@@ -80,7 +79,7 @@ public class GuavaEventBus implements EventBus {
 
         @com.google.common.eventbus.Subscribe
         public void handleEvent(DomainEvent event) {
-            if (eventType.isInstance(event)) {
+            if (eventType.equals(event.getClass())) {
                 handler.handle(eventType.cast(event));
             }
         }

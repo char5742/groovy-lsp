@@ -16,6 +16,9 @@ dependencies {
 
     // Guava for event bus implementation
     implementation libs.guava
+
+    // Test dependencies
+    testImplementation libs.bundles.lsp4j
 }
 
 jar {

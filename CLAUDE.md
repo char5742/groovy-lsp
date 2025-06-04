@@ -1,0 +1,2 @@
+ - 極力@SuppressWarningsを使用しないでください
+ - Prohibited: git push --no-verfify

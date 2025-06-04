@@ -20,6 +20,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,38 +37,63 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            logger.info("Starting Groovy Language Server...");
-
-            // Parse command line arguments
-            LaunchMode mode = parseArguments(args);
-
-            // Get workspace root (from command line or current directory)
-            String workspaceRoot =
-                    mode.workspaceRoot != null
-                            ? mode.workspaceRoot
-                            : System.getProperty("user.dir");
-            logger.info("Using workspace root: {}", workspaceRoot);
-
-            // Create Guice injector with workspace root
-            Injector injector = Guice.createInjector(new ServerModule(workspaceRoot));
-            logger.info("Dependency injection container initialized");
-
-            // Create the server instance through DI
-            GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
-
-            // Launch the server based on the mode
-            switch (mode.type) {
-                case STDIO -> launchStdio(server);
-                case SOCKET -> launchSocket(server, mode.host, mode.port);
-                default -> throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
-            }
+            runServer(args);
+        } catch (HelpRequestedException e) {
+            // Help was printed, exit normally
+            System.exit(0);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid arguments: {}", e.getMessage());
-            // Re-throw for tests
-            throw e;
+            System.exit(1);
         } catch (Exception e) {
             logger.error("Failed to start Groovy Language Server", e);
             System.exit(1);
+        }
+    }
+
+    /**
+     * Run the server without calling System.exit() - for testing purposes.
+     * @param args command line arguments
+     * @throws Exception if server fails to start
+     */
+    static void runServer(String[] args) throws Exception {
+        logger.info("Starting Groovy Language Server...");
+
+        // Parse command line arguments
+        LaunchMode mode = parseArguments(args);
+
+        // If dry-run mode, just return after parsing
+        if (mode.dryRun) {
+            logger.info("Dry run mode - arguments parsed successfully:");
+            logger.info("  Launch type: {}", mode.type);
+            logger.info(
+                    "  Workspace: {}",
+                    mode.workspaceRoot != null
+                            ? mode.workspaceRoot
+                            : System.getProperty("user.dir"));
+            if (mode.type == LaunchType.SOCKET) {
+                logger.info("  Host: {}", mode.host);
+                logger.info("  Port: {}", mode.port);
+            }
+            return;
+        }
+
+        // Get workspace root (from command line or current directory)
+        String workspaceRoot =
+                mode.workspaceRoot != null ? mode.workspaceRoot : System.getProperty("user.dir");
+        logger.info("Using workspace root: {}", workspaceRoot);
+
+        // Create Guice injector with workspace root
+        Injector injector = Guice.createInjector(new ServerModule(workspaceRoot));
+        logger.info("Dependency injection container initialized");
+
+        // Create the server instance through DI
+        GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
+
+        // Launch the server based on the mode
+        switch (mode.type) {
+            case STDIO -> launchStdio(server);
+            case SOCKET -> launchSocket(server, mode.host, mode.port);
+            default -> throw new IllegalArgumentException("Unknown launch mode: " + mode.type);
         }
     }
 
@@ -114,10 +140,8 @@ public class Main {
                 serverSocket.bind(new InetSocketAddress(host, port));
                 logger.info("Server socket listening on {}:{}", host, port);
             } catch (IOException e) {
-                String errorMessage = e.getMessage();
-                if (errorMessage != null
-                        && (errorMessage.contains("Address already in use")
-                                || errorMessage.contains("bind failed"))) {
+                // Check for BindException which indicates port is already in use
+                if (e instanceof java.net.BindException) {
                     logger.error(
                             "Port {} is already in use. Please choose a different port or stop the"
                                     + " conflicting process.",
@@ -182,9 +206,11 @@ public class Main {
 
     /**
      * Parse command line arguments to determine launch mode.
+     * Using statement switch (not expression switch) because we need to modify loop index 'i'
+     * and handle multiple statements with side effects in some cases.
      */
     @SuppressWarnings("StatementSwitchToExpressionSwitch")
-    private static LaunchMode parseArguments(String[] args) {
+    static LaunchMode parseArguments(String[] args) throws HelpRequestedException {
         LaunchMode mode = new LaunchMode();
         mode.type = LaunchType.STDIO; // Default to stdio
 
@@ -211,6 +237,10 @@ public class Main {
                     if (i + 1 < args.length) {
                         try {
                             mode.port = Integer.parseInt(args[++i]);
+                            if (mode.port <= 0 || mode.port > 65535) {
+                                throw new IllegalArgumentException(
+                                        "Port number must be between 1 and 65535: " + mode.port);
+                            }
                         } catch (NumberFormatException e) {
                             throw new IllegalArgumentException("Invalid port number: " + args[i]);
                         }
@@ -230,7 +260,12 @@ public class Main {
 
                 case "--help":
                     printHelp();
-                    System.exit(0);
+                    throw new HelpRequestedException();
+                // Note: HelpRequestedException is handled in main() method
+
+                case "--dry-run":
+                    mode.dryRun = true;
+                    logger.info("Dry run mode enabled - will parse arguments only");
                     break;
 
                 default:
@@ -280,10 +315,11 @@ public class Main {
         System.out.println("Options:");
         System.out.println("  --socket, -s              Use socket mode instead of stdio");
         System.out.println("  --host, -h <host>         Host for socket mode (default: localhost)");
-        System.out.println("  --port, -p <port>         Port for socket mode (default: 5007)");
+        System.out.println("  --port, -p <port>         Port for socket mode (default: 4389)");
         System.out.println(
                 "  --workspace, -w <path>    Workspace root directory (default: current"
                         + " directory)");
+        System.out.println("  --dry-run                 Parse arguments only, don't start server");
         System.out.println("  --help                    Show this help message");
         System.out.println();
         System.out.println("Environment variables:");
@@ -298,7 +334,7 @@ public class Main {
         System.out.println("  groovy-language-server                    # Start in stdio mode");
         System.out.println(
                 "  groovy-language-server --socket           # Start in socket mode on"
-                        + " localhost:5007");
+                        + " localhost:4389");
         System.out.println(
                 "  groovy-language-server -s -h 0.0.0.0 -p 8080  # Start on all interfaces, port"
                         + " 8080");
@@ -307,20 +343,30 @@ public class Main {
     /**
      * Launch mode configuration.
      */
-    private static class LaunchMode {
+    static class LaunchMode {
         LaunchType type = LaunchType.STDIO; // Default to STDIO mode
         String host = DEFAULT_SOCKET_HOST; // Default host
         int port = DEFAULT_SOCKET_PORT; // Default LSP port
+        boolean dryRun = false; // Dry run mode - parse arguments only, don't start server
 
-        @SuppressWarnings("NullAway") // Field will be initialized before use
-        String workspaceRoot = null; // Workspace root directory
+        @Nullable String workspaceRoot =
+                null; // Workspace root directory (null = use current directory)
     }
 
     /**
      * Launch type enumeration.
      */
-    private enum LaunchType {
+    enum LaunchType {
         STDIO,
         SOCKET
+    }
+
+    /**
+     * Exception thrown when help is requested.
+     */
+    static class HelpRequestedException extends Exception {
+        HelpRequestedException() {
+            super("Help requested");
+        }
     }
 }

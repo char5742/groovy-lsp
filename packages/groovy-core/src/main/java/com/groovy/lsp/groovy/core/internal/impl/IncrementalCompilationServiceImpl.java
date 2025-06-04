@@ -3,7 +3,16 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import com.groovy.lsp.groovy.core.api.CompilationResult;
 import com.groovy.lsp.groovy.core.api.CompilationResult.CompilationError;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -168,6 +177,10 @@ public class IncrementalCompilationServiceImpl implements IncrementalCompilation
         logger.debug("Compiling {} to phase {} with detailed results", sourceName, phase);
 
         try {
+            // Validate input parameters
+            if (sourceCode == null) {
+                throw new NullPointerException("Source code cannot be null");
+            }
             // Check cache first with read lock
             cacheLock.readLock().lock();
             try {

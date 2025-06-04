@@ -16,6 +16,10 @@ dependencies {
 
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
+
+    // Test dependencies
+    testImplementation libs.bundles.testing
+    testImplementation libs.mockito.core
 }
 
 test {

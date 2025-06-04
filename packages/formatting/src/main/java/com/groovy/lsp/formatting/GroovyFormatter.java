@@ -3,6 +3,12 @@ package com.groovy.lsp.formatting;
 import com.google.googlejavaformat.java.FormatterException;
 import com.groovy.lsp.formatting.options.FormatOptions;
 import java.util.regex.Pattern;
+import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.ErrorCollector;
+import org.codehaus.groovy.control.Phases;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.io.StringReaderSource;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +64,12 @@ public class GroovyFormatter {
         }
 
         logger.debug("Formatting Groovy source code");
+
+        // First, validate the syntax
+        if (!isValidGroovySyntax(source)) {
+            logger.warn("Invalid Groovy syntax, cannot format");
+            throw new FormatterException("Invalid Groovy syntax");
+        }
 
         try {
             // TODO: Implement proper Groovy formatting
@@ -249,5 +261,34 @@ public class GroovyFormatter {
                         ? "\t".repeat(level)
                         : " ".repeat(level * options.getIndentSize());
         return indent + line;
+    }
+
+    /**
+     * Validates if the given source code has valid Groovy syntax
+     *
+     * @param source the source code to validate
+     * @return true if the syntax is valid, false otherwise
+     */
+    private boolean isValidGroovySyntax(String source) {
+        try {
+            CompilerConfiguration config = new CompilerConfiguration();
+            CompilationUnit unit = new CompilationUnit(config);
+            SourceUnit sourceUnit =
+                    new SourceUnit(
+                            "formatter-validation",
+                            new StringReaderSource(source, config),
+                            config,
+                            unit.getClassLoader(),
+                            new ErrorCollector(config));
+
+            unit.addSource(sourceUnit);
+            unit.compile(Phases.CONVERSION); // Just parse, don't need full compilation
+
+            // Check if there are any syntax errors
+            return !sourceUnit.getErrorCollector().hasErrors();
+        } catch (Exception e) {
+            logger.debug("Syntax validation failed: {}", e.getMessage());
+            return false;
+        }
     }
 }

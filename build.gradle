@@ -33,6 +33,7 @@ subprojects {
     apply plugin: 'groovy'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'net.ltgt.nullaway'
+    apply plugin: 'jacoco'
 
     java {
         toolchain {
@@ -71,7 +72,67 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+
+        testLogging {
+            events "passed", "skipped", "failed"
+            exceptionFormat "full"
+        }
     }
+
+    jacoco {
+        toolVersion = libs.versions.jacoco.get()
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/*Launcher*',
+                    '**/*Module*',
+                    '**/*Constants*'
+                ])
+            }))
+        }
+    }
+
+    jacocoTestCoverageVerification {
+        dependsOn test
+        violationRules {
+            rule {
+                limit {
+                    minimum = 0.80
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                }
+            }
+            rule {
+                limit {
+                    minimum = 0.80
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                }
+            }
+        }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/*Launcher*',
+                    '**/*Module*',
+                    '**/*Constants*',
+                    '**/*Main*',
+                    '**/*Test*'
+                ])
+            }))
+        }
+    }
+
+    check.dependsOn jacocoTestCoverageVerification
 
     tasks.withType(JavaCompile) {
         options.errorprone {
@@ -83,7 +144,31 @@ subprojects {
             option("NullAway:AnnotatedPackages", "com.groovy.lsp")
             option("NullAway:TreatGeneratedAsUnannotated", "true")
             option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock,org.mockito.Spy")
+
+            // BadImport: FQDNを短縮するための設定
+            check("BadImport", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+
+            // WildcardImport: ワイルドカードインポートを禁止
+            check("WildcardImport", net.ltgt.gradle.errorprone.CheckSeverity.WARN)
         }
 
+    }
+}
+
+// 全体のカバレッジレポートを集約
+task jacocoRootReport(type: JacocoReport) {
+    description = "Aggregate JaCoCo reports from all subprojects"
+    group = "verification"
+
+    dependsOn subprojects.test
+
+    sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.from = files(subprojects.sourceSets.main.output)
+    executionData.from = files(subprojects.jacocoTestReport.executionData).filter { it.exists() }
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
     }
 }

@@ -11,6 +11,12 @@ dependencies {
 
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
+
+    // Test dependencies
+    testImplementation libs.wiremock.jre8
+    testImplementation libs.awaitility
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.junit.jupiter
 }
 
 

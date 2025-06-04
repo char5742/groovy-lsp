@@ -6,12 +6,21 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
-import org.lmdbjava.*;
+import org.lmdbjava.Cursor;
+import org.lmdbjava.Dbi;
+import org.lmdbjava.DbiFlags;
+import org.lmdbjava.Env;
+import org.lmdbjava.GetOp;
+import org.lmdbjava.Txn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,21 +216,33 @@ public class SymbolIndex implements AutoCloseable {
 
         try (Txn<ByteBuffer> txn = getEnv().txnRead()) {
             try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
-                ByteBuffer queryBuffer = toBuffer(query);
+                // Handle empty query - return all symbols
+                if (query.isEmpty()) {
+                    if (cursor.first()) {
+                        do {
+                            SymbolInfo symbol = deserializeSymbol(cursor.val());
+                            if (symbol != null) {
+                                results.add(symbol);
+                            }
+                        } while (cursor.next());
+                    }
+                } else {
+                    ByteBuffer queryBuffer = toBuffer(query);
 
-                // Prefix search
-                if (cursor.get(queryBuffer, GetOp.MDB_SET_RANGE)) {
-                    do {
-                        String key = toString(cursor.key());
-                        if (!key.startsWith(query)) {
-                            break;
-                        }
+                    // Prefix search
+                    if (cursor.get(queryBuffer, GetOp.MDB_SET_RANGE)) {
+                        do {
+                            String key = toString(cursor.key());
+                            if (!key.startsWith(query)) {
+                                break;
+                            }
 
-                        SymbolInfo symbol = deserializeSymbol(cursor.val());
-                        if (symbol != null) {
-                            results.add(symbol);
-                        }
-                    } while (cursor.next());
+                            SymbolInfo symbol = deserializeSymbol(cursor.val());
+                            if (symbol != null) {
+                                results.add(symbol);
+                            }
+                        } while (cursor.next());
+                    }
                 }
             }
         }

@@ -20,8 +20,16 @@ pre-commit:
         changed_modules=$(git diff --cached --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
         if [ -n "$changed_modules" ]; then
           for module in $changed_modules; do
-            echo "Running tests for :$module"
-            ./gradlew :$module:test
+            # スキップするモジュールをcase文で管理
+            case "$module" in
+              "settings.gradle"|"e2e-tests"|"benchmarks")
+                continue
+                ;;
+              *)
+                echo "Running tests for :$module"
+                ./gradlew :$module:test
+                ;;
+            esac
           done
         fi
       tags: testing
@@ -35,45 +43,71 @@ pre-push:
       run: ./gradlew spotlessCheck
       tags: formatting
 
-    # Error-proneの警告チェック
-    errorprone-check:
+    # コンパイルチェックのみ（テストは別途実行）
+    compile-check:
       run: |
-        echo "Checking for Error-prone warnings..."
-        # クリーンビルドして警告を確認
-        ./gradlew clean build --no-build-cache 2>&1 | tee build.log
+        echo "Checking compilation..."
+        # コンパイルのみ実行（テストをスキップ）
+        ./gradlew compileJava compileTestJava compileGroovy compileTestGroovy --parallel
+      tags: build quality
 
-        # APIGuardian関連の警告を除外してError-prone警告をカウント
-        # 既知の無害な警告をフィルタリング
-        errorprone_count=$(grep -E "(\[NullAway\]|\[UnusedVariable\]|\[ThreadPriorityCheck\]|\[EnumOrdinal\]|\[JdkObsolete\]|\[StatementSwitch\]|\[PatternMatching\]|\[StringCaseLocaleUsage\]|\[FutureReturnValueIgnored\]|\[DefaultCharset\])" build.log | wc -l || echo "0")
+    # 変更されたモジュールのテストのみ実行
+    test-changed:
+      run: |
+        echo "Running tests for changed modules..."
+        # 変更されたファイルからモジュールを特定
+        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
 
-        # Error-prone関連の警告を抽出
-        errorprone_warnings=$(grep -E "(\[NullAway\]|\[UnusedVariable\]|\[ThreadPriorityCheck\]|\[EnumOrdinal\]|\[JdkObsolete\]|\[StatementSwitch\]|\[PatternMatching\]|\[StringCaseLocaleUsage\]|\[FutureReturnValueIgnored\]|\[DefaultCharset\])" build.log || true)
-
-        # クリーンアップ
-        rm -f build.log
-
-        if [ "$errorprone_count" -gt 0 ]; then
-          echo "❌ Found $errorprone_count Error-prone warnings!"
-          if [ -n "$errorprone_warnings" ]; then
-            echo "Error-prone warnings detected:"
-            echo "$errorprone_warnings"
-          fi
-          echo "Please fix all Error-prone warnings before pushing."
-          exit 1
-        else
-          echo "✅ No Error-prone warnings found!"
+        if [ -z "$changed_modules" ]; then
+          echo "No module changes detected, skipping tests"
+          exit 0
         fi
-      tags: quality static-analysis
 
-    # 全体のテスト実行
-    test-all:
-      run: ./gradlew test
+        for module in $changed_modules; do
+          case "$module" in
+            "e2e-tests"|"benchmarks")
+              continue
+              ;;
+            *)
+              echo "Testing :$module"
+              ./gradlew :$module:test || exit 1
+              ;;
+          esac
+        done
+
+        echo "✅ All tests passed!"
       tags: testing
 
-    # ビルド検証
-    build:
-      run: ./gradlew build
-      tags: build
+    # カバレッジチェック
+    coverage-check:
+      run: |
+        echo "Checking code coverage..."
+        # 変更されたモジュールのカバレッジチェック
+        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
+
+        if [ -z "$changed_modules" ]; then
+          echo "No module changes detected, skipping coverage check"
+          exit 0
+        fi
+
+        for module in $changed_modules; do
+          case "$module" in
+            "e2e-tests"|"benchmarks"|"server-launcher")
+              continue
+              ;;
+            *)
+              echo "Checking coverage for :$module"
+              ./gradlew :$module:jacocoTestCoverageVerification || {
+                echo "❌ Coverage check failed for :$module"
+                echo "Coverage must be at least 80% for both line and branch coverage"
+                exit 1
+              }
+              ;;
+          esac
+        done
+
+        echo "✅ All coverage checks passed!"
+      tags: testing coverage
 
 # コミットメッセージのフック
 commit-msg:

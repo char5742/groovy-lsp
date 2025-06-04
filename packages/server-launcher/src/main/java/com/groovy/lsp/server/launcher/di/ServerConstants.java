@@ -42,7 +42,7 @@ public final class ServerConstants {
     public static final String WORKSPACE_ROOT_ENV_KEY = "groovy.lsp.workspace.root";
 
     /** Environment variable for max thread pool size */
-    public static final String MAX_THREADS_ENV_KEY = "groovy.lsp.max.threads";
+    public static final String MAX_THREADS_ENV_KEY = "groovy.lsp.server.max.threads";
 
     // Thread name prefixes
     /** Thread name prefix for main executor */
