@@ -258,4 +258,164 @@ class MainAdditionalTest {
         // when/then - Should complete quickly without hanging
         assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
     }
+
+    @Test
+    void main_shouldHandleAllArgumentCombinations() throws Exception {
+        // given
+        String workspace = tempDir.toString();
+        String[] args = {"--dry-run", "-s", "-h", "0.0.0.0", "-p", "12345", "-w", workspace};
+
+        // when
+        assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void main_shouldHandleRepeatedArguments() throws Exception {
+        // given - repeated workspace arguments
+        String workspace1 = tempDir.resolve("ws1").toString();
+        String workspace2 = tempDir.resolve("ws2").toString();
+        Files.createDirectory(tempDir.resolve("ws1"));
+        Files.createDirectory(tempDir.resolve("ws2"));
+
+        String[] args = {"--workspace", workspace1, "--workspace", workspace2};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then - last one wins
+        assertThat(mode.workspaceRoot).isEqualTo(workspace2);
+    }
+
+    @Test
+    void main_shouldHandleHostOnlyWithoutSocket() throws Exception {
+        // given
+        String[] args = {"--host", "example.com"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then - should remain in stdio mode
+        assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
+        assertThat(mode.host).isEqualTo("example.com");
+    }
+
+    @Test
+    void main_shouldHandlePortOnlyWithoutSocket() throws Exception {
+        // given
+        String[] args = {"--port", "8888"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then - should remain in stdio mode
+        assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
+        assertThat(mode.port).isEqualTo(8888);
+    }
+
+    @Test
+    void main_shouldHandleMixedValidAndInvalidArgs() throws Exception {
+        // given - valid args mixed with unknown args
+        String[] args = {"--socket", "--unknown", "--port", "5555", "--another-unknown"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then - should parse valid args and ignore unknown
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.port).isEqualTo(5555);
+    }
+
+    @Test
+    void main_shouldHandleArgumentsWithEquals() throws Exception {
+        // given - some systems pass args like --port=8080
+        String[] args = {"--port=8080"};
+
+        // when - this should be treated as unknown argument
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then - defaults should be used
+        assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
+    }
+
+    @Test
+    void main_shouldValidateWorkspaceExists() throws Exception {
+        // given
+        Path nonExistent = tempDir.resolve("does-not-exist");
+        String[] args = {"--workspace", nonExistent.toString()};
+
+        // when/then
+        assertThatThrownBy(() -> Main.parseArguments(args))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("does not exist");
+    }
+
+    @Test
+    void main_shouldHandleSocketModeWithDefaults() throws Exception {
+        // given
+        String[] args = {"-s"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
+        assertThat(mode.host).isEqualTo("localhost");
+        assertThat(mode.port).isEqualTo(4389);
+    }
+
+    @Test
+    void main_shouldHandleDryRunWithSocket() throws Exception {
+        // given
+        String[] args = {"--dry-run", "--socket", "--host", "test.com", "--port", "9999"};
+
+        // when/then
+        assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void main_shouldHandleEmptyHost() throws Exception {
+        // given
+        String[] args = {"--socket", "--host", ""};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then - empty host is allowed
+        assertThat(mode.host).isEmpty();
+    }
+
+    @Test
+    void main_shouldHandleMaxPortBoundary() throws Exception {
+        // given
+        String[] args = {"--socket", "--port", "65535"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.port).isEqualTo(65535);
+    }
+
+    @Test
+    void main_shouldHandleMinPortBoundary() throws Exception {
+        // given
+        String[] args = {"--socket", "--port", "1"};
+
+        // when
+        Main.LaunchMode mode = Main.parseArguments(args);
+
+        // then
+        assertThat(mode.port).isEqualTo(1);
+    }
+
+    @Test
+    void main_shouldHandleMissingWorkspaceValueShortForm() {
+        // given
+        String[] args = {"-w"};
+
+        // when/then
+        assertThatThrownBy(() -> Main.parseArguments(args))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Missing value for -w");
+    }
 }

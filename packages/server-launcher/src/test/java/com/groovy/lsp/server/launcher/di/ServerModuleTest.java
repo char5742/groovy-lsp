@@ -274,4 +274,77 @@ class ServerModuleTest {
             }
         }
     }
+
+    @Test
+    void serverModule_shouldUseDefaultThreadsWhenNoSystemProperty() {
+        // given
+        String originalMaxThreads = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
+        String originalSchedulerThreads =
+                System.getProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
+        try {
+            // Clear properties to test defaults
+            System.clearProperty(ServerConstants.MAX_THREADS_ENV_KEY);
+            System.clearProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
+
+            ServerModule module = new ServerModule(tempDir.toString());
+            Injector injector = Guice.createInjector(module);
+
+            // when
+            ExecutorService serverExecutor =
+                    injector.getInstance(
+                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+            ScheduledExecutorService scheduledExecutor =
+                    injector.getInstance(
+                            com.google.inject.Key.get(
+                                    ScheduledExecutorService.class, ScheduledServerExecutor.class));
+
+            // then
+            assertThat(serverExecutor).isNotNull();
+            assertThat(scheduledExecutor).isNotNull();
+
+            // Clean up
+            serverExecutor.shutdown();
+            scheduledExecutor.shutdown();
+        } finally {
+            // Restore original properties
+            if (originalMaxThreads != null) {
+                System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, originalMaxThreads);
+            }
+            if (originalSchedulerThreads != null) {
+                System.setProperty(
+                        ServerConstants.SCHEDULER_THREADS_ENV_KEY, originalSchedulerThreads);
+            }
+        }
+    }
+
+    @Test
+    void serverModule_shouldHandleInvalidThreadCountSystemProperty() {
+        // given
+        String originalProperty = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
+        try {
+            // Set invalid value (non-numeric)
+            System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "invalid");
+
+            ServerModule module = new ServerModule(tempDir.toString());
+            Injector injector = Guice.createInjector(module);
+
+            // when - should fall back to default
+            ExecutorService serverExecutor =
+                    injector.getInstance(
+                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+
+            // then
+            assertThat(serverExecutor).isNotNull();
+
+            // Clean up
+            serverExecutor.shutdown();
+        } finally {
+            // Restore original property
+            if (originalProperty != null) {
+                System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, originalProperty);
+            } else {
+                System.clearProperty(ServerConstants.MAX_THREADS_ENV_KEY);
+            }
+        }
+    }
 }

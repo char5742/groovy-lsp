@@ -106,16 +106,14 @@ subprojects {
         violationRules {
             rule {
                 limit {
-                    // server-launcherとgroovy-coreモジュールは段階的に改善予定
-                    minimum = project.name in ['server-launcher', 'groovy-core'] ? 0.0 : 0.80
+                    minimum = 0.80
                     counter = 'LINE'
                     value = 'COVEREDRATIO'
                 }
             }
             rule {
                 limit {
-                    // server-launcherとgroovy-coreモジュールは段階的に改善予定
-                    minimum = project.name in ['server-launcher', 'groovy-core'] ? 0.0 : 0.80
+                    minimum = 0.80
                     counter = 'BRANCH'
                     value = 'COVEREDRATIO'
                 }
