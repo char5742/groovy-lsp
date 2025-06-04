@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -306,5 +308,127 @@ class MainTest {
         assertThat(mode2.type).isEqualTo(Main.LaunchType.SOCKET);
         assertThat(mode2.host).isEqualTo("custom.host");
         assertThat(mode2.port).isEqualTo(4389); // default port
+    }
+
+    @Test
+    void testMainMethodWithHelp() {
+        // Test main method with --help argument by calling runServer instead
+        try {
+            Main.runServer(new String[] {"--help"});
+        } catch (Main.HelpRequestedException e) {
+            // Expected exception for help
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+        }
+
+        // Verify help was printed to stdout
+        String output = outContent.toString();
+        assertThat(output).contains("Groovy Language Server");
+        assertThat(output).contains("Usage:");
+    }
+
+    @Test
+    void testMainMethodWithInvalidArguments() {
+        // Test parseArguments with invalid port
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Main.parseArguments(new String[] {"--port", "invalid"}),
+                "Should throw exception for invalid port");
+    }
+
+    @Test
+    void testPrintHelp() throws Exception {
+        // Use reflection to test private printHelp method
+        Method printHelpMethod = Main.class.getDeclaredMethod("printHelp");
+        printHelpMethod.setAccessible(true);
+
+        // Clear output before test
+        outContent.reset();
+
+        // Invoke printHelp
+        printHelpMethod.invoke(null);
+
+        // Verify help content
+        String output = outContent.toString();
+        assertThat(output).contains("Groovy Language Server");
+        assertThat(output).contains("Usage: groovy-language-server [options]");
+        assertThat(output).contains("--socket");
+        assertThat(output).contains("--host");
+        assertThat(output).contains("--port");
+        assertThat(output).contains("--workspace");
+        assertThat(output).contains("--dry-run");
+        assertThat(output).contains("--help");
+        assertThat(output).contains("Environment variables:");
+        assertThat(output).contains("Examples:");
+    }
+
+    @Test
+    void testCreateExecutorService() throws Exception {
+        // Use reflection to test private createExecutorService method
+        Method createExecutorServiceMethod = Main.class.getDeclaredMethod("createExecutorService");
+        createExecutorServiceMethod.setAccessible(true);
+
+        // Invoke createExecutorService
+        ExecutorService executorService =
+                (ExecutorService) createExecutorServiceMethod.invoke(null);
+
+        // Verify executor service is created correctly
+        assertThat(executorService).isNotNull();
+
+        // Test that threads are daemon threads
+        executorService.submit(
+                () -> {
+                    assertThat(Thread.currentThread().isDaemon()).isTrue();
+                    assertThat(Thread.currentThread().getName()).isEqualTo("groovy-lsp-jsonrpc");
+                });
+
+        // Cleanup
+        executorService.shutdown();
+    }
+
+    @Test
+    void testLaunchModeEnum() {
+        // Test LaunchType enum values
+        Main.LaunchType[] types = Main.LaunchType.values();
+        assertThat(types).hasSize(2);
+        assertThat(types).contains(Main.LaunchType.STDIO, Main.LaunchType.SOCKET);
+    }
+
+    @Test
+    void testHelpRequestedException() {
+        // Test HelpRequestedException
+        Main.HelpRequestedException exception = new Main.HelpRequestedException();
+        assertThat(exception.getMessage()).isEqualTo("Help requested");
+    }
+
+    @Test
+    void testLaunchModeClass() {
+        // Test LaunchMode default values
+        Main.LaunchMode mode = new Main.LaunchMode();
+        assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
+        assertThat(mode.host).isEqualTo("localhost");
+        assertThat(mode.port).isEqualTo(4389);
+        assertThat(mode.dryRun).isFalse();
+        assertThat(mode.workspaceRoot).isNull();
+    }
+
+    @Test
+    void testArgumentValidation() throws Exception {
+        // Test various argument validations
+
+        // Test workspace validation with non-existent directory
+        String nonExistentPath = tempDir.resolve("non-existent").toString();
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Main.parseArguments(new String[] {"--workspace", nonExistentPath}),
+                "Should throw exception for non-existent workspace");
+
+        // Test workspace validation with file instead of directory
+        Path file = tempDir.resolve("test.txt");
+        Files.createFile(file);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Main.parseArguments(new String[] {"--workspace", file.toString()}),
+                "Should throw exception for workspace that is a file");
     }
 }

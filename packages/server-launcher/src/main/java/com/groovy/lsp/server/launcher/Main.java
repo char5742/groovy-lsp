@@ -140,10 +140,8 @@ public class Main {
                 serverSocket.bind(new InetSocketAddress(host, port));
                 logger.info("Server socket listening on {}:{}", host, port);
             } catch (IOException e) {
-                String errorMessage = e.getMessage();
-                if (errorMessage != null
-                        && (errorMessage.contains("Address already in use")
-                                || errorMessage.contains("bind failed"))) {
+                // Check for BindException which indicates port is already in use
+                if (e instanceof java.net.BindException) {
                     logger.error(
                             "Port {} is already in use. Please choose a different port or stop the"
                                     + " conflicting process.",

@@ -232,4 +232,255 @@ class DependencyResolverTest {
         // Then
         assertThat(sourceDirs).isEmpty();
     }
+
+    @Test
+    void resolveDependencies_shouldHandleInvalidGradleProject() throws IOException {
+        // Given - Create a file that is not a gradle build file but in test mode
+        Files.createFile(tempDir.resolve("notGradle.txt"));
+        resolver.detectBuildSystem(); // Will detect NONE
+
+        // When - Try to resolve dependencies for non-gradle project
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should return empty list
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldHandleGradleProjectWithOnlySettingsGradle() throws IOException {
+        // Given - Only settings.gradle file exists
+        Files.createFile(tempDir.resolve("settings.gradle"));
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should handle gracefully and return empty list
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldHandleGradleProjectWithOnlySettingsGradleKts()
+            throws IOException {
+        // Given - Only settings.gradle.kts file exists
+        Files.createFile(tempDir.resolve("settings.gradle.kts"));
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should handle gracefully and return empty list
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldHandleGradleProjectWithBuildGradleKts() throws IOException {
+        // Given - Only build.gradle.kts file exists
+        Files.createFile(tempDir.resolve("build.gradle.kts"));
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should handle gracefully and return empty list
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListInTestEnvironment() throws IOException {
+        // Given - Set test mode system property
+        System.setProperty("test.mode", "true");
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.clearProperty("test.mode");
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListInBuildEnvTest() throws IOException {
+        // Given - Set build.env to test
+        System.setProperty("build.env", "test");
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.clearProperty("build.env");
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListInGradleTestTask() throws IOException {
+        // Given - Set gradle task name to test
+        System.setProperty("gradle.task.name", "test");
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.clearProperty("gradle.task.name");
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListWhenRunningTests() throws IOException {
+        // Given - Set multiple test indicators at once
+        System.setProperty("gradle.task.name", "check");
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.clearProperty("gradle.task.name");
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListWhenTestClasspath() throws IOException {
+        // Given - Set java.class.path containing "test-classes"
+        String originalClassPath = System.getProperty("java.class.path", "");
+        System.setProperty("java.class.path", "/path/to/test-classes:" + originalClassPath);
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.setProperty("java.class.path", originalClassPath);
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListWithJunitPlatform() throws IOException {
+        // Given - Set junit.platform.launcher.interceptors.enabled
+        System.setProperty("junit.platform.launcher.interceptors.enabled", "true");
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.clearProperty("junit.platform.launcher.interceptors.enabled");
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListWithEnvironmentVariable() throws IOException {
+        // Given - gradle.task.name starts with "test"
+        System.setProperty("gradle.task.name", "testClasses");
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty list in test environment
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.clearProperty("gradle.task.name");
+        }
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListWithGradleWrapper() throws IOException {
+        // Given - Create Gradle wrapper files
+        Files.createFile(tempDir.resolve("gradlew"));
+        Files.createFile(tempDir.resolve("build.gradle"));
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should handle gracefully and return empty list
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldHandleMultipleBuildFiles() throws IOException {
+        // Given - Multiple Gradle build files exist for valid project check
+        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(tempDir.resolve("build.gradle.kts"));
+        Files.createFile(tempDir.resolve("settings.gradle"));
+        Files.createFile(tempDir.resolve("settings.gradle.kts"));
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should handle gracefully
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldHandleProjectWithoutWrapper() throws IOException {
+        // Given - Gradle project without wrapper
+        Files.createFile(tempDir.resolve("build.gradle"));
+        // Ensure gradlew does not exist
+        assertThat(Files.exists(tempDir.resolve("gradlew"))).isFalse();
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should handle gracefully
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldHandleNonTestEnvironment() throws IOException {
+        // Given - Ensure no test environment indicators
+        System.clearProperty("test.mode");
+        System.clearProperty("build.env");
+        System.clearProperty("gradle.task.name");
+        String classpath = System.getProperty("java.class.path", "");
+        // Remove test-classes from classpath if present
+        if (classpath.contains("test-classes")) {
+            System.setProperty("java.class.path", classpath.replace("test-classes", "classes"));
+        }
+
+        try {
+            Files.createFile(tempDir.resolve("build.gradle"));
+            resolver.detectBuildSystem();
+
+            // When
+            List<Path> dependencies = resolver.resolveDependencies();
+
+            // Then - Should return empty (because it's still a dummy gradle project)
+            assertThat(dependencies).isEmpty();
+        } finally {
+            System.setProperty("java.class.path", classpath);
+        }
+    }
 }
