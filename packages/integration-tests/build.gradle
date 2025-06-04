@@ -24,6 +24,7 @@ dependencies {
     testImplementation libs.google.java.format // For FormatterException
     testImplementation libs.awaitility
     testImplementation libs.wiremock.jre8
+    testImplementation libs.guice
 }
 
 test {

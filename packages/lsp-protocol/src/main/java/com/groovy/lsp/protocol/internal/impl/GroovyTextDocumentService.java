@@ -1,5 +1,9 @@
 package com.groovy.lsp.protocol.internal.impl;
 
+import com.google.inject.Inject;
+import com.groovy.lsp.protocol.api.IServiceRouter;
+import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.protocol.internal.handler.HoverHandler;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -56,6 +60,18 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     private static final Logger logger = LoggerFactory.getLogger(GroovyTextDocumentService.class);
 
     private @Nullable LanguageClient client;
+    private @Nullable IServiceRouter serviceRouter;
+    private @Nullable DocumentManager documentManager;
+
+    @Inject
+    public void setServiceRouter(IServiceRouter serviceRouter) {
+        this.serviceRouter = serviceRouter;
+    }
+
+    @Inject
+    public void setDocumentManager(DocumentManager documentManager) {
+        this.documentManager = documentManager;
+    }
 
     @Override
     public void connect(LanguageClient client) {
@@ -65,7 +81,11 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         logger.debug("Document opened: {}", params.getTextDocument().getUri());
-        // TODO: Implement document open handling
+
+        // Store document in document manager
+        if (documentManager != null) {
+            documentManager.openDocument(params.getTextDocument());
+        }
 
         // For testing purposes, send empty diagnostics to indicate document was processed
         if (client != null) {
@@ -80,13 +100,26 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
         logger.debug("Document changed: {}", params.getTextDocument().getUri());
-        // TODO: Implement document change handling
+
+        // Update document content
+        if (documentManager != null && !params.getContentChanges().isEmpty()) {
+            // For simplicity, assuming full document sync
+            String newContent = params.getContentChanges().get(0).getText();
+            documentManager.updateDocument(
+                    params.getTextDocument().getUri(),
+                    newContent,
+                    params.getTextDocument().getVersion());
+        }
     }
 
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
         logger.debug("Document closed: {}", params.getTextDocument().getUri());
-        // TODO: Implement document close handling
+
+        // Remove document from manager
+        if (documentManager != null) {
+            documentManager.closeDocument(params.getTextDocument().getUri());
+        }
     }
 
     @Override
@@ -114,8 +147,19 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
         logger.debug("Hover requested at: {}", params.getPosition());
-        // TODO: Implement hover
-        return CompletableFuture.completedFuture(null);
+
+        if (serviceRouter == null) {
+            logger.error("ServiceRouter is not initialized");
+            return CompletableFuture.completedFuture(null);
+        }
+
+        if (documentManager == null) {
+            logger.error("DocumentManager is not initialized");
+            return CompletableFuture.completedFuture(null);
+        }
+
+        HoverHandler handler = new HoverHandler(serviceRouter, documentManager);
+        return handler.handleHover(params);
     }
 
     @Override
