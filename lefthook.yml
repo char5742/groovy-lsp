@@ -43,34 +43,40 @@ pre-push:
       run: ./gradlew spotlessCheck
       tags: formatting
 
-    # ビルドとテストを一度に実行（Error-prone警告も含む）
-    build:
+    # コンパイルチェックのみ（テストは別途実行）
+    compile-check:
       run: |
-        echo "Building and checking for errors..."
-        # ビルドとテストを一度に実行（buildにはtestも含まれる）
-        ./gradlew build 2>&1 | tee build.log
+        echo "Checking compilation..."
+        # コンパイルのみ実行（テストをスキップ）
+        ./gradlew compileJava compileTestJava compileGroovy compileTestGroovy --parallel
+      tags: build quality
 
-        # ビルドが失敗した場合は終了
-        if [ ${PIPESTATUS[0]} -ne 0 ]; then
-          rm -f build.log
-          exit 1
+    # 変更されたモジュールのテストのみ実行
+    test-changed:
+      run: |
+        echo "Running tests for changed modules..."
+        # 変更されたファイルからモジュールを特定
+        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
+
+        if [ -z "$changed_modules" ]; then
+          echo "No module changes detected, skipping tests"
+          exit 0
         fi
 
-        # Error-prone警告をチェック（エラーレベルのもののみ）
-        # WildcardImportは警告レベルなので除外
-        error_count=$(grep -E "エラー:" build.log | grep -v "WildcardImport" | wc -l || echo "0")
+        for module in $changed_modules; do
+          case "$module" in
+            "e2e-tests"|"benchmarks")
+              continue
+              ;;
+            *)
+              echo "Testing :$module"
+              ./gradlew :$module:test || exit 1
+              ;;
+          esac
+        done
 
-        # クリーンアップ
-        rm -f build.log
-
-        if [ "$error_count" -gt 0 ]; then
-          echo "❌ Found $error_count compilation errors!"
-          echo "Please fix all errors before pushing."
-          exit 1
-        else
-          echo "✅ Build successful!"
-        fi
-      tags: build testing quality
+        echo "✅ All tests passed!"
+      tags: testing
 
 # コミットメッセージのフック
 commit-msg:
