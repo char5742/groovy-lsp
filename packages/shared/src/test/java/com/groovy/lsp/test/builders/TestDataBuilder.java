@@ -6,6 +6,9 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -53,6 +56,14 @@ public final class TestDataBuilder {
     @NonNull
     public static Position position(int line, int character) {
         return new Position(line, character);
+    }
+
+    /**
+     * Create a hover builder.
+     */
+    @NonNull
+    public static HoverBuilder hover() {
+        return new HoverBuilder();
     }
 
     /**
@@ -245,6 +256,58 @@ public final class TestDataBuilder {
             item.setAdditionalTextEdits(additionalTextEdits);
 
             return item;
+        }
+    }
+
+    /**
+     * Builder for Hover objects.
+     */
+    public static class HoverBuilder {
+        private @Nullable MarkupContent contents;
+        private @Nullable Range range;
+
+        public HoverBuilder markdown(@NonNull String value) {
+            this.contents = new MarkupContent();
+            this.contents.setKind(MarkupKind.MARKDOWN);
+            this.contents.setValue(value);
+            return this;
+        }
+
+        public HoverBuilder plaintext(@NonNull String value) {
+            this.contents = new MarkupContent();
+            this.contents.setKind(MarkupKind.PLAINTEXT);
+            this.contents.setValue(value);
+            return this;
+        }
+
+        public HoverBuilder contents(@NonNull MarkupContent contents) {
+            this.contents = contents;
+            return this;
+        }
+
+        public HoverBuilder range(@Nullable Range range) {
+            this.range = range;
+            return this;
+        }
+
+        public HoverBuilder range(int startLine, int startChar, int endLine, int endChar) {
+            this.range = TestDataBuilder.range(startLine, startChar, endLine, endChar);
+            return this;
+        }
+
+        @NonNull
+        public Hover build() {
+            if (contents == null) {
+                contents = new MarkupContent();
+                contents.setKind(MarkupKind.PLAINTEXT);
+                contents.setValue("");
+            }
+
+            Hover hover = new Hover();
+            hover.setContents(contents);
+            hover.setRange(range);
+
+            return hover;
         }
     }
 }

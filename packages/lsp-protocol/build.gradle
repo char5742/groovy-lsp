@@ -20,6 +20,7 @@ dependencies {
     compileOnly libs.apiguardian.api
 
     // Test dependencies
+    testImplementation project(':shared')
     testImplementation libs.wiremock.jre8
     testImplementation libs.awaitility
     testImplementation libs.mockito.core
