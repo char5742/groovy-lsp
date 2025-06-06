@@ -99,7 +99,12 @@ public class HoverHandler {
                         return hover;
 
                     } catch (Exception e) {
-                        logger.error("Error processing hover request", e);
+                        logger.error(
+                                "Error processing hover request for URI: {} at position {}:{}",
+                                params.getTextDocument().getUri(),
+                                params.getPosition().getLine(),
+                                params.getPosition().getCharacter(),
+                                e);
                         return null;
                     }
                 });
@@ -119,8 +124,13 @@ public class HoverHandler {
         } else if (node instanceof ClassNode) {
             generateClassHover((ClassNode) node, content);
         } else if (node instanceof VariableExpression) {
-            // VariableExpression is both Variable and Expression, handle it specifically
-            generateExpressionHover((Expression) node, content, typeService, moduleNode);
+            VariableExpression varExpr = (VariableExpression) node;
+            Variable variable = varExpr.getAccessedVariable();
+            if (variable != null) {
+                generateVariableHover(variable, content, typeService);
+            } else {
+                generateExpressionHover(varExpr, content, typeService, moduleNode);
+            }
         } else if (node instanceof Variable) {
             generateVariableHover((Variable) node, content, typeService);
         } else if (node instanceof Expression) {
@@ -189,6 +199,7 @@ public class HoverHandler {
     }
 
     private void generateFieldHover(FieldNode field, StringBuilder content) {
+        logger.debug("generateFieldHover called for field: {}", field.getName());
         content.append("```groovy\n");
 
         // Field declaration
@@ -205,6 +216,14 @@ public class HoverHandler {
         content.append("\n```\n");
 
         content.append("\n**Field** in ").append(field.getOwner().getName());
+
+        // Javadoc if available
+        logger.debug("Calling extractJavadoc for field: {}", field.getName());
+        String javadoc = extractJavadoc(field);
+        logger.debug("extractJavadoc returned: {}", javadoc);
+        if (javadoc != null) {
+            content.append("\n").append(javadoc);
+        }
     }
 
     private void generatePropertyHover(PropertyNode property, StringBuilder content) {
@@ -222,6 +241,12 @@ public class HoverHandler {
         content.append("\n```\n");
 
         content.append("\n**Property** in ").append(property.getDeclaringClass().getName());
+
+        // Javadoc if available
+        String javadoc = extractJavadoc(property);
+        if (javadoc != null) {
+            content.append("\n").append(javadoc);
+        }
     }
 
     private void generateClassHover(ClassNode classNode, StringBuilder content) {
@@ -240,7 +265,9 @@ public class HoverHandler {
 
         // Superclass
         ClassNode superClass = classNode.getSuperClass();
-        if (superClass != null && !superClass.getName().equals("java.lang.Object")) {
+        if (superClass != null
+                && superClass.getName() != null
+                && !superClass.getName().equals("java.lang.Object")) {
             content.append(" extends ").append(superClass.getName());
         }
 
@@ -259,6 +286,12 @@ public class HoverHandler {
         // Package info
         if (classNode.getPackageName() != null) {
             content.append("\n**Package:** ").append(classNode.getPackageName());
+        }
+
+        // Javadoc if available
+        String javadoc = extractJavadoc(classNode);
+        if (javadoc != null) {
+            content.append("\n").append(javadoc);
         }
     }
 
@@ -289,8 +322,59 @@ public class HoverHandler {
     }
 
     private @Nullable String extractJavadoc(AnnotatedNode node) {
-        // TODO: Implement Javadoc/Groovydoc extraction
-        // This would parse the source file to extract documentation comments
-        return null;
+        StringBuilder doc = new StringBuilder();
+        logger.debug("extractJavadoc called with node type: {}", node.getClass().getName());
+
+        // Extract annotation information
+        if (node.getAnnotations() != null && !node.getAnnotations().isEmpty()) {
+            logger.debug("Node has {} annotations", node.getAnnotations().size());
+            doc.append("\n\n**Annotations:**\n");
+            node.getAnnotations()
+                    .forEach(
+                            annotation -> {
+                                doc.append("- @")
+                                        .append(annotation.getClassNode().getName())
+                                        .append("\n");
+                            });
+        }
+
+        // Add basic documentation based on node type
+        if (node instanceof MethodNode) {
+            logger.debug("Node is MethodNode");
+            MethodNode method = (MethodNode) node;
+            if (method.isAbstract()) {
+                doc.append("\n*Abstract method*");
+            }
+            if (method.isSynthetic()) {
+                doc.append("\n*Synthetic method*");
+            }
+        } else if (node instanceof FieldNode) {
+            logger.debug("Node is FieldNode");
+            FieldNode field = (FieldNode) node;
+            logger.debug("Field.isEnum() = {}", field.isEnum());
+            if (field.isEnum()) {
+                doc.append("\n*Enum constant*");
+                logger.debug("Added '*Enum constant*' to doc");
+            }
+            if (field.isSynthetic()) {
+                doc.append("\n*Synthetic field*");
+            }
+        } else if (node instanceof ClassNode) {
+            logger.debug("Node is ClassNode");
+            ClassNode clazz = (ClassNode) node;
+            if (clazz.isAbstract()) {
+                doc.append("\n*Abstract class*");
+            }
+            if (clazz.isInterface()) {
+                doc.append("\n*Interface*");
+            }
+            if (clazz.isEnum()) {
+                doc.append("\n*Enumeration*");
+            }
+        }
+
+        String result = doc.length() > 0 ? doc.toString() : null;
+        logger.debug("extractJavadoc returning: {}", result);
+        return result;
     }
 }
