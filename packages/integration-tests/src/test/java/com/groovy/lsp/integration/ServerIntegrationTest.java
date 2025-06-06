@@ -3,7 +3,10 @@ package com.groovy.lsp.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.server.launcher.di.ServerModule;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,7 +34,8 @@ class ServerIntegrationTest {
     @BeforeAll
     void setUp() {
         client = new TestLanguageClient();
-        server = new GroovyLanguageServer();
+        Injector injector = Guice.createInjector(new ServerModule());
+        server = injector.getInstance(GroovyLanguageServer.class);
         ((GroovyLanguageServer) server).connect(client);
     }
 

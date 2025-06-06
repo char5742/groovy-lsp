@@ -1,0 +1,296 @@
+package com.groovy.lsp.protocol.internal.handler;
+
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
+import com.groovy.lsp.protocol.api.IServiceRouter;
+import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import java.util.concurrent.CompletableFuture;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Handles hover requests for Groovy documents.
+ *
+ * This handler provides hover information including:
+ * - Type information
+ * - Javadoc/Groovydoc documentation
+ * - Method signatures
+ * - Field/property information
+ */
+public class HoverHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(HoverHandler.class);
+
+    private final IServiceRouter serviceRouter;
+    private final DocumentManager documentManager;
+
+    public HoverHandler(IServiceRouter serviceRouter, DocumentManager documentManager) {
+        this.serviceRouter = serviceRouter;
+        this.documentManager = documentManager;
+    }
+
+    public CompletableFuture<Hover> handleHover(HoverParams params) {
+        return CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        String uri = params.getTextDocument().getUri();
+                        Position position = params.getPosition();
+
+                        logger.debug(
+                                "Processing hover at {}:{}:{}",
+                                uri,
+                                position.getLine(),
+                                position.getCharacter());
+
+                        // Get AST service
+                        ASTService astService = serviceRouter.getAstService();
+                        TypeInferenceService typeService = serviceRouter.getTypeInferenceService();
+
+                        // Get document content
+                        String sourceCode = documentManager.getDocumentContent(uri);
+                        if (sourceCode == null) {
+                            logger.debug("Document not found in document manager: {}", uri);
+                            return null;
+                        }
+
+                        // Parse the document
+                        ModuleNode moduleNode = astService.parseSource(sourceCode, uri);
+                        if (moduleNode == null) {
+                            logger.debug("Failed to parse module for {}", uri);
+                            return null;
+                        }
+
+                        // Find node at position
+                        ASTNode node =
+                                astService.findNodeAtPosition(
+                                        moduleNode,
+                                        position.getLine() + 1,
+                                        position.getCharacter() + 1);
+                        if (node == null) {
+                            logger.debug(
+                                    "No node found at position {}:{}",
+                                    position.getLine(),
+                                    position.getCharacter());
+                            return null;
+                        }
+
+                        // Generate hover content
+                        String hoverContent = generateHoverContent(node, typeService, moduleNode);
+                        if (hoverContent == null || hoverContent.isEmpty()) {
+                            return null;
+                        }
+
+                        // Create hover result
+                        MarkupContent markupContent = new MarkupContent();
+                        markupContent.setKind(MarkupKind.MARKDOWN);
+                        markupContent.setValue(hoverContent);
+
+                        Hover hover = new Hover();
+                        hover.setContents(markupContent);
+
+                        return hover;
+
+                    } catch (Exception e) {
+                        logger.error("Error processing hover request", e);
+                        return null;
+                    }
+                });
+    }
+
+    private @Nullable String generateHoverContent(
+            ASTNode node, TypeInferenceService typeService, ModuleNode moduleNode) {
+        StringBuilder content = new StringBuilder();
+
+        // Check more specific types first before checking interfaces
+        if (node instanceof FieldNode) {
+            generateFieldHover((FieldNode) node, content);
+        } else if (node instanceof PropertyNode) {
+            generatePropertyHover((PropertyNode) node, content);
+        } else if (node instanceof MethodNode) {
+            generateMethodHover((MethodNode) node, content);
+        } else if (node instanceof ClassNode) {
+            generateClassHover((ClassNode) node, content);
+        } else if (node instanceof VariableExpression) {
+            // VariableExpression is both Variable and Expression, handle it specifically
+            generateExpressionHover((Expression) node, content, typeService, moduleNode);
+        } else if (node instanceof Variable) {
+            generateVariableHover((Variable) node, content, typeService);
+        } else if (node instanceof Expression) {
+            generateExpressionHover((Expression) node, content, typeService, moduleNode);
+        }
+
+        return content.length() > 0 ? content.toString() : null;
+    }
+
+    private void generateVariableHover(
+            Variable variable, StringBuilder content, TypeInferenceService typeService) {
+        content.append("```groovy\n");
+
+        // Variable declaration
+        ClassNode type = variable.getType();
+        if (type != null && !type.getName().equals("java.lang.Object")) {
+            content.append(type.getName()).append(" ");
+        } else {
+            content.append("def ");
+        }
+
+        content.append(variable.getName());
+        content.append("\n```\n");
+
+        // Add additional information
+        if (variable instanceof Parameter) {
+            content.append("\n**Parameter**");
+        } else {
+            content.append("\n**Local variable**");
+        }
+    }
+
+    private void generateMethodHover(MethodNode method, StringBuilder content) {
+        content.append("```groovy\n");
+
+        // Method signature
+        if (method.isPublic()) content.append("public ");
+        else if (method.isProtected()) content.append("protected ");
+        else if (method.isPrivate()) content.append("private ");
+
+        if (method.isStatic()) content.append("static ");
+        if (method.isFinal()) content.append("final ");
+
+        // Return type
+        ClassNode returnType = method.getReturnType();
+        content.append(returnType.getName()).append(" ");
+
+        // Method name
+        content.append(method.getName()).append("(");
+
+        // Parameters
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            if (i > 0) content.append(", ");
+            Parameter param = parameters[i];
+            content.append(param.getType().getName()).append(" ").append(param.getName());
+        }
+
+        content.append(")\n```\n");
+
+        // Javadoc if available
+        String javadoc = extractJavadoc(method);
+        if (javadoc != null) {
+            content.append("\n").append(javadoc);
+        }
+    }
+
+    private void generateFieldHover(FieldNode field, StringBuilder content) {
+        content.append("```groovy\n");
+
+        // Field declaration
+        if (field.isPublic()) content.append("public ");
+        else if (field.isProtected()) content.append("protected ");
+        else if (field.isPrivate()) content.append("private ");
+
+        if (field.isStatic()) content.append("static ");
+        if (field.isFinal()) content.append("final ");
+
+        content.append(field.getType().getName()).append(" ");
+        content.append(field.getName());
+
+        content.append("\n```\n");
+
+        content.append("\n**Field** in ").append(field.getOwner().getName());
+    }
+
+    private void generatePropertyHover(PropertyNode property, StringBuilder content) {
+        content.append("```groovy\n");
+
+        // Property declaration
+        if (property.isPublic()) content.append("public ");
+        else if (property.isPrivate()) content.append("private ");
+
+        if (property.isStatic()) content.append("static ");
+
+        content.append(property.getType().getName()).append(" ");
+        content.append(property.getName());
+
+        content.append("\n```\n");
+
+        content.append("\n**Property** in ").append(property.getDeclaringClass().getName());
+    }
+
+    private void generateClassHover(ClassNode classNode, StringBuilder content) {
+        content.append("```groovy\n");
+
+        // Class declaration
+        if (classNode.isInterface()) {
+            content.append("interface ");
+        } else if (classNode.isEnum()) {
+            content.append("enum ");
+        } else {
+            content.append("class ");
+        }
+
+        content.append(classNode.getName());
+
+        // Superclass
+        ClassNode superClass = classNode.getSuperClass();
+        if (superClass != null && !superClass.getName().equals("java.lang.Object")) {
+            content.append(" extends ").append(superClass.getName());
+        }
+
+        // Interfaces
+        ClassNode[] interfaces = classNode.getInterfaces();
+        if (interfaces.length > 0) {
+            content.append(" implements ");
+            for (int i = 0; i < interfaces.length; i++) {
+                if (i > 0) content.append(", ");
+                content.append(interfaces[i].getName());
+            }
+        }
+
+        content.append("\n```\n");
+
+        // Package info
+        if (classNode.getPackageName() != null) {
+            content.append("\n**Package:** ").append(classNode.getPackageName());
+        }
+    }
+
+    private void generateExpressionHover(
+            Expression expr,
+            StringBuilder content,
+            TypeInferenceService typeService,
+            ModuleNode moduleNode) {
+        // Infer type for expression
+        ClassNode inferredType = typeService.inferExpressionType(expr, moduleNode);
+
+        if (inferredType != null) {
+            content.append("```groovy\n");
+            content.append(inferredType.getName());
+            content.append("\n```\n");
+
+            if (expr instanceof VariableExpression) {
+                VariableExpression varExpr = (VariableExpression) expr;
+                content.append("\n**Variable:** ").append(varExpr.getName());
+            } else if (expr instanceof MethodCallExpression) {
+                MethodCallExpression methodCall = (MethodCallExpression) expr;
+                content.append("\n**Method call:** ").append(methodCall.getMethodAsString());
+            } else if (expr instanceof PropertyExpression) {
+                PropertyExpression propExpr = (PropertyExpression) expr;
+                content.append("\n**Property:** ").append(propExpr.getPropertyAsString());
+            }
+        }
+    }
+
+    private @Nullable String extractJavadoc(AnnotatedNode node) {
+        // TODO: Implement Javadoc/Groovydoc extraction
+        // This would parse the source file to extract documentation comments
+        return null;
+    }
+}
