@@ -1,6 +1,5 @@
 package com.groovy.lsp.protocol.api;
 
-import com.google.inject.Inject;
 import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 import java.util.concurrent.CompletableFuture;
@@ -35,12 +34,9 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
     private @Nullable LanguageClient client;
     private int errorCode = 1;
 
-    @Inject
-    public GroovyLanguageServer(
-            GroovyTextDocumentService textDocumentService,
-            GroovyWorkspaceService workspaceService) {
-        this.textDocumentService = textDocumentService;
-        this.workspaceService = workspaceService;
+    public GroovyLanguageServer() {
+        this.textDocumentService = new GroovyTextDocumentService();
+        this.workspaceService = new GroovyWorkspaceService();
     }
 
     @Override

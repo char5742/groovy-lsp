@@ -7,7 +7,6 @@ import com.groovy.lsp.formatting.service.FormattingService;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
-import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.workspace.api.WorkspaceIndexService;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * and managing service lifecycle through Guice dependency injection.
  */
 @Singleton
-public class ServiceRouter implements IServiceRouter {
+public class ServiceRouter {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceRouter.class);
 
@@ -89,7 +88,6 @@ public class ServiceRouter implements IServiceRouter {
      * @return the AST service
      * @throws IllegalStateException if the service is not available
      */
-    @Override
     public ASTService getAstService() {
         ensureServiceAvailable(astService, "ASTService");
         return astService;
@@ -112,7 +110,6 @@ public class ServiceRouter implements IServiceRouter {
      * @return the type inference service
      * @throws IllegalStateException if the service is not available
      */
-    @Override
     public TypeInferenceService getTypeInferenceService() {
         ensureServiceAvailable(typeInferenceService, "TypeInferenceService");
         return typeInferenceService;

@@ -14,10 +14,6 @@ import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.GroovyCoreFactory;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
-import com.groovy.lsp.protocol.api.IServiceRouter;
-import com.groovy.lsp.protocol.internal.document.DocumentManager;
-import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
-import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
 import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
@@ -62,16 +58,8 @@ public class ServerModule extends AbstractModule {
         // Bind LanguageServer interface to our implementation
         bind(LanguageServer.class).to(GroovyLanguageServer.class);
 
-        // Bind text document and workspace services
-        bind(GroovyTextDocumentService.class).in(Singleton.class);
-        bind(GroovyWorkspaceService.class).in(Singleton.class);
-
-        // Bind document manager
-        bind(DocumentManager.class).in(Singleton.class);
-
         // Bind service router
         bind(ServiceRouter.class).in(Singleton.class);
-        bind(IServiceRouter.class).to(ServiceRouter.class);
 
         logger.info("Server module configured");
     }
