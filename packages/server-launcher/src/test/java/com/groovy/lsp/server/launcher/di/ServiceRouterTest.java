@@ -8,6 +8,7 @@ import com.groovy.lsp.codenarc.LintEngine;
 import com.groovy.lsp.formatting.service.FormattingService;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
+import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.workspace.api.WorkspaceIndexService;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ class ServiceRouterTest {
 
     private ASTService astService;
     private CompilerConfigurationService compilerConfigurationService;
+    private IncrementalCompilationService incrementalCompilationService;
     private TypeInferenceService typeInferenceService;
     private WorkspaceIndexService workspaceIndexService;
     private FormattingService formattingService;
@@ -29,6 +31,7 @@ class ServiceRouterTest {
     void setUp() {
         astService = mock(ASTService.class);
         compilerConfigurationService = mock(CompilerConfigurationService.class);
+        incrementalCompilationService = mock(IncrementalCompilationService.class);
         typeInferenceService = mock(TypeInferenceService.class);
         workspaceIndexService = mock(WorkspaceIndexService.class);
         formattingService = mock(FormattingService.class);
@@ -42,6 +45,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -50,6 +54,8 @@ class ServiceRouterTest {
         // then
         assertThat(router.getAstService()).isSameAs(astService);
         assertThat(router.getCompilerConfigurationService()).isSameAs(compilerConfigurationService);
+        assertThat(router.getIncrementalCompilationService())
+                .isSameAs(incrementalCompilationService);
         assertThat(router.getTypeInferenceService()).isSameAs(typeInferenceService);
         assertThat(router.getWorkspaceIndexService()).isSameAs(workspaceIndexService);
         assertThat(router.getFormattingService()).isSameAs(formattingService);
@@ -64,6 +70,7 @@ class ServiceRouterTest {
                                 new ServiceRouter(
                                         null,
                                         compilerConfigurationService,
+                                        incrementalCompilationService,
                                         typeInferenceService,
                                         workspaceIndexService,
                                         formattingService,
@@ -80,12 +87,30 @@ class ServiceRouterTest {
                                 new ServiceRouter(
                                         astService,
                                         null,
+                                        incrementalCompilationService,
                                         typeInferenceService,
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("CompilerConfigurationService must not be null");
+    }
+
+    @Test
+    void constructor_shouldThrowExceptionForNullIncrementalCompilationService() {
+        // when/then
+        assertThatThrownBy(
+                        () ->
+                                new ServiceRouter(
+                                        astService,
+                                        compilerConfigurationService,
+                                        null,
+                                        typeInferenceService,
+                                        workspaceIndexService,
+                                        formattingService,
+                                        lintEngine))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("IncrementalCompilationService must not be null");
     }
 
     @Test
@@ -96,6 +121,7 @@ class ServiceRouterTest {
                                 new ServiceRouter(
                                         astService,
                                         compilerConfigurationService,
+                                        incrementalCompilationService,
                                         null,
                                         workspaceIndexService,
                                         formattingService,
@@ -112,6 +138,7 @@ class ServiceRouterTest {
                                 new ServiceRouter(
                                         astService,
                                         compilerConfigurationService,
+                                        incrementalCompilationService,
                                         typeInferenceService,
                                         null,
                                         formattingService,
@@ -128,6 +155,7 @@ class ServiceRouterTest {
                                 new ServiceRouter(
                                         astService,
                                         compilerConfigurationService,
+                                        incrementalCompilationService,
                                         typeInferenceService,
                                         workspaceIndexService,
                                         null,
@@ -144,6 +172,7 @@ class ServiceRouterTest {
                                 new ServiceRouter(
                                         astService,
                                         compilerConfigurationService,
+                                        incrementalCompilationService,
                                         typeInferenceService,
                                         workspaceIndexService,
                                         formattingService,
@@ -159,6 +188,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -178,6 +208,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -197,6 +228,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -210,12 +242,33 @@ class ServiceRouterTest {
     }
 
     @Test
+    void getIncrementalCompilationService_shouldReturnService() {
+        // given
+        ServiceRouter router =
+                new ServiceRouter(
+                        astService,
+                        compilerConfigurationService,
+                        incrementalCompilationService,
+                        typeInferenceService,
+                        workspaceIndexService,
+                        formattingService,
+                        lintEngine);
+
+        // when
+        IncrementalCompilationService result = router.getIncrementalCompilationService();
+
+        // then
+        assertThat(result).isSameAs(incrementalCompilationService);
+    }
+
+    @Test
     void getTypeInferenceService_shouldReturnService() {
         // given
         ServiceRouter router =
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -235,6 +288,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -254,6 +308,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -273,6 +328,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -293,6 +349,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -310,6 +367,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -319,6 +377,7 @@ class ServiceRouterTest {
         String[][] serviceTests = {
             {"astService", "ASTService"},
             {"compilerConfigurationService", "CompilerConfigurationService"},
+            {"incrementalCompilationService", "IncrementalCompilationService"},
             {"typeInferenceService", "TypeInferenceService"},
             {"workspaceIndexService", "WorkspaceIndexService"},
             {"formattingService", "FormattingService"},
@@ -346,6 +405,11 @@ class ServiceRouterTest {
                         break;
                     case "compilerConfigurationService":
                         assertThatThrownBy(() -> router.getCompilerConfigurationService())
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(serviceName + " is not available");
+                        break;
+                    case "incrementalCompilationService":
+                        assertThatThrownBy(() -> router.getIncrementalCompilationService())
                                 .isInstanceOf(IllegalStateException.class)
                                 .hasMessage(serviceName + " is not available");
                         break;
@@ -388,6 +452,7 @@ class ServiceRouterTest {
                 new ServiceRouter(
                         astService,
                         compilerConfigurationService,
+                        incrementalCompilationService,
                         typeInferenceService,
                         workspaceIndexService,
                         formattingService,
@@ -398,8 +463,13 @@ class ServiceRouterTest {
 
         // Test each service null case individually via reflection
         String[] fieldNames = {
-            "astService", "compilerConfigurationService", "typeInferenceService",
-            "workspaceIndexService", "formattingService", "lintEngine"
+            "astService",
+            "compilerConfigurationService",
+            "incrementalCompilationService",
+            "typeInferenceService",
+            "workspaceIndexService",
+            "formattingService",
+            "lintEngine"
         };
 
         for (String fieldName : fieldNames) {

@@ -2,10 +2,20 @@ package com.groovy.lsp.protocol.internal.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilationResult;
+import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
+import com.groovy.lsp.protocol.api.IServiceRouter;
+import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import java.util.Arrays;
 import java.util.List;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.control.CompilationUnit;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -58,31 +68,58 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * GroovyTextDocumentServiceのテストクラス。
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class GroovyTextDocumentServiceTest {
 
     private GroovyTextDocumentService service;
 
     @Mock private LanguageClient mockClient;
+    @Mock private IServiceRouter serviceRouter;
+    @Mock private DocumentManager documentManager;
+    @Mock private IncrementalCompilationService compilationService;
+    @Mock private ASTService astService;
+    @Mock private TypeInferenceService typeInferenceService;
+    @Mock private CompilationUnit compilationUnit;
 
     @BeforeEach
     void setUp() {
         service = new GroovyTextDocumentService();
+
+        // Setup service router mocks
+        when(serviceRouter.getIncrementalCompilationService()).thenReturn(compilationService);
+        when(serviceRouter.getAstService()).thenReturn(astService);
+        when(serviceRouter.getTypeInferenceService()).thenReturn(typeInferenceService);
+
+        // Inject dependencies
+        service.setServiceRouter(serviceRouter);
+        service.setDocumentManager(documentManager);
     }
 
     @Test
-    void connect_shouldSetClient() {
+    void connect_shouldSetClient() throws Exception {
         // when
         service.connect(mockClient);
 
+        // given
+        String uri = "file:///test.groovy";
+        when(documentManager.getDocumentContent(uri)).thenReturn("test");
+        when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+        when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
+
         // then - verify by using the client
         service.didOpen(
-                new DidOpenTextDocumentParams(
-                        new TextDocumentItem("file:///test.groovy", "groovy", 1, "test")));
+                new DidOpenTextDocumentParams(new TextDocumentItem(uri, "groovy", 1, "test")));
+
+        // Wait a bit for async processing
+        Thread.sleep(100);
         verify(mockClient).publishDiagnostics(any());
     }
 
@@ -98,16 +135,24 @@ class GroovyTextDocumentServiceTest {
     }
 
     @Test
-    void didOpen_shouldPublishDiagnostics() {
+    void didOpen_shouldPublishDiagnostics() throws Exception {
         // given
         service.connect(mockClient);
-        TextDocumentItem textDocument =
-                new TextDocumentItem(
-                        "file:///workspace/Test.groovy", "groovy", 1, "class Test { }");
+        String uri = "file:///workspace/Test.groovy";
+        String content = "class Test { }";
+        TextDocumentItem textDocument = new TextDocumentItem(uri, "groovy", 1, content);
         DidOpenTextDocumentParams params = new DidOpenTextDocumentParams(textDocument);
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+        when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
 
         // when
         service.didOpen(params);
+
+        // Wait a bit for async processing
+        Thread.sleep(100);
 
         // then
         ArgumentCaptor<PublishDiagnosticsParams> captor =
@@ -115,7 +160,7 @@ class GroovyTextDocumentServiceTest {
         verify(mockClient).publishDiagnostics(captor.capture());
 
         PublishDiagnosticsParams diagnostics = captor.getValue();
-        assertThat(diagnostics.getUri()).isEqualTo("file:///workspace/Test.groovy");
+        assertThat(diagnostics.getUri()).isEqualTo(uri);
         assertThat(diagnostics.getDiagnostics()).isEmpty();
     }
 

@@ -1,12 +1,23 @@
 package com.groovy.lsp.protocol;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilationResult;
+import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
+import com.groovy.lsp.protocol.api.IServiceRouter;
+import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 import com.groovy.lsp.protocol.test.AbstractProtocolTest;
 import com.groovy.lsp.protocol.test.LSPTestHarness;
 import java.util.concurrent.CompletableFuture;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.control.CompilationUnit;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
@@ -210,8 +221,34 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
      * Test implementation of LanguageServer for protocol testing.
      */
     private static class TestGroovyLanguageServer implements LanguageServer, LanguageClientAware {
-        private final TextDocumentService textDocumentService = new GroovyTextDocumentService();
+        private final GroovyTextDocumentService textDocumentService;
         private final WorkspaceService workspaceService = new GroovyWorkspaceService();
+
+        public TestGroovyLanguageServer() {
+            // Setup mock dependencies
+            IServiceRouter serviceRouter = mock(IServiceRouter.class);
+            DocumentManager documentManager = new DocumentManager();
+            IncrementalCompilationService compilationService =
+                    mock(IncrementalCompilationService.class);
+            ASTService astService = mock(ASTService.class);
+            TypeInferenceService typeInferenceService = mock(TypeInferenceService.class);
+            CompilationUnit compilationUnit = mock(CompilationUnit.class);
+
+            // Configure mocks
+            when(serviceRouter.getIncrementalCompilationService()).thenReturn(compilationService);
+            when(serviceRouter.getAstService()).thenReturn(astService);
+            when(serviceRouter.getTypeInferenceService()).thenReturn(typeInferenceService);
+
+            // Setup compilation service to return success by default
+            when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+            when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                    .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
+
+            // Create text document service with dependencies
+            textDocumentService = new GroovyTextDocumentService();
+            textDocumentService.setServiceRouter(serviceRouter);
+            textDocumentService.setDocumentManager(documentManager);
+        }
 
         @Override
         public CompletableFuture<InitializeResult> initialize(

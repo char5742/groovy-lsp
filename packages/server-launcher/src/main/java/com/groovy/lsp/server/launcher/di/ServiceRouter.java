@@ -6,6 +6,7 @@ import com.groovy.lsp.codenarc.LintEngine;
 import com.groovy.lsp.formatting.service.FormattingService;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
+import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.workspace.api.WorkspaceIndexService;
@@ -26,6 +27,7 @@ public class ServiceRouter implements IServiceRouter {
 
     private final ASTService astService;
     private final CompilerConfigurationService compilerConfigurationService;
+    private final IncrementalCompilationService incrementalCompilationService;
     private final TypeInferenceService typeInferenceService;
     private final WorkspaceIndexService workspaceIndexService;
     private final FormattingService formattingService;
@@ -35,6 +37,7 @@ public class ServiceRouter implements IServiceRouter {
     public ServiceRouter(
             ASTService astService,
             CompilerConfigurationService compilerConfigurationService,
+            IncrementalCompilationService incrementalCompilationService,
             TypeInferenceService typeInferenceService,
             WorkspaceIndexService workspaceIndexService,
             FormattingService formattingService,
@@ -45,6 +48,10 @@ public class ServiceRouter implements IServiceRouter {
                 Objects.requireNonNull(
                         compilerConfigurationService,
                         "CompilerConfigurationService must not be null");
+        this.incrementalCompilationService =
+                Objects.requireNonNull(
+                        incrementalCompilationService,
+                        "IncrementalCompilationService must not be null");
         this.typeInferenceService =
                 Objects.requireNonNull(
                         typeInferenceService, "TypeInferenceService must not be null");
@@ -152,6 +159,18 @@ public class ServiceRouter implements IServiceRouter {
     }
 
     /**
+     * Get the incremental compilation service.
+     *
+     * @return the incremental compilation service
+     * @throws IllegalStateException if the service is not available
+     */
+    @Override
+    public IncrementalCompilationService getIncrementalCompilationService() {
+        ensureServiceAvailable(incrementalCompilationService, "IncrementalCompilationService");
+        return incrementalCompilationService;
+    }
+
+    /**
      * Ensures that a service is available before returning it.
      *
      * @param service the service to check
@@ -174,6 +193,7 @@ public class ServiceRouter implements IServiceRouter {
     public boolean areAllServicesAvailable() {
         return astService != null
                 && compilerConfigurationService != null
+                && incrementalCompilationService != null
                 && typeInferenceService != null
                 && workspaceIndexService != null
                 && formattingService != null
