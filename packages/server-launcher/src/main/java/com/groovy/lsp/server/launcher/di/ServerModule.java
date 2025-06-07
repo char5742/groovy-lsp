@@ -12,6 +12,7 @@ import com.groovy.lsp.formatting.service.FormattingService;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.GroovyCoreFactory;
+import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.protocol.api.IServiceRouter;
@@ -98,6 +99,12 @@ public class ServerModule extends AbstractModule {
     @Singleton
     TypeInferenceService provideTypeInferenceService(ASTService astService) {
         return GroovyCoreFactory.getInstance().createTypeInferenceService(astService);
+    }
+
+    @Provides
+    @Singleton
+    IncrementalCompilationService provideIncrementalCompilationService() {
+        return GroovyCoreFactory.getInstance().createIncrementalCompilationService();
     }
 
     @Provides

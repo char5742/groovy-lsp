@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol.api;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 
 /**
@@ -25,4 +26,12 @@ public interface IServiceRouter {
      * @throws IllegalStateException if the service is not available
      */
     TypeInferenceService getTypeInferenceService();
+
+    /**
+     * Get the incremental compilation service.
+     *
+     * @return the incremental compilation service
+     * @throws IllegalStateException if the service is not available
+     */
+    IncrementalCompilationService getIncrementalCompilationService();
 }

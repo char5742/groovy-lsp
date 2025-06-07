@@ -97,6 +97,12 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
     @Override
     public CompletableFuture<Object> shutdown() {
         logger.info("Shutting down Groovy Language Server");
+
+        // Shutdown text document service
+        if (textDocumentService != null) {
+            textDocumentService.shutdown();
+        }
+
         errorCode = 0;
         return CompletableFuture.completedFuture(null);
     }
