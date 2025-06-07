@@ -63,30 +63,38 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     private @Nullable IServiceRouter serviceRouter;
     private @Nullable DocumentManager documentManager;
     private @Nullable DiagnosticsHandler diagnosticsHandler;
+    private final Object diagnosticsHandlerLock = new Object();
 
     @Inject
     public void setServiceRouter(IServiceRouter serviceRouter) {
         this.serviceRouter = serviceRouter;
-        // Initialize diagnostics handler when both dependencies are available
-        if (this.serviceRouter != null && this.documentManager != null) {
-            this.diagnosticsHandler =
-                    new DiagnosticsHandler(this.serviceRouter, this.documentManager);
-        }
+        initializeDiagnosticsHandler();
     }
 
     @Inject
     public void setDocumentManager(DocumentManager documentManager) {
         this.documentManager = documentManager;
-        // Initialize diagnostics handler when both dependencies are available
-        if (this.serviceRouter != null && this.documentManager != null) {
-            this.diagnosticsHandler =
-                    new DiagnosticsHandler(this.serviceRouter, this.documentManager);
+        initializeDiagnosticsHandler();
+    }
+
+    private void initializeDiagnosticsHandler() {
+        synchronized (diagnosticsHandlerLock) {
+            if (this.diagnosticsHandler == null
+                    && this.serviceRouter != null
+                    && this.documentManager != null) {
+                this.diagnosticsHandler =
+                        new DiagnosticsHandler(this.serviceRouter, this.documentManager);
+            }
         }
     }
 
     @Override
     public void connect(LanguageClient client) {
         this.client = client;
+    }
+
+    private boolean isDiagnosticsReady() {
+        return client != null && diagnosticsHandler != null && documentManager != null;
     }
 
     @Override
@@ -99,14 +107,20 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         }
 
         // Trigger diagnostics immediately on open
-        if (client != null && diagnosticsHandler != null) {
+        if (isDiagnosticsReady()) {
             logger.debug("Triggering diagnostics for opened document");
+            // Safe to use because isDiagnosticsReady() ensures non-null
+            assert diagnosticsHandler != null && client != null;
             diagnosticsHandler
                     .handleDiagnosticsImmediate(params.getTextDocument().getUri(), client)
                     .exceptionally(
                             ex -> {
                                 logger.error(
-                                        "Failed to handle diagnostics for opened document", ex);
+                                        "Failed to handle diagnostics for opened document: {} -"
+                                                + " Error: {}",
+                                        params.getTextDocument().getUri(),
+                                        ex.getMessage(),
+                                        ex);
                                 return null;
                             });
         }
@@ -126,14 +140,19 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
                     params.getTextDocument().getVersion());
 
             // Trigger diagnostics with debouncing on change
-            if (client != null && diagnosticsHandler != null) {
+            if (isDiagnosticsReady()) {
                 logger.debug("Triggering debounced diagnostics for changed document");
+                // Safe to use because isDiagnosticsReady() ensures non-null
+                assert diagnosticsHandler != null && client != null;
                 diagnosticsHandler
                         .handleDiagnosticsDebounced(params.getTextDocument().getUri(), client)
                         .exceptionally(
                                 ex -> {
                                     logger.error(
-                                            "Failed to handle diagnostics for changed document",
+                                            "Failed to handle diagnostics for changed document: {}"
+                                                    + " - Error: {}",
+                                            params.getTextDocument().getUri(),
+                                            ex.getMessage(),
                                             ex);
                                     return null;
                                 });
@@ -144,6 +163,13 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
         logger.debug("Document closed: {}", params.getTextDocument().getUri());
+
+        // Clear diagnostics for the closed document
+        if (isDiagnosticsReady()) {
+            // Safe to use because isDiagnosticsReady() ensures non-null
+            assert diagnosticsHandler != null && client != null;
+            diagnosticsHandler.clearDiagnostics(params.getTextDocument().getUri(), client);
+        }
 
         // Remove document from manager
         if (documentManager != null) {
@@ -156,13 +182,20 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         logger.debug("Document saved: {}", params.getTextDocument().getUri());
 
         // Trigger diagnostics immediately on save
-        if (client != null && diagnosticsHandler != null) {
+        if (isDiagnosticsReady()) {
             logger.debug("Triggering diagnostics for saved document");
+            // Safe to use because isDiagnosticsReady() ensures non-null
+            assert diagnosticsHandler != null && client != null;
             diagnosticsHandler
                     .handleDiagnosticsImmediate(params.getTextDocument().getUri(), client)
                     .exceptionally(
                             ex -> {
-                                logger.error("Failed to handle diagnostics for saved document", ex);
+                                logger.error(
+                                        "Failed to handle diagnostics for saved document: {} -"
+                                                + " Error: {}",
+                                        params.getTextDocument().getUri(),
+                                        ex.getMessage(),
+                                        ex);
                                 return null;
                             });
         }
@@ -298,5 +331,15 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         logger.debug("Folding ranges requested for: {}", params.getTextDocument().getUri());
         // TODO: Implement folding ranges
         return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    /**
+     * Shuts down the text document service and cleans up resources.
+     */
+    public void shutdown() {
+        logger.debug("Shutting down GroovyTextDocumentService");
+        if (diagnosticsHandler != null) {
+            diagnosticsHandler.shutdown();
+        }
     }
 }

@@ -85,7 +85,14 @@ public class DiagnosticsHandler {
         // Schedule new task with debounce delay
         ScheduledFuture<?> newTask =
                 debounceExecutor.schedule(
-                        () -> publishDiagnostics(uri, client),
+                        () -> {
+                            try {
+                                publishDiagnostics(uri, client);
+                            } finally {
+                                // タスク完了後にマップから削除
+                                scheduledTasks.remove(uri);
+                            }
+                        },
                         DEBOUNCE_DELAY_MS,
                         TimeUnit.MILLISECONDS);
 
@@ -148,9 +155,10 @@ public class DiagnosticsHandler {
 
         // Set range (LSP uses 0-based indexing)
         Position start = new Position(error.getLine() - 1, error.getColumn() - 1);
-        Position end =
-                new Position(
-                        error.getLine() - 1, error.getColumn()); // Simple single character range
+        // エラー範囲を改善: エラー位置から適切な長さの範囲を設定
+        // デフォルトで単語の長さを推定（最低10文字、最大120文字）
+        int endColumn = Math.max(error.getColumn() + 10, Math.min(error.getColumn() + 30, 120));
+        Position end = new Position(error.getLine() - 1, endColumn);
         Range range = new Range(start, end);
         diagnostic.setRange(range);
 
@@ -172,9 +180,38 @@ public class DiagnosticsHandler {
     }
 
     /**
+     * Clears diagnostics for a specific document and cancels any pending tasks.
+     */
+    public void clearDiagnostics(String uri, LanguageClient client) {
+        // Cancel any pending task for this URI
+        ScheduledFuture<?> task = scheduledTasks.remove(uri);
+        if (task != null && !task.isDone()) {
+            task.cancel(false);
+        }
+
+        // Clear diagnostics by publishing empty list
+        PublishDiagnosticsParams params = new PublishDiagnosticsParams();
+        params.setUri(uri);
+        params.setDiagnostics(new ArrayList<>());
+        client.publishDiagnostics(params);
+    }
+
+    /**
      * Shuts down the debounce executor.
      */
     public void shutdown() {
+        // Cancel all pending tasks
+        scheduledTasks
+                .values()
+                .forEach(
+                        task -> {
+                            if (task != null && !task.isDone()) {
+                                task.cancel(false);
+                            }
+                        });
+        scheduledTasks.clear();
+
+        // Shutdown executor
         debounceExecutor.shutdown();
         try {
             if (!debounceExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -184,5 +221,10 @@ public class DiagnosticsHandler {
             debounceExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+    // Test helper method
+    int getScheduledTasksSize() {
+        return scheduledTasks.size();
     }
 }

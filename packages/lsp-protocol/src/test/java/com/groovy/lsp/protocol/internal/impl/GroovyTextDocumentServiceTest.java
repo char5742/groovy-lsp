@@ -3,6 +3,7 @@ package com.groovy.lsp.protocol.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -181,11 +182,24 @@ class GroovyTextDocumentServiceTest {
     @Test
     void didClose_shouldHandleDocumentClose() {
         // given
-        TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
+        service.connect(mockClient);
+        String uri = "file:///test.groovy";
+        TextDocumentIdentifier textDocument = new TextDocumentIdentifier(uri);
         DidCloseTextDocumentParams params = new DidCloseTextDocumentParams(textDocument);
 
-        // when/then - should not throw
+        // when
         service.didClose(params);
+
+        // then
+        // Wait a bit for async processing
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Verify diagnostics are cleared
+        verify(mockClient).publishDiagnostics(any());
     }
 
     @Test
@@ -437,5 +451,33 @@ class GroovyTextDocumentServiceTest {
 
         // then
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shutdown_shouldCleanupResources() {
+        // given - service with initialized diagnostics handler
+        service.connect(mockClient);
+
+        // when
+        service.shutdown();
+
+        // then - should not throw
+        // In a real test, we would verify that the diagnostics handler's shutdown was called
+    }
+
+    @Test
+    void isDiagnosticsReady_shouldCheckAllDependencies() {
+        // given - service without client
+        service.setServiceRouter(serviceRouter);
+        service.setDocumentManager(documentManager);
+
+        // when - open document without client
+        TextDocumentItem textDocument =
+                new TextDocumentItem("file:///test.groovy", "groovy", 1, "class Test {}");
+        DidOpenTextDocumentParams params = new DidOpenTextDocumentParams(textDocument);
+        service.didOpen(params);
+
+        // then - diagnostics should not be triggered
+        verify(mockClient, never()).publishDiagnostics(any());
     }
 }

@@ -243,6 +243,12 @@ class DiagnosticsHandlerTest {
 
         // Then - should only publish once due to debouncing
         verify(languageClient, times(1)).publishDiagnostics(any());
+
+        // And scheduledTasks should be empty after execution
+        Thread.sleep(100); // Wait for cleanup
+        assertTrue(
+                diagnosticsHandler.getScheduledTasksSize() == 0,
+                "Scheduled tasks should be empty after execution");
     }
 
     @Test
@@ -279,5 +285,63 @@ class DiagnosticsHandlerTest {
 
         // Then - should not throw, error should be logged
         verify(languageClient, never()).publishDiagnostics(any());
+    }
+
+    @Test
+    void testClearDiagnostics() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+
+        // When
+        diagnosticsHandler.clearDiagnostics(uri, languageClient);
+
+        // Then
+        ArgumentCaptor<PublishDiagnosticsParams> captor =
+                ArgumentCaptor.forClass(PublishDiagnosticsParams.class);
+        verify(languageClient).publishDiagnostics(captor.capture());
+
+        PublishDiagnosticsParams params = captor.getValue();
+        assertEquals(uri, params.getUri());
+        assertTrue(params.getDiagnostics().isEmpty());
+    }
+
+    @Test
+    void testClearDiagnostics_WithPendingTask() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        when(documentManager.getDocumentContent(uri)).thenReturn("test code");
+        when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+        when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
+
+        // Schedule a debounced task
+        diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
+
+        // When - clear diagnostics before the task executes
+        diagnosticsHandler.clearDiagnostics(uri, languageClient);
+
+        // Wait to ensure the task would have executed if not cancelled
+        Thread.sleep(300);
+
+        // Then - should only publish empty diagnostics once
+        verify(languageClient, times(1)).publishDiagnostics(any());
+        assertEquals(0, diagnosticsHandler.getScheduledTasksSize());
+    }
+
+    @Test
+    void testShutdown_CancelsAllTasks() throws Exception {
+        // Given
+        String uri1 = "file:///test1.groovy";
+        String uri2 = "file:///test2.groovy";
+
+        // Schedule multiple tasks
+        diagnosticsHandler.handleDiagnosticsDebounced(uri1, languageClient);
+        diagnosticsHandler.handleDiagnosticsDebounced(uri2, languageClient);
+
+        // When
+        diagnosticsHandler.shutdown();
+
+        // Then
+        assertEquals(0, diagnosticsHandler.getScheduledTasksSize());
     }
 }
