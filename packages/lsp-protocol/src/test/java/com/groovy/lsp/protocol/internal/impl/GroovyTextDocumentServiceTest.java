@@ -14,6 +14,7 @@ import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -478,6 +479,158 @@ class GroovyTextDocumentServiceTest {
         service.didOpen(params);
 
         // then - diagnostics should not be triggered
+        verify(mockClient, never()).publishDiagnostics(any());
+    }
+
+    @Test
+    void didChange_shouldTriggerDebouncedDiagnostics() throws Exception {
+        // given
+        service.connect(mockClient);
+        String uri = "file:///test.groovy";
+        when(documentManager.getDocumentContent(uri)).thenReturn("updated content");
+        when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+        when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
+
+        VersionedTextDocumentIdentifier textDocument = new VersionedTextDocumentIdentifier(uri, 2);
+        TextDocumentContentChangeEvent change =
+                new TextDocumentContentChangeEvent("updated content");
+        DidChangeTextDocumentParams params =
+                new DidChangeTextDocumentParams(textDocument, Arrays.asList(change));
+
+        // when
+        service.didChange(params);
+
+        // Wait for debounced diagnostics
+        Thread.sleep(300);
+
+        // then
+        verify(mockClient).publishDiagnostics(any());
+    }
+
+    @Test
+    void didSave_shouldTriggerImmediateDiagnostics() throws Exception {
+        // given
+        service.connect(mockClient);
+        String uri = "file:///test.groovy";
+        when(documentManager.getDocumentContent(uri)).thenReturn("saved content");
+        when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+        when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
+
+        TextDocumentIdentifier textDocument = new TextDocumentIdentifier(uri);
+        DidSaveTextDocumentParams params = new DidSaveTextDocumentParams(textDocument);
+
+        // when
+        service.didSave(params);
+
+        // Wait a bit for async processing
+        Thread.sleep(100);
+
+        // then
+        verify(mockClient).publishDiagnostics(any());
+    }
+
+    @Test
+    void hover_shouldHandleNullServiceRouter() throws Exception {
+        // given
+        service = new GroovyTextDocumentService();
+        service.setDocumentManager(documentManager);
+        // serviceRouter is null
+
+        TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
+        Position position = new Position(1, 5);
+        HoverParams params = new HoverParams(textDocument, position);
+
+        // when
+        Hover result = service.hover(params).get();
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void hover_shouldHandleNullDocumentManager() throws Exception {
+        // given
+        service = new GroovyTextDocumentService();
+        service.setServiceRouter(serviceRouter);
+        // documentManager is null
+
+        TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
+        Position position = new Position(1, 5);
+        HoverParams params = new HoverParams(textDocument, position);
+
+        // when
+        Hover result = service.hover(params).get();
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void didOpen_shouldHandleNullDocumentManager() {
+        // given
+        service = new GroovyTextDocumentService();
+        service.setServiceRouter(serviceRouter);
+        // documentManager is null
+
+        TextDocumentItem textDocument =
+                new TextDocumentItem("file:///test.groovy", "groovy", 1, "class Test {}");
+        DidOpenTextDocumentParams params = new DidOpenTextDocumentParams(textDocument);
+
+        // when/then - should not throw
+        service.didOpen(params);
+    }
+
+    @Test
+    void didChange_shouldHandleEmptyContentChanges() {
+        // given
+        VersionedTextDocumentIdentifier textDocument =
+                new VersionedTextDocumentIdentifier("file:///test.groovy", 2);
+        DidChangeTextDocumentParams params =
+                new DidChangeTextDocumentParams(textDocument, Collections.emptyList());
+
+        // when/then - should not throw
+        service.didChange(params);
+    }
+
+    @Test
+    void didClose_shouldHandleNullDocumentManager() {
+        // given
+        service = new GroovyTextDocumentService();
+        service.connect(mockClient);
+        service.setServiceRouter(serviceRouter);
+        // documentManager is null
+
+        TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
+        DidCloseTextDocumentParams params = new DidCloseTextDocumentParams(textDocument);
+
+        // when/then - should not throw
+        service.didClose(params);
+    }
+
+    @Test
+    void didOpen_shouldHandleDiagnosticsError() throws Exception {
+        // given
+        service.connect(mockClient);
+        String uri = "file:///test.groovy";
+        String content = "class Test { }";
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(compilationService.createCompilationUnit(any())).thenReturn(compilationUnit);
+        when(compilationService.compileToPhaseWithResult(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException("Compilation failed"));
+
+        TextDocumentItem textDocument = new TextDocumentItem(uri, "groovy", 1, content);
+        DidOpenTextDocumentParams params = new DidOpenTextDocumentParams(textDocument);
+
+        // when
+        service.didOpen(params);
+
+        // Wait a bit for async processing
+        Thread.sleep(100);
+
+        // then - should not publish diagnostics due to error
         verify(mockClient, never()).publishDiagnostics(any());
     }
 }
