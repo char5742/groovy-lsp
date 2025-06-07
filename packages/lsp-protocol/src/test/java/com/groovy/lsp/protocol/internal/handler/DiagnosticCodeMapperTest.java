@@ -27,15 +27,27 @@ class DiagnosticCodeMapperTest {
                         CompilationError.ErrorType.SYNTAX);
         assertEquals(DiagnosticCodes.SYNTAX_UNEXPECTED_TOKEN, mapper.mapErrorToCode(error));
 
-        // Missing parenthesis
+        // Missing parenthesis - right
         error =
                 new CompilationError(
-                        "expecting ')', found '{'",
+                        "missing ')'", 1, 10, "test.groovy", CompilationError.ErrorType.SYNTAX);
+        assertEquals(DiagnosticCodes.SYNTAX_MISSING_PARENTHESIS, mapper.mapErrorToCode(error));
+
+        // Missing parenthesis - left
+        error =
+                new CompilationError(
+                        "missing '('", 1, 10, "test.groovy", CompilationError.ErrorType.SYNTAX);
+        assertEquals(DiagnosticCodes.SYNTAX_MISSING_PARENTHESIS, mapper.mapErrorToCode(error));
+
+        // Invalid identifier
+        error =
+                new CompilationError(
+                        "invalid identifier used in expression",
                         1,
                         10,
                         "test.groovy",
                         CompilationError.ErrorType.SYNTAX);
-        assertEquals(DiagnosticCodes.SYNTAX_GENERAL, mapper.mapErrorToCode(error));
+        assertEquals(DiagnosticCodes.SYNTAX_INVALID_IDENTIFIER, mapper.mapErrorToCode(error));
 
         // Unclosed string
         error =
@@ -89,6 +101,26 @@ class DiagnosticCodeMapperTest {
                         "test.groovy",
                         CompilationError.ErrorType.SEMANTIC);
         assertEquals(DiagnosticCodes.SEMANTIC_MISSING_RETURN, mapper.mapErrorToCode(error));
+
+        // Invalid import
+        error =
+                new CompilationError(
+                        "unable to resolve class in import statement",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.SEMANTIC);
+        assertEquals(DiagnosticCodes.SEMANTIC_INVALID_IMPORT, mapper.mapErrorToCode(error));
+
+        // Unreachable statement
+        error =
+                new CompilationError(
+                        "unreachable statement detected",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.SEMANTIC);
+        assertEquals(DiagnosticCodes.SEMANTIC_UNREACHABLE_CODE, mapper.mapErrorToCode(error));
     }
 
     @Test
@@ -113,10 +145,60 @@ class DiagnosticCodeMapperTest {
                         CompilationError.ErrorType.TYPE);
         assertEquals(DiagnosticCodes.TYPE_CANNOT_RESOLVE, mapper.mapErrorToCode(error));
 
+        // Incompatible cast
+        error =
+                new CompilationError(
+                        "cannot cast String to Integer",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.TYPE);
+        assertEquals(DiagnosticCodes.TYPE_INCOMPATIBLE_CAST, mapper.mapErrorToCode(error));
+
+        // Another cast error
+        error =
+                new CompilationError(
+                        "incompatible cast from List to Map",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.TYPE);
+        assertEquals(DiagnosticCodes.TYPE_INCOMPATIBLE_CAST, mapper.mapErrorToCode(error));
+
+        // Invalid assignment
+        error =
+                new CompilationError(
+                        "cannot assign null to primitive type int",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.TYPE);
+        assertEquals(DiagnosticCodes.TYPE_INVALID_ASSIGNMENT, mapper.mapErrorToCode(error));
+
+        // Another assignment error
+        error =
+                new CompilationError(
+                        "invalid assignment to final variable",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.TYPE);
+        assertEquals(DiagnosticCodes.TYPE_INVALID_ASSIGNMENT, mapper.mapErrorToCode(error));
+
         // Undefined method
         error =
                 new CompilationError(
                         "No signature of method: String.unknownMethod()",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.TYPE);
+        assertEquals(DiagnosticCodes.TYPE_UNDEFINED_METHOD, mapper.mapErrorToCode(error));
+
+        // Another method not found error
+        error =
+                new CompilationError(
+                        "cannot find method doSomething() in class MyClass",
                         1,
                         10,
                         "test.groovy",
@@ -146,7 +228,7 @@ class DiagnosticCodeMapperTest {
                         CompilationError.ErrorType.WARNING);
         assertEquals(DiagnosticCodes.WARNING_DEPRECATED_METHOD, mapper.mapErrorToCode(error));
 
-        // Dead code
+        // Dead code - with "dead code" text
         error =
                 new CompilationError(
                         "Unreachable statement - dead code",
@@ -155,6 +237,26 @@ class DiagnosticCodeMapperTest {
                         "test.groovy",
                         CompilationError.ErrorType.WARNING);
         assertEquals(DiagnosticCodes.WARNING_DEAD_CODE, mapper.mapErrorToCode(error));
+
+        // Dead code - with "unreachable" text
+        error =
+                new CompilationError(
+                        "This code is unreachable",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.WARNING);
+        assertEquals(DiagnosticCodes.WARNING_DEAD_CODE, mapper.mapErrorToCode(error));
+
+        // Unnecessary cast
+        error =
+                new CompilationError(
+                        "unnecessary cast from String to String",
+                        1,
+                        10,
+                        "test.groovy",
+                        CompilationError.ErrorType.WARNING);
+        assertEquals(DiagnosticCodes.WARNING_UNNECESSARY_CAST, mapper.mapErrorToCode(error));
     }
 
     @Test

@@ -170,4 +170,177 @@ class ErrorRangeCalculatorTest {
         assertEquals(0, range.getEnd().getLine());
         assertEquals(24, range.getEnd().getCharacter()); // "ArrayList"
     }
+
+    @Test
+    void testCalculateRange_NegativeLineNumber() {
+        // Given
+        String sourceCode = "def hello() { }";
+        CompilationError error =
+                new CompilationError(
+                        "Some error",
+                        -1, // Negative line number
+                        1,
+                        "test.groovy",
+                        CompilationError.ErrorType.SYNTAX);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(-2, range.getStart().getLine()); // -1 - 1 = -2
+        assertEquals(0, range.getStart().getCharacter());
+        assertEquals(-2, range.getEnd().getLine());
+        assertTrue(range.getEnd().getCharacter() > 0);
+    }
+
+    @Test
+    void testCalculateRange_StartColumnExceedsLineLength() {
+        // Given
+        String sourceCode = "def x = 5";
+        CompilationError error =
+                new CompilationError(
+                        "Some error",
+                        1,
+                        50, // Column exceeds line length
+                        "test.groovy",
+                        CompilationError.ErrorType.SYNTAX);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(49, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(9, range.getEnd().getCharacter()); // End of line
+    }
+
+    @Test
+    void testCalculateRange_WhitespaceHandling() {
+        // Given
+        String sourceCode = "def x =     hello"; // Multiple spaces before 'hello'
+        CompilationError error =
+                new CompilationError(
+                        "undefined variable",
+                        1,
+                        13, // Points to spaces before 'hello'
+                        "test.groovy",
+                        CompilationError.ErrorType.SEMANTIC);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(12, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(
+                17, range.getEnd().getCharacter()); // Should skip whitespace and highlight 'hello'
+    }
+
+    @Test
+    void testCalculateRange_SingleCharacterToken() {
+        // Given
+        String sourceCode = "def x = 5 + a";
+        CompilationError error =
+                new CompilationError(
+                        "undefined variable 'a'",
+                        1,
+                        13,
+                        "test.groovy",
+                        CompilationError.ErrorType.SEMANTIC);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(12, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(13, range.getEnd().getCharacter()); // Single character 'a'
+    }
+
+    @Test
+    void testCalculateRange_NoMatchingPattern() {
+        // Given
+        String sourceCode = "def hello() { return 42 }";
+        CompilationError error =
+                new CompilationError(
+                        "Generic error with no pattern",
+                        1,
+                        5,
+                        "test.groovy",
+                        CompilationError.ErrorType.SEMANTIC);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(4, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(9, range.getEnd().getCharacter()); // Should highlight 'hello'
+    }
+
+    @Test
+    void testCalculateRange_MultiCharacterOperator() {
+        // Given
+        String sourceCode = "def x = 5 == 3";
+        CompilationError error =
+                new CompilationError(
+                        "invalid operator",
+                        1,
+                        11, // Points to '=='
+                        "test.groovy",
+                        CompilationError.ErrorType.SYNTAX);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(10, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(12, range.getEnd().getCharacter()); // Both characters of '=='
+    }
+
+    @Test
+    void testCalculateRange_SingleCharacterBracket() {
+        // Given
+        String sourceCode = "def x = {";
+        CompilationError error =
+                new CompilationError(
+                        "unclosed bracket", 1, 9, "test.groovy", CompilationError.ErrorType.SYNTAX);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(8, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(9, range.getEnd().getCharacter()); // Single character '{'
+    }
+
+    @Test
+    void testCalculateRange_EmptyLine() {
+        // Given
+        String sourceCode = "\n\ndef x = 5";
+        CompilationError error =
+                new CompilationError(
+                        "unexpected empty line",
+                        1,
+                        1,
+                        "test.groovy",
+                        CompilationError.ErrorType.SYNTAX);
+
+        // When
+        Range range = calculator.calculateRange(error, sourceCode);
+
+        // Then
+        assertEquals(0, range.getStart().getLine());
+        assertEquals(0, range.getStart().getCharacter());
+        assertEquals(0, range.getEnd().getLine());
+        assertEquals(0, range.getEnd().getCharacter()); // Empty line
+    }
 }
