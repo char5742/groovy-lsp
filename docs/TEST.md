@@ -1,185 +1,258 @@
-## 🎯 全体像（Before → After）
+# Groovy LSP テスト戦略
 
-| 項目          | 旧構成                   | モダン構成                                                                                                                         |
-| ----------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **ランタイム**   | Node 20 / Java 17     | **Node 22 LTS**（組み込み test runner & Maglev JIT）([Node.js][1]) / **Bun 1.x** はユーティリティ実行に採用                                      |
-| **パッケージ管理** | npm                   | **pnpm 9** – monorepo を高速解決                                                                                                   |
-| **単体テスト**   | ts-lsp-client + Mocha | **ts-lsp-client** ([GitHub][2]) + **Node built-in test runner** (watch/coverage) ([Node.js][3]) or **Vitest 3** forフロント寄りロジック |
-| **E2E テスト** | @vscode/test          | そのまま継続 （VS Code v1.96 の API に追随）                                                                                              |
-| **多言語 LSP** | 手作りスクリプト              | **pytest-lsp** & **lsp-devtools** で統一 ([PyPI][4], [GitHub][5])                                                                |
-| **開発環境**    | 手動セットアップ              | **Dev Containers spec 1.0** + Codespaces 対応 ([Dev Containers][6])                                                             |
-| **CI**      | GitHub Actions 単一ジョブ  | **matrix**（Node 22 / Bun 1 / JDK 21）+ キャッシュ & コンテナ再利用                                                                         |
+## 概要
 
----
+Groovy LSPプロジェクトでは、堅牢で保守性の高いLanguage Serverを実現するため、包括的なテスト戦略を採用しています。
 
-## 1. リポジトリレイアウト
+## テストレベル
+
+### 1. 単体テスト（Unit Tests）
+
+| フレームワーク | 用途 | カバレッジ目標 |
+|--------------|------|-------------|
+| JUnit 5      | 基本的なテストフレームワーク | 80%以上 |
+| AssertJ      | 流暢なアサーション | - |
+| Mockito      | モックとスタブ | - |
+| ArchUnit     | アーキテクチャ検証 | - |
+
+各モジュールの単体テスト実装状況：
+- ✅ **shared**: イベントバス、DDDパターン検証
+- ✅ **groovy-core**: コンパイラ、AST、型推論
+- ✅ **lsp-protocol**: ハンドラー、プロトコル処理
+- ✅ **workspace-index**: インデックス、シンボル管理
+- ✅ **codenarc-lint**: ルール実行、クイックフィックス
+- ✅ **formatting**: フォーマッター動作
+- ✅ **server-launcher**: 起動パラメータ、DI設定
+
+### 2. 統合テスト（Integration Tests）
+
+`packages/integration-tests/`に配置：
+- **ModuleIntegrationTest**: モジュール間の連携検証
+- **ServerIntegrationTest**: LSPサーバー全体の動作確認
+
+主なテストシナリオ：
+- Groovy CoreとLint Engineの統合
+- FormatterとGroovy Coreの統合
+- Workspace Indexerと複数モジュールの統合
+- エンドツーエンド: コード変更から診断まで
+
+### 3. E2Eテスト（End-to-End Tests）
+
+`packages/e2e-tests/`に配置：
+- VS Code環境での実際の動作確認
+- クライアント-サーバー間のプロトコル通信
+- 実際のGroovyプロジェクトでの動作検証
+
+### 4. パフォーマンステスト（Performance Tests）
+
+`packages/benchmarks/`に配置（JMH使用）：
+- **ParsingBenchmark**: Groovyファイルのパース性能
+- **CompletionBenchmark**: コード補完の応答速度
+- **IndexingBenchmark**: ワークスペースインデックス性能
+- **FormattingBenchmark**: フォーマッティング処理速度
+
+## テストインフラストラクチャ
+
+### テストユーティリティ
+
+```java
+// LSPプロトコルテスト用ハーネス
+packages/lsp-protocol/src/test/java/
+├── AbstractProtocolTest.java      // 基底テストクラス
+├── LSPTestHarness.java           // LSP通信テスト支援
+├── ProtocolMockServer.java       // モックサーバー
+└── TestLanguageClient.java       // テスト用クライアント
+```
+
+### テストフィクスチャ
 
 ```
-root/
-├─ packages/
-│  ├─ server/            # LSP サーバー本体
-│  ├─ protocol-tests/    # JSON-RPC レベル
-│  └─ e2e/               # VS Code Extension Host 絡み
-├─ .devcontainer/        # VS Code & Codespaces
-├─ docker/               # 本番用イメージ
-└─ .github/workflows/
+packages/shared/src/test/resources/fixtures/groovy/
+├── SimpleClass.groovy      // 基本的なクラス定義
+├── ClosureExample.groovy   // クロージャのテスト
+├── DSLExample.groovy       // DSL構文のテスト
+├── TraitExample.groovy     // トレイトのテスト
+└── ErrorExample.groovy     // エラー検出のテスト
 ```
 
-Monorepo でも `pnpm filter` でパッケージ横断テストが 1 コマンドに。
+## テスト実行
 
----
+### 基本コマンド
 
-## 2. Dev Container（.devcontainer/devcontainer.json 抜粋）
+```bash
+# 全モジュールのテスト実行
+./gradlew test
 
-```jsonc
-{
-  "name": "lsp-dev",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-  "features": {
-    "ghcr.io/devcontainers/features/java": "21"
-  },
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "typescript.tsserver.useNodeNext": true
-      },
-      "extensions": [
-        "ms-vscode.vscode-typescript-next",
-        "github.vscode-pull-request-github"
-      ]
-    }
-  },
-  "postCreateCommand": "pnpm install && pnpm build"
+# 特定モジュールのテスト
+./gradlew :lsp-protocol:test
+
+# 統合テストの実行
+./gradlew integrationTest
+
+# カバレッジレポート生成
+./gradlew jacocoTestReport
+
+# カバレッジ閾値チェック
+./gradlew jacocoTestCoverageVerification
+
+# パフォーマンステスト
+./gradlew :benchmarks:jmh
+```
+
+### 継続的インテグレーション
+
+GitHub Actionsでの自動テスト：
+- プルリクエスト時: 変更モジュールのテスト
+- プッシュ前: 全テスト + カバレッジチェック
+- マルチプラットフォーム: Ubuntu, macOS, Windows
+- Javaバージョンマトリクス: Java 21, 23
+
+## テストベストプラクティス
+
+### 1. テスト命名規則
+
+```java
+// Given-When-Then形式
+@Test
+void analyzeFile_shouldReturnDiagnostics_whenSyntaxErrorExists() {
+    // Given: 構文エラーを含むファイル
+    // When: analyzeFileを実行
+    // Then: 診断結果にエラーが含まれる
+}
+
+// 日本語での記述も可能（統合テスト）
+@Test
+@DisplayName("ホバー機能の基本的な動作確認")
+void testHoverFunctionality() {
+    // テスト実装
 }
 ```
 
-*Node 22 イメージなので組み込み test runner が即利用可。
-Java 21 は LSP4J 系ビルドに備えて feature で注入。*
+### 2. モック戦略
 
----
+```java
+// 外部依存はモック化
+@Mock private WorkspaceIndexService indexService;
+@Mock private CompilerConfigurationService compilerService;
 
-## 3. プロトコル単体テスト（Node 側）
-
-```ts
-// packages/protocol-tests/hover.test.ts
-import { startServer, client } from 'ts-lsp-client';
-import assert from 'node:assert/strict';
-
-const srv = await startServer({
-  command: 'node',
-  args: ['dist/server.js', '--stdio']
-});
-
-await client.initialize({ rootUri: 'file:///proj' });
-const hover = await client.sendRequest('textDocument/hover', {
-  textDocument: { uri: 'file:///proj/src/main.foo' },
-  position: { line: 10, character: 5 }
-});
-
-assert.ok(hover.contents.value.includes('ExpectedDoc'));
-await srv.shutdown();
+// 内部実装は実際のインスタンスを使用
+private final GroovyFormatter formatter = new GroovyFormatter();
 ```
 
-```bash
-# 実行
-node --test --watch packages/protocol-tests
+### 3. アーキテクチャテスト
+
+```java
+@ArchTest
+static final ArchRule internalPackagesShouldNotBeAccessedFromOutside =
+    noClasses()
+        .that().resideOutsideOfPackage("..internal..")
+        .should().accessClassesThat()
+        .resideInAPackage("..internal..");
 ```
 
-*Node 22 の `node:test` は watch / coverage / TAP 出力が標準装備で Mocha 相当の書き味。
-CLI の依存がゼロになり CI イメージも軽量化。*
+## カバレッジ目標
 
----
+### モジュール別目標
 
-## 4. Python／その他ランタイムを巻き込む場合
+| モジュール | ライン | ブランチ | 特記事項 |
+|-----------|-------|---------|------|
+| shared | 80% | 80% | 基盤コード |
+| groovy-core | 80% | 80% | コア機能 |
+| lsp-protocol | 80% | 80% | プロトコル処理 |
+| workspace-index | 80% | 80% | インデックス管理 |
+| codenarc-lint | 80% | 80% | 静的解析 |
+| formatting | 80% | 80% | フォーマッター |
+| server-launcher | 80% | 80% | 起動処理 |
 
-```python
-# tests/test_hover.py
-from pytest_lsp import LanguageClient
+### 除外対象
 
-def test_hover(tmp_path):
-    srv = LanguageClient.command(
-        ["python", "-m", "my_py_ls", "--stdio"], root_uri=tmp_path.as_uri()
-    )
-    with srv:
-        doc = srv.open("main.py", "print(1)")
-        hover = srv.hover(doc, position=(0, 1))
-        assert "int" in hover["contents"][0]["value"]
+- Main/Launcherクラス
+- 定数定義クラス
+- DIモジュール設定
+- 自動生成コード
+
+## トラブルシューティング
+
+### よくある問題
+
+1. **OutOfMemoryError during tests**
+   ```bash
+   # JVMヒープサイズを増やす
+   ./gradlew test -Dorg.gradle.jvmargs="-Xmx2g -XX:+HeapDumpOnOutOfMemoryError"
+   ```
+
+2. **テストの並列実行による競合**
+   ```groovy
+   test {
+       maxParallelForks = 1  // 並列実行を無効化
+   }
+   ```
+
+3. **Windows環境でのパス問題**
+   - テストでは`Path`クラスを使用してOSに依存しないパス処理を実装
+
+4. **LMDBのロック問題**
+   - 各テストで独立した一時ディレクトリを使用
+   - `@TempDir`アノテーションの活用
+
+## デバッグテクニック
+
+### 1. LSPメッセージのトレース
+
+```java
+// テスト時のLSPメッセージをログ出力
+@Test
+void debugProtocolMessages() {
+    var server = new ProtocolMockServer();
+    server.enableTracing();  // すべてのJSON-RPCメッセージをログ出力
+    // テスト実行
+}
 ```
 
-`pytest -q` だけで Node と同等の E2E が回ります。
-`lsp-devtools` の *capability index* を使うと「このメッセージを VS Code が本当にサポートしているか？」の表引きも自動化できます。([LSP Devtools][7])
+### 2. 診断結果の詳細確認
 
----
-
-## 5. VS Code Extension Host E2E
-
-```ts
-import { runTests } from '@vscode/test';
-
-await runTests({
-  version: 'stable',
-  extensionDevelopmentPath: resolve('../server'),
-  extensionTestsPath: resolve('./suite/index'),
-  launchArgs: ['--disable-workspace-trust']
-});
+```java
+// 診断結果を見やすく出力
+assertThat(diagnostics)
+    .extracting(d -> d.getMessage())
+    .containsExactly(
+        "Missing semicolon",
+        "Undefined variable: foo"
+    );
 ```
 
-*GUI は起動しますが xvfb-run でヘッドレス実行 OK。
-GitHub Actions では ubuntu-latest + `xvfb-action@v2` が楽。*
+### 3. パフォーマンス計測
 
----
-
-## 6. GitHub Actions（.github/workflows/ci.yml 抜粋）
-
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        runtime: [node22, bun, temurin-21]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with: { version: 9 }
-      - name: Set up ${{ matrix.runtime }}
-        uses: ./.github/actions/setup-${{ matrix.runtime }}
-      - run: pnpm -r test
+```java
+@Test
+@Timeout(value = 200, unit = TimeUnit.MILLISECONDS)
+void performanceTest() {
+    // 200ms以内に完了することを保証
+}
 ```
 
-*ローカルと同じ devcontainer を Docker ビルドキャッシュとして再利用することで
-`pnpm install` は 80 % 以上ヒット、一周 2 〜 3 分に短縮。*
+## 今後の改善計画
 
----
+1. **プロパティベーステスト（Property-based Testing）**
+   - QuickCheckスタイルのテスト導入
+   - ランダムな入力によるエッジケース検出
 
-## 7. 追加で押さえておきたい一次情報
+2. **ミューテーションテスト（Mutation Testing）**
+   - PITestの導入検討
+   - テストの品質自体を検証
 
-| 資料                           | 概要                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------- |
-| **LSP Spec 3.18 (Draft)**    | 2025-H1 のエディタ実装が追随中。`textDocument/diagnostic` の完全版が安定予定。([Microsoft GitHub][8]) |
-| **ts-lsp-client README**     | VS Code 依存ゼロのスタンドアロン LSP クライアント実装。([GitHub][2])                                 |
-| **pytest-lsp Docs**          | PyGLS ベースのサーバーをワンライナーでテスト。([PyPI][4])                                           |
-| **Node.js test runner Docs** | `node --test --watch` / coverage / TAP 出力。([Node.js][3])                        |
+3. **契約テスト（Contract Testing）**
+   - LSPクライアントとの互換性保証
+   - プロトコルバージョン間の互換性
 
----
+4. **ビジュアルリグレッションテスト**
+   - VS Code拡張機能のUIテスト
+   - スクリーンショット比較
 
-### ✨ Tips
+## 参考資料
 
-* **Bun の test runner** は Vitest API 互換なので、Node 側と同じテストコードがそのまま動きます。高速フィードバック用にローカルでは `bun test`, CI で `node --test` など切り替えるのもアリ。([Bun][9])
-* **LSP メッセージ** を JSON Schema で定義しておくと、実行時バリデーションを Node/Python 両方で共通化でき、破壊的変更の回避に◎。
-* VS Code 用 E2E を最初から **Playwright** に寄せておくと、スクリーンショット付きレポートが得られデバッグが楽（@playwright/test は Extension Host 起動をサポート済み）。
-
----
-
-これで “エディタ不使用でも再現性の高い LSP テスト” を **ローカル → Dev Container → CI** へ一気通貫で流せます。
-試してみて詰まりどころがあったら、また気軽に声かけてくださいね 😊
-
-[1]: https://nodejs.org/en/blog/announcements/v22-release-announce?utm_source=chatgpt.com "Node.js 22 is now available!"
-[2]: https://github.com/ImperiumMaximus/ts-lsp-client?utm_source=chatgpt.com "ImperiumMaximus/ts-lsp-client: lsp language-server-protocol nodejs ..."
-[3]: https://nodejs.org/api/test.html?utm_source=chatgpt.com "Test runner | Node.js v24.1.0 Documentation"
-[4]: https://pypi.org/project/pytest-lsp/?utm_source=chatgpt.com "pytest-lsp · PyPI"
-[5]: https://github.com/swyddfa/lsp-devtools?utm_source=chatgpt.com "swyddfa/lsp-devtools: Tooling for working with language ... - GitHub"
-[6]: https://devcontainers.github.io/implementors/json_reference/?utm_source=chatgpt.com "Dev Container metadata reference"
-[7]: https://lsp-devtools.readthedocs.io/?utm_source=chatgpt.com "LSP Devtools"
-[8]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/?utm_source=chatgpt.com "Language Server Protocol Specification - 3.18"
-[9]: https://bun.sh/?utm_source=chatgpt.com "Bun — A fast all-in-one JavaScript runtime"
+- [JUnit 5 User Guide](https://junit.org/junit5/docs/current/user-guide/)
+- [AssertJ Documentation](https://assertj.github.io/doc/)
+- [ArchUnit User Guide](https://www.archunit.org/userguide/html/000_Index.html)
+- [JMH Tutorial](https://github.com/openjdk/jmh)
+- [LSP Specification](https://microsoft.github.io/language-server-protocol/)
