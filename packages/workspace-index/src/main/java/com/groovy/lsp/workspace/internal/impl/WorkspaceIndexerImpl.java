@@ -8,6 +8,7 @@ import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
 import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import com.groovy.lsp.workspace.internal.dependency.DependencyResolver;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
+import com.groovy.lsp.workspace.internal.parser.GroovyFileParser;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -31,6 +32,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
     private final DependencyResolver dependencyResolver;
     private final ExecutorService executorService;
     private final EventBus eventBus;
+    private final GroovyFileParser groovyFileParser;
 
     public WorkspaceIndexerImpl(Path workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
@@ -38,6 +40,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
         this.dependencyResolver = new DependencyResolver(workspaceRoot);
         this.executorService = Executors.newWorkStealingPool();
         this.eventBus = EventBusFactory.getInstance();
+        this.groovyFileParser = new GroovyFileParser();
     }
 
     /**
@@ -135,12 +138,32 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
     private List<SymbolInfo> indexFileWithResult(Path file) {
         try {
             logger.debug("Indexing file: {}", file);
-            // TODO: Parse file and extract symbols
-            // For now, just register the file
+
+            List<SymbolInfo> symbols = List.of();
+
+            // Check if it's a Groovy file
+            String fileName = file.getFileName().toString();
+            if (fileName.endsWith(".groovy") || fileName.endsWith(".gradle")) {
+                // Parse the file and extract symbols
+                symbols = groovyFileParser.parseFile(file);
+
+                // Add symbols to the index
+                for (SymbolInfo symbol : symbols) {
+                    symbolIndex.addSymbol(symbol);
+                }
+            } else if (fileName.endsWith(".java")) {
+                // TODO: Implement Java file parsing
+                logger.debug("Java file parsing not yet implemented: {}", file);
+            } else if (fileName.endsWith(".gradle.kts")) {
+                // TODO: Implement Kotlin script parsing
+                logger.debug("Kotlin script parsing not yet implemented: {}", file);
+            }
+
+            // Register the file in the index
             symbolIndex.addFile(file);
 
-            // Return empty list for now
-            return List.of();
+            logger.debug("Indexed {} symbols from file: {}", symbols.size(), file);
+            return symbols;
         } catch (Exception e) {
             logger.error("Error indexing file: {}", file, e);
             String errorMessage =
