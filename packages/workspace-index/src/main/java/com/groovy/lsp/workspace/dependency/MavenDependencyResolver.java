@@ -162,7 +162,7 @@ public class MavenDependencyResolver implements DependencyResolver {
 
             // Configure session
             systemSession.setOffline(false);
-            systemSession.setChecksumPolicy("WARN");
+            systemSession.setChecksumPolicy("warn");
             systemSession.setUpdatePolicy("daily");
 
             session = systemSession;
