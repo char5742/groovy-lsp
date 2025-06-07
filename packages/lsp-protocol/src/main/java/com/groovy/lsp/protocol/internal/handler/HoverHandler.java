@@ -325,6 +325,21 @@ public class HoverHandler {
         StringBuilder doc = new StringBuilder();
         logger.debug("extractJavadoc called with node type: {}", node.getClass().getName());
 
+        // Extract Groovydoc content if available
+        try {
+            var groovydoc = node.getGroovydoc();
+            if (groovydoc != null) {
+                logger.debug("Found Groovydoc for node: {}", node);
+                String content = groovydoc.getContent();
+                if (content != null && !content.trim().isEmpty()) {
+                    logger.debug("Groovydoc content: {}", content);
+                    doc.append(content.trim());
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Error accessing Groovydoc: {}", e.getMessage());
+        }
+
         // Extract annotation information
         if (node.getAnnotations() != null && !node.getAnnotations().isEmpty()) {
             logger.debug("Node has {} annotations", node.getAnnotations().size());

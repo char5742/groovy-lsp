@@ -8,6 +8,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import groovy.lang.groovydoc.Groovydoc;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ASTNode;
@@ -1422,5 +1423,312 @@ class HoverHandlerTest {
         assertFalse(content.contains("**Annotations:**"));
         assertFalse(content.contains("*Abstract"));
         assertFalse(content.contains("*Synthetic"));
+    }
+
+    @Test
+    void testHoverOnMethodWithGroovydoc() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "/** This is a test method */ def testMethod() { }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 35));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        MethodNode methodNode = mock(MethodNode.class);
+        Groovydoc groovydoc = mock(Groovydoc.class);
+
+        when(methodNode.getName()).thenReturn("testMethod");
+        when(methodNode.isPublic()).thenReturn(true);
+        when(methodNode.isStatic()).thenReturn(false);
+        when(methodNode.isFinal()).thenReturn(false);
+        when(methodNode.isAbstract()).thenReturn(false);
+        when(methodNode.isSynthetic()).thenReturn(false);
+        when(methodNode.getReturnType()).thenReturn(new ClassNode(Object.class));
+        when(methodNode.getParameters()).thenReturn(Parameter.EMPTY_ARRAY);
+        when(methodNode.getAnnotations()).thenReturn(java.util.Collections.emptyList());
+        when(methodNode.getGroovydoc()).thenReturn(groovydoc);
+        when(groovydoc.getContent()).thenReturn("This is a test method");
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(36))).thenReturn(methodNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("testMethod"));
+        assertTrue(content.contains("This is a test method"));
+    }
+
+    @Test
+    void testHoverOnFieldWithGroovydoc() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "class Test { /** Field documentation */ String myField }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 50));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        ClassNode ownerClass = new ClassNode("Test", 0, null);
+        FieldNode fieldNode = mock(FieldNode.class);
+        Groovydoc groovydoc = mock(Groovydoc.class);
+
+        when(fieldNode.getName()).thenReturn("myField");
+        when(fieldNode.getType()).thenReturn(new ClassNode(String.class));
+        when(fieldNode.getOwner()).thenReturn(ownerClass);
+        when(fieldNode.isPublic()).thenReturn(true);
+        when(fieldNode.isProtected()).thenReturn(false);
+        when(fieldNode.isPrivate()).thenReturn(false);
+        when(fieldNode.isStatic()).thenReturn(false);
+        when(fieldNode.isFinal()).thenReturn(false);
+        when(fieldNode.isEnum()).thenReturn(false);
+        when(fieldNode.isSynthetic()).thenReturn(false);
+        when(fieldNode.getAnnotations()).thenReturn(java.util.Collections.emptyList());
+        when(fieldNode.getGroovydoc()).thenReturn(groovydoc);
+        when(groovydoc.getContent()).thenReturn("Field documentation");
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(51))).thenReturn(fieldNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("myField"));
+        assertTrue(content.contains("Field documentation"));
+    }
+
+    @Test
+    void testHoverOnClassWithGroovydoc() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "/** Test class documentation */ class TestClass { }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 40));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        ClassNode classNode = mock(ClassNode.class);
+        Groovydoc groovydoc = mock(Groovydoc.class);
+
+        when(classNode.getName()).thenReturn("TestClass");
+        when(classNode.isInterface()).thenReturn(false);
+        when(classNode.isEnum()).thenReturn(false);
+        when(classNode.isAbstract()).thenReturn(false);
+        when(classNode.getSuperClass()).thenReturn(mock(ClassNode.class));
+        when(classNode.getInterfaces()).thenReturn(new ClassNode[0]);
+        when(classNode.getPackageName()).thenReturn(null);
+        when(classNode.getAnnotations()).thenReturn(java.util.Collections.emptyList());
+        when(classNode.getGroovydoc()).thenReturn(groovydoc);
+        when(groovydoc.getContent()).thenReturn("Test class documentation");
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(41))).thenReturn(classNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("TestClass"));
+        assertTrue(content.contains("Test class documentation"));
+    }
+
+    @Test
+    void testHoverOnPropertyWithGroovydoc() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "class Test { /** Property documentation */ String name }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 52));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        ClassNode declaringClass = new ClassNode("Test", 0, null);
+        PropertyNode propertyNode = mock(PropertyNode.class);
+        Groovydoc groovydoc = mock(Groovydoc.class);
+
+        when(propertyNode.getName()).thenReturn("name");
+        when(propertyNode.getType()).thenReturn(new ClassNode(String.class));
+        when(propertyNode.getDeclaringClass()).thenReturn(declaringClass);
+        when(propertyNode.isPublic()).thenReturn(true);
+        when(propertyNode.isPrivate()).thenReturn(false);
+        when(propertyNode.isStatic()).thenReturn(false);
+        when(propertyNode.getAnnotations()).thenReturn(java.util.Collections.emptyList());
+        when(propertyNode.getGroovydoc()).thenReturn(groovydoc);
+        when(groovydoc.getContent()).thenReturn("Property documentation");
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(53))).thenReturn(propertyNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("name"));
+        assertTrue(content.contains("Property documentation"));
+    }
+
+    @Test
+    void testHoverWithGroovydocAndAnnotations() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "/** Deprecated method */ @Deprecated def oldMethod() { }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 42));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        MethodNode methodNode = mock(MethodNode.class);
+        Groovydoc groovydoc = mock(Groovydoc.class);
+        AnnotationNode annotation = mock(AnnotationNode.class);
+        ClassNode deprecatedClass = mock(ClassNode.class);
+
+        when(methodNode.getName()).thenReturn("oldMethod");
+        when(methodNode.isPublic()).thenReturn(true);
+        when(methodNode.isStatic()).thenReturn(false);
+        when(methodNode.isFinal()).thenReturn(false);
+        when(methodNode.isAbstract()).thenReturn(false);
+        when(methodNode.isSynthetic()).thenReturn(false);
+        when(methodNode.getReturnType()).thenReturn(new ClassNode(Object.class));
+        when(methodNode.getParameters()).thenReturn(Parameter.EMPTY_ARRAY);
+        when(methodNode.getGroovydoc()).thenReturn(groovydoc);
+        when(groovydoc.getContent()).thenReturn("Deprecated method");
+
+        when(deprecatedClass.getName()).thenReturn("java.lang.Deprecated");
+        when(annotation.getClassNode()).thenReturn(deprecatedClass);
+        when(methodNode.getAnnotations()).thenReturn(java.util.Arrays.asList(annotation));
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(43))).thenReturn(methodNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("oldMethod"));
+        assertTrue(content.contains("Deprecated method"));
+        assertTrue(content.contains("**Annotations:**"));
+        assertTrue(content.contains("@java.lang.Deprecated"));
+    }
+
+    @Test
+    void testHoverWithNullGroovydoc() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "def noDocMethod() { }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 7));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        MethodNode methodNode = mock(MethodNode.class);
+
+        when(methodNode.getName()).thenReturn("noDocMethod");
+        when(methodNode.isPublic()).thenReturn(true);
+        when(methodNode.isStatic()).thenReturn(false);
+        when(methodNode.isFinal()).thenReturn(false);
+        when(methodNode.isAbstract()).thenReturn(false);
+        when(methodNode.isSynthetic()).thenReturn(false);
+        when(methodNode.getReturnType()).thenReturn(new ClassNode(Object.class));
+        when(methodNode.getParameters()).thenReturn(Parameter.EMPTY_ARRAY);
+        when(methodNode.getAnnotations()).thenReturn(java.util.Collections.emptyList());
+        when(methodNode.getGroovydoc()).thenReturn(null);
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(8))).thenReturn(methodNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("noDocMethod"));
+        // Should not throw exception when groovydoc is null
+    }
+
+    @Test
+    void testHoverWithEmptyGroovydocContent() throws Exception {
+        // Given
+        String uri = "file:///test.groovy";
+        String sourceCode = "/**/ def emptyDocMethod() { }";
+        HoverParams params = new HoverParams(new TextDocumentIdentifier(uri), new Position(0, 15));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(sourceCode);
+
+        // Create a mock AST
+        ModuleNode moduleNode = mock(ModuleNode.class);
+        MethodNode methodNode = mock(MethodNode.class);
+        Groovydoc groovydoc = mock(Groovydoc.class);
+
+        when(methodNode.getName()).thenReturn("emptyDocMethod");
+        when(methodNode.isPublic()).thenReturn(true);
+        when(methodNode.isStatic()).thenReturn(false);
+        when(methodNode.isFinal()).thenReturn(false);
+        when(methodNode.isAbstract()).thenReturn(false);
+        when(methodNode.isSynthetic()).thenReturn(false);
+        when(methodNode.getReturnType()).thenReturn(new ClassNode(Object.class));
+        when(methodNode.getParameters()).thenReturn(Parameter.EMPTY_ARRAY);
+        when(methodNode.getAnnotations()).thenReturn(java.util.Collections.emptyList());
+        when(methodNode.getGroovydoc()).thenReturn(groovydoc);
+        when(groovydoc.getContent()).thenReturn("");
+
+        when(astService.parseSource(sourceCode, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(eq(moduleNode), eq(1), eq(16))).thenReturn(methodNode);
+
+        // When
+        CompletableFuture<Hover> result = hoverHandler.handleHover(params);
+        Hover hover = result.get();
+
+        // Then
+        assertNotNull(hover);
+        assertNotNull(hover.getContents());
+        assertTrue(hover.getContents().isRight());
+        MarkupContent markupContent = hover.getContents().getRight();
+        String content = markupContent.getValue();
+        assertTrue(content.contains("emptyDocMethod"));
+        // Should not include empty groovydoc
     }
 }

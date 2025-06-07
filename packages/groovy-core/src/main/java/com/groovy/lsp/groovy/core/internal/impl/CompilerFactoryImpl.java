@@ -128,12 +128,13 @@ public class CompilerFactoryImpl implements CompilerConfigurationService {
      * @return optimization options map
      */
     private static java.util.Map<String, Boolean> createOptimizationOptions() {
-        return java.util.Map.of(
-                "indy", true, // Use invokedynamic
-                "groovydoc", true, // Preserve groovydoc
-                "int", false, // Don't optimize int operations (for debugging)
-                "parrot", true // Use Parrot parser (Groovy 4.0+ default)
-                );
+        // Using HashMap instead of Map.of() to include CompilerConfiguration constant
+        java.util.Map<String, Boolean> options = new java.util.HashMap<>();
+        options.put("indy", true); // Use invokedynamic
+        options.put("int", false); // Don't optimize int operations (for debugging)
+        options.put("parrot", true); // Use Parrot parser (Groovy 4.0+ default)
+        options.put(CompilerConfiguration.GROOVYDOC, true); // Attach groovydoc as AST node metadata
+        return options;
     }
 
     /**
