@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +52,13 @@ public class GroovyFileParser {
                 return Collections.emptyList();
             }
 
-            SymbolExtractorVisitor visitor = new SymbolExtractorVisitor(file);
+            // First, collect all class names to help identify traits
+            Set<String> allClassNames =
+                    moduleNode.getClasses().stream()
+                            .map(ClassNode::getName)
+                            .collect(java.util.stream.Collectors.toSet());
+
+            SymbolExtractorVisitor visitor = new SymbolExtractorVisitor(file, allClassNames);
             moduleNode
                     .getClasses()
                     .forEach(

@@ -23,13 +23,13 @@ import org.slf4j.LoggerFactory;
  */
 public class GradleDependencyResolver implements DependencyResolver {
     private static final Logger logger = LoggerFactory.getLogger(GradleDependencyResolver.class);
-    
+
     private final Path workspaceRoot;
-    
+
     public GradleDependencyResolver(Path workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
     }
-    
+
     @Override
     public boolean canHandle(Path workspaceRoot) {
         return Files.exists(workspaceRoot.resolve("build.gradle"))
@@ -37,12 +37,12 @@ public class GradleDependencyResolver implements DependencyResolver {
                 || Files.exists(workspaceRoot.resolve("settings.gradle"))
                 || Files.exists(workspaceRoot.resolve("settings.gradle.kts"));
     }
-    
+
     @Override
     public BuildSystem getBuildSystem() {
         return BuildSystem.GRADLE;
     }
-    
+
     @Override
     public List<Path> resolveDependencies() {
         // Check if running in test environment and skip Gradle connection
@@ -179,7 +179,7 @@ public class GradleDependencyResolver implements DependencyResolver {
 
         return dependencies.stream().distinct().filter(Files::exists).collect(Collectors.toList());
     }
-    
+
     @Override
     public List<Path> getSourceDirectories() {
         List<Path> sourceDirs = new ArrayList<>();
@@ -194,7 +194,7 @@ public class GradleDependencyResolver implements DependencyResolver {
 
         return sourceDirs;
     }
-    
+
     /**
      * Get classpath from Gradle using custom tooling model.
      */
@@ -289,7 +289,7 @@ public class GradleDependencyResolver implements DependencyResolver {
         return Files.exists(workspaceRoot.resolve("gradlew"))
                 || Files.exists(workspaceRoot.resolve("gradlew.bat"));
     }
-    
+
     private void addIfExists(List<Path> list, String relativePath) {
         Path path = workspaceRoot.resolve(relativePath);
         if (Files.exists(path) && Files.isDirectory(path)) {

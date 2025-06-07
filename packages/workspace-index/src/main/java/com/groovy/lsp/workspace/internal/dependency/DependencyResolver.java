@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Resolves project dependencies using Gradle Tooling API or Maven.
  * Detects the build system and extracts classpath information.
- * 
+ *
  * @deprecated Use {@link com.groovy.lsp.workspace.dependency.MavenAndGradleDependencyResolver} instead.
  *             This class now delegates to the new implementation for backward compatibility.
  */
@@ -30,16 +30,17 @@ public class DependencyResolver {
      */
     public BuildSystem detectBuildSystem() {
         // Re-create resolver to force re-detection for backward compatibility with tests
-        com.groovy.lsp.workspace.dependency.DependencyResolver newResolver = 
-            new MavenAndGradleDependencyResolver(workspaceRoot);
-        
-        com.groovy.lsp.workspace.dependency.DependencyResolver.BuildSystem newBuildSystem = newResolver.getBuildSystem();
-        
+        com.groovy.lsp.workspace.dependency.DependencyResolver newResolver =
+                new MavenAndGradleDependencyResolver(workspaceRoot);
+
+        com.groovy.lsp.workspace.dependency.DependencyResolver.BuildSystem newBuildSystem =
+                newResolver.getBuildSystem();
+
         // Update the internal resolver if build system changed
         if (newResolver.getBuildSystem() != resolver.getBuildSystem()) {
             this.resolver = newResolver;
         }
-        
+
         return switch (newBuildSystem) {
             case GRADLE -> BuildSystem.GRADLE;
             case MAVEN -> BuildSystem.MAVEN;

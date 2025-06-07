@@ -32,21 +32,21 @@ public class PerformanceTest {
     private static final int LINES_PER_METHOD = 5;
     private static final int LINES_PER_FIELD = 1;
     private static final int LINES_PER_CLASS_HEADER = 3;
-    
+
     // Calculate required files based on lines per file
-    private static final int LINES_PER_FILE = 
-        CLASSES_PER_FILE * (LINES_PER_CLASS_HEADER + 
-            METHODS_PER_CLASS * LINES_PER_METHOD + 
-            FIELDS_PER_CLASS * LINES_PER_FIELD);
+    private static final int LINES_PER_FILE =
+            CLASSES_PER_FILE
+                    * (LINES_PER_CLASS_HEADER
+                            + METHODS_PER_CLASS * LINES_PER_METHOD
+                            + FIELDS_PER_CLASS * LINES_PER_FIELD);
     private static final int TOTAL_FILES = TOTAL_LINES / LINES_PER_FILE;
-    
+
     // Performance thresholds
     private static final long MAX_SEARCH_TIME_MS = 50;
     private static final int WARMUP_ITERATIONS = 5;
     private static final int TEST_ITERATIONS = 10;
 
-    @TempDir
-    private Path tempDir;
+    @TempDir private Path tempDir;
 
     private SymbolIndex symbolIndex;
     private List<SymbolInfo> testSymbols;
@@ -56,13 +56,13 @@ public class PerformanceTest {
     void setUp() throws Exception {
         Path indexPath = tempDir.resolve("index");
         Files.createDirectories(indexPath);
-        
+
         symbolIndex = new SymbolIndex(indexPath);
         symbolIndex.initialize();
-        
+
         testSymbols = new ArrayList<>();
         random = new Random(42); // Fixed seed for reproducible tests
-        
+
         // Generate test data
         generateTestData();
     }
@@ -86,26 +86,20 @@ public class PerformanceTest {
 
         // Actual performance test
         List<Long> searchTimes = new ArrayList<>();
-        
+
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             // Test different types of searches
             searchTimes.add(measureSearchTime("Class")); // Common prefix
             searchTimes.add(measureSearchTime("method")); // Common substring
-            searchTimes.add(measureSearchTime("field"));  // Another common substring
+            searchTimes.add(measureSearchTime("field")); // Another common substring
             searchTimes.add(measureSearchTime(getRandomSymbolName())); // Random symbol
             searchTimes.add(measureSearchTime("")); // Empty query (all symbols)
         }
 
         // Calculate statistics
-        double averageTime = searchTimes.stream()
-            .mapToLong(Long::longValue)
-            .average()
-            .orElse(0);
-        
-        long maxTime = searchTimes.stream()
-            .mapToLong(Long::longValue)
-            .max()
-            .orElse(0);
+        double averageTime = searchTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+
+        long maxTime = searchTimes.stream().mapToLong(Long::longValue).max().orElse(0);
 
         // Log results
         System.out.println("Performance Test Results:");
@@ -116,8 +110,8 @@ public class PerformanceTest {
 
         // Assert performance requirements
         assertThat(maxTime)
-            .as("Maximum search time should be under %d ms", MAX_SEARCH_TIME_MS)
-            .isLessThanOrEqualTo(MAX_SEARCH_TIME_MS);
+                .as("Maximum search time should be under %d ms", MAX_SEARCH_TIME_MS)
+                .isLessThanOrEqualTo(MAX_SEARCH_TIME_MS);
     }
 
     /**
@@ -131,19 +125,21 @@ public class PerformanceTest {
         newIndex.initialize();
 
         Instant start = Instant.now();
-        
+
         // Add all symbols
         for (SymbolInfo symbol : testSymbols) {
             newIndex.addSymbol(symbol);
         }
-        
+
         Duration indexingTime = Duration.between(start, Instant.now());
-        
+
         System.out.println("Index Creation Performance:");
         System.out.println("  Total symbols: " + testSymbols.size());
         System.out.println("  Indexing time: " + indexingTime.toMillis() + " ms");
-        System.out.println("  Symbols per second: " + 
-            String.format("%.0f", testSymbols.size() * 1000.0 / indexingTime.toMillis()));
+        System.out.println(
+                "  Symbols per second: "
+                        + String.format(
+                                "%.0f", testSymbols.size() * 1000.0 / indexingTime.toMillis()));
 
         // Clean up
         try {
@@ -173,15 +169,17 @@ public class PerformanceTest {
 
         // Create and start threads
         for (int t = 0; t < threadCount; t++) {
-            Thread thread = new Thread(() -> {
-                List<Long> threadSearchTimes = new ArrayList<>();
-                for (int i = 0; i < searchesPerThread; i++) {
-                    threadSearchTimes.add(measureSearchTime(getRandomSymbolName()));
-                }
-                synchronized (lock) {
-                    allSearchTimes.addAll(threadSearchTimes);
-                }
-            });
+            Thread thread =
+                    new Thread(
+                            () -> {
+                                List<Long> threadSearchTimes = new ArrayList<>();
+                                for (int i = 0; i < searchesPerThread; i++) {
+                                    threadSearchTimes.add(measureSearchTime(getRandomSymbolName()));
+                                }
+                                synchronized (lock) {
+                                    allSearchTimes.addAll(threadSearchTimes);
+                                }
+                            });
             threads.add(thread);
             thread.start();
         }
@@ -192,17 +190,11 @@ public class PerformanceTest {
         }
 
         Duration totalTime = Duration.between(start, Instant.now());
-        
+
         // Calculate statistics
-        double averageTime = allSearchTimes.stream()
-            .mapToLong(Long::longValue)
-            .average()
-            .orElse(0);
-        
-        long maxTime = allSearchTimes.stream()
-            .mapToLong(Long::longValue)
-            .max()
-            .orElse(0);
+        double averageTime = allSearchTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+
+        long maxTime = allSearchTimes.stream().mapToLong(Long::longValue).max().orElse(0);
 
         System.out.println("Concurrent Search Performance:");
         System.out.println("  Threads: " + threadCount);
@@ -213,8 +205,8 @@ public class PerformanceTest {
 
         // Assert performance requirements
         assertThat(maxTime)
-            .as("Maximum concurrent search time should be under %d ms", MAX_SEARCH_TIME_MS)
-            .isLessThanOrEqualTo(MAX_SEARCH_TIME_MS);
+                .as("Maximum concurrent search time should be under %d ms", MAX_SEARCH_TIME_MS)
+                .isLessThanOrEqualTo(MAX_SEARCH_TIME_MS);
     }
 
     private void generateTestData() {
@@ -226,66 +218,51 @@ public class PerformanceTest {
         System.out.println("  Fields per class: " + FIELDS_PER_CLASS);
 
         int currentLine = 1;
-        
+
         for (int fileNum = 0; fileNum < TOTAL_FILES; fileNum++) {
-            Path filePath = Path.of("/virtual/src/main/groovy/com/example/File" + fileNum + ".groovy");
-            
+            Path filePath =
+                    Path.of("/virtual/src/main/groovy/com/example/File" + fileNum + ".groovy");
+
             for (int classNum = 0; classNum < CLASSES_PER_FILE; classNum++) {
                 String className = "Class" + fileNum + "_" + classNum;
-                
+
                 // Add class symbol
-                SymbolInfo classSymbol = new SymbolInfo(
-                    className,
-                    SymbolKind.CLASS,
-                    filePath,
-                    currentLine,
-                    1
-                );
+                SymbolInfo classSymbol =
+                        new SymbolInfo(className, SymbolKind.CLASS, filePath, currentLine, 1);
                 testSymbols.add(classSymbol);
                 symbolIndex.addSymbol(classSymbol);
                 currentLine += LINES_PER_CLASS_HEADER;
-                
+
                 // Add fields
                 for (int fieldNum = 0; fieldNum < FIELDS_PER_CLASS; fieldNum++) {
                     String fieldName = "field" + fieldNum;
-                    SymbolInfo fieldSymbol = new SymbolInfo(
-                        fieldName,
-                        SymbolKind.FIELD,
-                        filePath,
-                        currentLine,
-                        5
-                    );
+                    SymbolInfo fieldSymbol =
+                            new SymbolInfo(fieldName, SymbolKind.FIELD, filePath, currentLine, 5);
                     testSymbols.add(fieldSymbol);
                     symbolIndex.addSymbol(fieldSymbol);
                     currentLine += LINES_PER_FIELD;
                 }
-                
+
                 // Add methods
                 for (int methodNum = 0; methodNum < METHODS_PER_CLASS; methodNum++) {
                     String methodName = "method" + methodNum;
-                    SymbolInfo methodSymbol = new SymbolInfo(
-                        methodName,
-                        SymbolKind.METHOD,
-                        filePath,
-                        currentLine,
-                        5
-                    );
+                    SymbolInfo methodSymbol =
+                            new SymbolInfo(methodName, SymbolKind.METHOD, filePath, currentLine, 5);
                     testSymbols.add(methodSymbol);
                     symbolIndex.addSymbol(methodSymbol);
                     currentLine += LINES_PER_METHOD;
                 }
             }
         }
-        
+
         System.out.println("  Total symbols generated: " + testSymbols.size());
     }
 
     private long measureSearchTime(String query) {
         long start = System.nanoTime();
-        var results = symbolIndex.search(query)
-            .collect(Collectors.toList());
+        var results = symbolIndex.search(query).collect(Collectors.toList());
         long end = System.nanoTime();
-        
+
         return TimeUnit.NANOSECONDS.toMillis(end - start);
     }
 

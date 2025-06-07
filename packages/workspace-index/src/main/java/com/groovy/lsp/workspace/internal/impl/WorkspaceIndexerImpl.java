@@ -189,7 +189,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
         IndexStats stats = new IndexStats();
         try {
             logger.debug("Indexing dependency: {}", dependency);
-            
+
             if (Files.isDirectory(dependency)) {
                 // Index directory as a source directory
                 try (Stream<Path> paths = Files.walk(dependency)) {
@@ -209,14 +209,14 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
                 if (!jarSymbols.isEmpty()) {
                     stats.files = 1; // Count the JAR as one file
                     stats.symbols = jarSymbols.size();
-                    
+
                     // Add symbols to the index
                     for (SymbolInfo symbol : jarSymbols) {
                         symbolIndex.addSymbol(symbol);
                     }
                 }
             }
-            
+
             // Register the dependency in the index
             symbolIndex.addDependency(dependency);
         } catch (Exception e) {

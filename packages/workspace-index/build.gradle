@@ -11,7 +11,7 @@ dependencies {
 
     // Gradle Tooling API for build system integration
     implementation libs.gradle.tooling.api
-    
+
     // Maven Resolver API for Maven dependency resolution
     implementation libs.bundles.maven.resolver
 
@@ -29,7 +29,7 @@ dependencies {
     // Test dependencies
     testImplementation libs.bundles.testing
     testImplementation libs.mockito.core
-    
+
     // JMH for performance testing
     jmhImplementation libs.bundles.jmh
     jmhAnnotationProcessor libs.jmh.generator.annprocess

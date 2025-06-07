@@ -10,7 +10,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 /**
  * ASM ClassVisitor implementation that extracts symbols from class files.
@@ -30,10 +29,16 @@ public class ClassFileVisitor extends ClassVisitor {
     }
 
     @Override
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+    public void visit(
+            int version,
+            int access,
+            String name,
+            String signature,
+            String superName,
+            String[] interfaces) {
         // Convert internal name (com/example/MyClass) to qualified name (com.example.MyClass)
         qualifiedClassName = name.replace('/', '.');
-        
+
         // Extract package and simple class name
         int lastDot = qualifiedClassName.lastIndexOf('.');
         if (lastDot > 0) {
@@ -48,36 +53,40 @@ public class ClassFileVisitor extends ClassVisitor {
         jarEntryPath = Paths.get(jarPath + "!/" + name + ".class");
 
         // Create symbol for the class itself
-        SymbolInfo classSymbol = new SymbolInfo(
-                className,
-                determineClassKind(access),
-                jarEntryPath,
-                1,  // Line number not available for JAR entries
-                1   // Column number not available for JAR entries
-        );
-        
+        SymbolInfo classSymbol =
+                new SymbolInfo(
+                        className,
+                        determineClassKind(access),
+                        jarEntryPath,
+                        1, // Line number not available for JAR entries
+                        1 // Column number not available for JAR entries
+                        );
+
         symbols.add(classSymbol);
     }
 
     @Override
-    public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+    public FieldVisitor visitField(
+            int access, String name, String descriptor, String signature, Object value) {
         // Create symbol for field
         String fieldFullName = qualifiedClassName + "." + name;
-        SymbolInfo fieldSymbol = new SymbolInfo(
-                fieldFullName,
-                SymbolKind.FIELD,
-                jarEntryPath,
-                1,  // Line number not available for JAR entries
-                1   // Column number not available for JAR entries
-        );
-        
+        SymbolInfo fieldSymbol =
+                new SymbolInfo(
+                        fieldFullName,
+                        SymbolKind.FIELD,
+                        jarEntryPath,
+                        1, // Line number not available for JAR entries
+                        1 // Column number not available for JAR entries
+                        );
+
         symbols.add(fieldSymbol);
-        
+
         return null; // We don't need to visit field annotations
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+    public MethodVisitor visitMethod(
+            int access, String name, String descriptor, String signature, String[] exceptions) {
         // Skip synthetic methods
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             return null;
@@ -85,16 +94,17 @@ public class ClassFileVisitor extends ClassVisitor {
 
         // Create symbol for method
         String methodFullName = qualifiedClassName + "." + name;
-        SymbolInfo methodSymbol = new SymbolInfo(
-                methodFullName,
-                determineMethodKind(name),
-                jarEntryPath,
-                1,  // Line number not available for JAR entries
-                1   // Column number not available for JAR entries
-        );
-        
+        SymbolInfo methodSymbol =
+                new SymbolInfo(
+                        methodFullName,
+                        determineMethodKind(name),
+                        jarEntryPath,
+                        1, // Line number not available for JAR entries
+                        1 // Column number not available for JAR entries
+                        );
+
         symbols.add(methodSymbol);
-        
+
         return null; // We don't need to visit method instructions
     }
 
@@ -121,7 +131,6 @@ public class ClassFileVisitor extends ClassVisitor {
             return SymbolKind.METHOD;
         }
     }
-
 
     /**
      * Get all symbols extracted from the class.

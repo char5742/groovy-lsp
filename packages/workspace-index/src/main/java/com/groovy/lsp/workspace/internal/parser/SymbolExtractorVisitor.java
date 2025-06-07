@@ -26,10 +26,16 @@ public class SymbolExtractorVisitor extends ClassCodeVisitorSupport {
     private final Path file;
     private final List<SymbolInfo> symbols = new ArrayList<>();
     private final Set<String> visitedClasses = new HashSet<>();
+    private final Set<String> allClassNames;
     @Nullable private String currentClassName = null;
 
     public SymbolExtractorVisitor(Path file) {
+        this(file, new HashSet<>());
+    }
+
+    public SymbolExtractorVisitor(Path file, Set<String> allClassNames) {
         this.file = file;
+        this.allClassNames = allClassNames;
     }
 
     /**
@@ -83,7 +89,8 @@ public class SymbolExtractorVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitMethod(MethodNode node) {
-        if (node.isAbstract() || node.isSynthetic()) {
+        // Skip synthetic methods (compiler-generated)
+        if (node.isSynthetic()) {
             return;
         }
 
@@ -174,15 +181,24 @@ public class SymbolExtractorVisitor extends ClassCodeVisitorSupport {
      * Determine the symbol kind for a class node.
      */
     private SymbolKind determineClassSymbolKind(ClassNode node) {
-        if (node.isInterface()) {
-            return SymbolKind.INTERFACE;
-        } else if (node.isEnum()) {
-            return SymbolKind.ENUM;
-        } else if (node.isAnnotationDefinition()) {
+        // Check for annotation first
+        if (node.isAnnotationDefinition()) {
             return SymbolKind.ANNOTATION;
-        } else if (isTrait(node)) {
+        }
+        // Check for enum
+        else if (node.isEnum()) {
+            return SymbolKind.ENUM;
+        }
+        // Check for trait before interface (since traits are compiled as interfaces)
+        else if (isTrait(node)) {
             return SymbolKind.TRAIT;
-        } else {
+        }
+        // Check for interface
+        else if (node.isInterface()) {
+            return SymbolKind.INTERFACE;
+        }
+        // Default to class
+        else {
             return SymbolKind.CLASS;
         }
     }
@@ -200,6 +216,8 @@ public class SymbolExtractorVisitor extends ClassCodeVisitorSupport {
             return false;
         }
 
+        String className = node.getName();
+
         // Check for @groovy.transform.Trait annotation
         if (node.getAnnotations().stream()
                 .anyMatch(ann -> ann.getClassNode().getName().equals("groovy.transform.Trait"))) {
@@ -212,11 +230,23 @@ public class SymbolExtractorVisitor extends ClassCodeVisitorSupport {
             return true;
         }
 
+        // Check if this is a trait by looking for the $Trait$Helper pattern
+        String helperClassName = className + "$Trait$Helper";
+
+        // First check in allClassNames (if available)
+        if (allClassNames.contains(helperClassName)) {
+            return true;
+        }
+
+        // Then check in visitedClasses
+        if (visitedClasses.contains(helperClassName)) {
+            return true;
+        }
+
         // As a fallback, check if there's a helper class pattern in the same module
-        String className = node.getName();
         if (node.getModule() != null) {
             return node.getModule().getClasses().stream()
-                    .anyMatch(c -> c.getName().equals(className + "$Trait$Helper"));
+                    .anyMatch(c -> c.getName().equals(helperClassName));
         }
 
         return false;
