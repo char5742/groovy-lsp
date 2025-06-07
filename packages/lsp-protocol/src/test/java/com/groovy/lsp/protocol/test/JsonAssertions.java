@@ -142,7 +142,13 @@ public class JsonAssertions extends AbstractAssert<JsonAssertions, String> {
                 int bracketIndex = part.indexOf('[');
                 String fieldName = part.substring(0, bracketIndex);
                 String indexStr = part.substring(bracketIndex + 1, part.length() - 1);
-                int index = Integer.parseInt(indexStr);
+                int index;
+                try {
+                    index = Integer.parseInt(indexStr);
+                } catch (NumberFormatException e) {
+                    // Invalid array index format
+                    return null;
+                }
 
                 if (!fieldName.isEmpty() && current.isJsonObject()) {
                     current = current.getAsJsonObject().get(fieldName);
@@ -173,9 +179,14 @@ public class JsonAssertions extends AbstractAssert<JsonAssertions, String> {
 
     /**
      * Extract value from JSON element.
+     * @param element The JSON element to extract value from (can contain JsonNull)
+     * @return The extracted value, or null for JsonNull elements
      */
     @Nullable
-    private Object extractValue(@NonNull JsonElement element) {
+    private Object extractValue(@Nullable JsonElement element) {
+        if (element == null) {
+            return null;
+        }
         if (element.isJsonPrimitive()) {
             JsonPrimitive primitive = element.getAsJsonPrimitive();
             if (primitive.isBoolean()) {
