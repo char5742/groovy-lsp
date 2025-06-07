@@ -8,6 +8,7 @@ import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
 import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import com.groovy.lsp.workspace.internal.dependency.DependencyResolver;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
+import com.groovy.lsp.workspace.internal.jar.JarFileIndexer;
 import com.groovy.lsp.workspace.internal.parser.GroovyFileParser;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
     private final ExecutorService executorService;
     private final EventBus eventBus;
     private final GroovyFileParser groovyFileParser;
+    private final JarFileIndexer jarFileIndexer;
 
     public WorkspaceIndexerImpl(Path workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
@@ -41,6 +43,7 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
         this.executorService = Executors.newWorkStealingPool();
         this.eventBus = EventBusFactory.getInstance();
         this.groovyFileParser = new GroovyFileParser();
+        this.jarFileIndexer = new JarFileIndexer();
     }
 
     /**
@@ -71,7 +74,11 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
                         totalSymbols += stats.symbols;
 
                         // Index dependency files
-                        dependencies.forEach(this::indexDependency);
+                        for (Path dependency : dependencies) {
+                            var depStats = indexDependency(dependency);
+                            totalFiles += depStats.files;
+                            totalSymbols += depStats.symbols;
+                        }
 
                         long duration = System.currentTimeMillis() - startTime;
                         logger.info(
@@ -176,15 +183,46 @@ public class WorkspaceIndexerImpl implements WorkspaceIndexService, AutoCloseabl
 
     /**
      * Index symbols from a dependency.
+     * Returns statistics about the indexed dependency.
      */
-    private void indexDependency(Path dependency) {
+    private IndexStats indexDependency(Path dependency) {
+        IndexStats stats = new IndexStats();
         try {
             logger.debug("Indexing dependency: {}", dependency);
-            // TODO: Extract and index symbols from JAR/directory
+            
+            if (Files.isDirectory(dependency)) {
+                // Index directory as a source directory
+                try (Stream<Path> paths = Files.walk(dependency)) {
+                    paths.filter(this::shouldIndexFile)
+                            .forEach(
+                                    file -> {
+                                        var symbols = indexFileWithResult(file);
+                                        if (symbols != null && !symbols.isEmpty()) {
+                                            stats.files++;
+                                            stats.symbols += symbols.size();
+                                        }
+                                    });
+                }
+            } else if (dependency.toString().endsWith(".jar")) {
+                // Index JAR file
+                List<SymbolInfo> jarSymbols = jarFileIndexer.indexJar(dependency);
+                if (!jarSymbols.isEmpty()) {
+                    stats.files = 1; // Count the JAR as one file
+                    stats.symbols = jarSymbols.size();
+                    
+                    // Add symbols to the index
+                    for (SymbolInfo symbol : jarSymbols) {
+                        symbolIndex.addSymbol(symbol);
+                    }
+                }
+            }
+            
+            // Register the dependency in the index
             symbolIndex.addDependency(dependency);
         } catch (Exception e) {
             logger.error("Error indexing dependency: {}", dependency, e);
         }
+        return stats;
     }
 
     /**
