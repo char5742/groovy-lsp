@@ -17,8 +17,6 @@ public class DiagnosticCodeMapper {
     private static final Pattern TYPE_MISMATCH_PATTERN =
             Pattern.compile(
                     "cannot assign value of type|incompatible types", Pattern.CASE_INSENSITIVE);
-    private static final Pattern MISSING_PROPERTY_PATTERN =
-            Pattern.compile("no such property", Pattern.CASE_INSENSITIVE);
     private static final Pattern UNDEFINED_VARIABLE_PATTERN =
             Pattern.compile("the variable .* is undeclared", Pattern.CASE_INSENSITIVE);
     private static final Pattern DUPLICATE_METHOD_PATTERN =

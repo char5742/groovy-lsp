@@ -56,6 +56,7 @@ public class ErrorRangeCalculator {
      * @param errorMessage the error message
      * @return the extracted token, or null if not found
      */
+    @org.jspecify.annotations.Nullable
     private String extractErrorToken(String errorMessage) {
         // Try to match "unexpected token: X"
         Matcher tokenMatcher = TOKEN_PATTERN.matcher(errorMessage);
@@ -86,7 +87,8 @@ public class ErrorRangeCalculator {
      * @param errorToken the error token (may be null)
      * @return the calculated end column
      */
-    private int calculateEndColumn(String line, int startColumn, String errorToken) {
+    private int calculateEndColumn(
+            String line, int startColumn, @org.jspecify.annotations.Nullable String errorToken) {
         if (startColumn >= line.length()) {
             return line.length();
         }
