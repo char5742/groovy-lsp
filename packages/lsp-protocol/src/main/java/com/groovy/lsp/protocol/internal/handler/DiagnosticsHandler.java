@@ -15,7 +15,6 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -40,6 +39,8 @@ public class DiagnosticsHandler {
 
     private final IServiceRouter serviceRouter;
     private final DocumentManager documentManager;
+    private final ErrorRangeCalculator errorRangeCalculator = new ErrorRangeCalculator();
+    private final DiagnosticCodeMapper diagnosticCodeMapper = new DiagnosticCodeMapper();
     private final ScheduledExecutorService debounceExecutor =
             Executors.newSingleThreadScheduledExecutor(
                     r -> {
@@ -132,7 +133,7 @@ public class DiagnosticsHandler {
             // Convert compilation errors to diagnostics
             List<Diagnostic> diagnostics = new ArrayList<>();
             for (CompilationResult.CompilationError error : result.getErrors()) {
-                Diagnostic diagnostic = convertToDiagnostic(error);
+                Diagnostic diagnostic = convertToDiagnostic(error, sourceCode);
                 diagnostics.add(diagnostic);
             }
 
@@ -150,16 +151,12 @@ public class DiagnosticsHandler {
         }
     }
 
-    private Diagnostic convertToDiagnostic(CompilationResult.CompilationError error) {
+    private Diagnostic convertToDiagnostic(
+            CompilationResult.CompilationError error, String sourceCode) {
         Diagnostic diagnostic = new Diagnostic();
 
-        // Set range (LSP uses 0-based indexing)
-        Position start = new Position(error.getLine() - 1, error.getColumn() - 1);
-        // エラー範囲を改善: エラー位置から適切な長さの範囲を設定
-        // デフォルトで単語の長さを推定（最低10文字、最大120文字）
-        int endColumn = Math.max(error.getColumn() + 10, Math.min(error.getColumn() + 30, 120));
-        Position end = new Position(error.getLine() - 1, endColumn);
-        Range range = new Range(start, end);
+        // Set range using ErrorRangeCalculator for better accuracy
+        Range range = errorRangeCalculator.calculateRange(error, sourceCode);
         diagnostic.setRange(range);
 
         // Set message
@@ -175,6 +172,12 @@ public class DiagnosticsHandler {
 
         // Set source
         diagnostic.setSource("groovy");
+
+        // Set diagnostic code
+        String code = diagnosticCodeMapper.mapErrorToCode(error);
+        if (code != null) {
+            diagnostic.setCode(code);
+        }
 
         return diagnostic;
     }

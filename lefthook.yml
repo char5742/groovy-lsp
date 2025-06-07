@@ -29,6 +29,7 @@ pre-commit:
 # プッシュ前のフック
 pre-push:
   parallel: false
+  piped: false  # 各コマンドのエラーコードを個別に処理
   commands:
     # Spotlessによるコードフォーマットチェック
     spotless:
@@ -77,15 +78,20 @@ pre-push:
 
         for module in $changed_modules; do
           echo "Checking coverage for :$module"
-          ./gradlew :$module:jacocoTestCoverageVerification || {
+          if ! ./gradlew :$module:jacocoTestCoverageVerification; then
+            echo ""
             echo "❌ Coverage check failed for :$module"
             echo "Coverage must be at least 80% for both line and branch coverage"
+            echo ""
+            echo "Run './gradlew :$module:test :$module:jacocoTestReport' to generate coverage report"
+            echo "Then check build/reports/jacoco/test/html/index.html for details"
             exit 1
-          }
+          fi
         done
 
         echo "✅ All coverage checks passed!"
       tags: testing coverage
+      fail_text: "Coverage check failed. Push aborted."
 
 # コミットメッセージのフック
 commit-msg:
