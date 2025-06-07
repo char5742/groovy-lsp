@@ -151,13 +151,22 @@ public class SymbolIndex implements AutoCloseable {
             ByteBuffer key = toBuffer(file.toString());
             getFilesDb().delete(txn, key);
 
-            // Remove all symbols from this file
-            Set<String> symbols = fileSymbols.remove(file);
-            if (symbols != null) {
-                for (String symbol : symbols) {
-                    removeSymbolEntry(txn, symbol, file);
+            // Remove all symbols from this file by scanning the database
+            try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
+                if (cursor.first()) {
+                    do {
+                        SymbolInfo symbol = deserializeSymbol(cursor.val());
+                        if (symbol != null && symbol.location().equals(file)) {
+                            cursor.delete();
+                        }
+                    } while (cursor.next());
                 }
             }
+
+            // Clear the cache for this file
+            fileSymbols.remove(file);
+            // Clear the symbol cache as symbols have been removed
+            symbolCache.clear();
 
             txn.commit();
         }
@@ -283,28 +292,6 @@ public class SymbolIndex implements AutoCloseable {
         return String.format(
                 "%s:%s:%s:%d:%d",
                 symbol.name(), symbol.kind(), symbol.location(), symbol.line(), symbol.column());
-    }
-
-    /**
-     * Remove a symbol entry for a specific file.
-     */
-    private void removeSymbolEntry(Txn<ByteBuffer> txn, String symbolName, Path file) {
-        try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
-            ByteBuffer key = toBuffer(symbolName);
-            if (cursor.get(key, GetOp.MDB_SET_RANGE)) {
-                do {
-                    String keyStr = toString(cursor.key());
-                    if (!keyStr.startsWith(symbolName)) {
-                        break;
-                    }
-
-                    SymbolInfo symbol = deserializeSymbol(cursor.val());
-                    if (symbol != null && symbol.location().equals(file)) {
-                        cursor.delete();
-                    }
-                } while (cursor.next());
-            }
-        }
     }
 
     /**

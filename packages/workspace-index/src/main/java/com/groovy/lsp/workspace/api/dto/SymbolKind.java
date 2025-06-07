@@ -54,5 +54,15 @@ public enum SymbolKind {
     /**
      * An enum constant definition.
      */
-    ENUM_CONSTANT
+    ENUM_CONSTANT,
+
+    /**
+     * An annotation type definition.
+     */
+    ANNOTATION,
+
+    /**
+     * A closure expression in Groovy.
+     */
+    CLOSURE
 }

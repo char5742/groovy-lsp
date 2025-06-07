@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.errorprone) apply false
     alias(libs.plugins.nullaway) apply false
     alias(libs.plugins.spotless) apply false
+    alias(libs.plugins.jmh) apply false
 }
 
 // Spotless設定をすべてのプロジェクトに適用

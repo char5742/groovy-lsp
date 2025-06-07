@@ -39,6 +39,11 @@ spotless-plugin = "6.25.0"
 jacoco = "0.8.12"
 awaitility = "4.3.0"
 wiremock = "3.0.1"
+asm = "9.7.1"
+maven-resolver = "1.9.22"
+maven-resolver-connector-basic = "1.9.22"
+maven-resolver-transport-file = "1.9.22"
+maven-resolver-transport-http = "1.9.22"
 
 [libraries]
 # Groovy
@@ -123,6 +128,22 @@ nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 wiremock-jre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
 
+# Bytecode Analysis
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
+asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+
+# Maven Resolver
+maven-resolver-api = { module = "org.apache.maven.resolver:maven-resolver-api", version.ref = "maven-resolver" }
+maven-resolver-impl = { module = "org.apache.maven.resolver:maven-resolver-impl", version.ref = "maven-resolver" }
+maven-resolver-connector-basic = { module = "org.apache.maven.resolver:maven-resolver-connector-basic", version.ref = "maven-resolver-connector-basic" }
+maven-resolver-transport-file = { module = "org.apache.maven.resolver:maven-resolver-transport-file", version.ref = "maven-resolver-transport-file" }
+maven-resolver-transport-http = { module = "org.apache.maven.resolver:maven-resolver-transport-http", version.ref = "maven-resolver-transport-http" }
+maven-model = { module = "org.apache.maven:maven-model", version = "3.9.9" }
+maven-model-builder = { module = "org.apache.maven:maven-model-builder", version = "3.9.9" }
+maven-repository-metadata = { module = "org.apache.maven:maven-repository-metadata", version = "3.9.9" }
+maven-resolver-provider = { module = "org.apache.maven:maven-resolver-provider", version = "3.9.9" }
+
 [bundles]
 groovy = ["groovy", "groovy-json", "groovy-xml", "groovy-nio", "groovy-templates"]
 lsp4j = ["lsp4j", "lsp4j-jsonrpc"]
@@ -130,6 +151,7 @@ testing = ["junit-jupiter", "junit-jupiter-params", "mockk", "assertj-core"]
 logging = ["slf4j-api", "logback-classic"]
 jmh = ["jmh-core", "jmh-generator-annprocess"]
 jmolecules = ["jmolecules-ddd", "jmolecules-events", "jmolecules-onion-architecture"]
+maven-resolver = ["maven-resolver-api", "maven-resolver-impl", "maven-resolver-connector-basic", "maven-resolver-transport-file", "maven-resolver-transport-http", "maven-model", "maven-model-builder", "maven-repository-metadata", "maven-resolver-provider"]
 
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "gradle-shadow" }

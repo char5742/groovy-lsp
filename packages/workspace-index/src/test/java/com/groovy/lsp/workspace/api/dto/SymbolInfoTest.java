@@ -36,7 +36,9 @@ class SymbolInfoTest {
                         SymbolKind.FIELD,
                         SymbolKind.PROPERTY,
                         SymbolKind.CONSTRUCTOR,
-                        SymbolKind.ENUM_CONSTANT);
+                        SymbolKind.ENUM_CONSTANT,
+                        SymbolKind.ANNOTATION,
+                        SymbolKind.CLOSURE);
     }
 
     @Test
