@@ -129,6 +129,8 @@ class DiagnosticsHandlerTest {
         assertEquals(0, diagnostic.getRange().getStart().getLine());
         assertEquals(10, diagnostic.getRange().getStart().getCharacter());
         assertEquals("groovy", diagnostic.getSource());
+        assertNotNull(diagnostic.getCode());
+        assertEquals("groovy-1001", diagnostic.getCode().getLeft());
     }
 
     @Test
@@ -217,6 +219,8 @@ class DiagnosticsHandlerTest {
 
         Diagnostic diagnostic = params.getDiagnostics().get(0);
         assertEquals(DiagnosticSeverity.Warning, diagnostic.getSeverity());
+        assertNotNull(diagnostic.getCode());
+        assertEquals("groovy-4001", diagnostic.getCode().getLeft()); // Unused variable warning
     }
 
     @Test
