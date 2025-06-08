@@ -3,17 +3,19 @@ package com.groovy.lsp.protocol.internal.handler;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.protocol.internal.util.LocationUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -150,7 +152,7 @@ public class DefinitionHandler {
             // Find the declaring node
             ASTNode declaringNode = findDeclaringNode(variable, moduleNode);
             if (declaringNode != null) {
-                Location location = createLocation(currentUri, declaringNode);
+                Location location = LocationUtils.createLocation(currentUri, declaringNode);
                 if (location != null) {
                     return Collections.singletonList(location);
                 }
@@ -177,7 +179,7 @@ public class DefinitionHandler {
         for (ClassNode classNode : moduleNode.getClasses()) {
             for (MethodNode method : classNode.getMethods()) {
                 if (method.getName().equals(methodName)) {
-                    Location location = createLocation(currentUri, method);
+                    Location location = LocationUtils.createLocation(currentUri, method);
                     if (location != null) {
                         locations.add(location);
                     }
@@ -226,7 +228,7 @@ public class DefinitionHandler {
             // Check fields
             for (FieldNode field : classNode.getFields()) {
                 if (field.getName().equals(propertyName)) {
-                    Location location = createLocation(currentUri, field);
+                    Location location = LocationUtils.createLocation(currentUri, field);
                     if (location != null) {
                         locations.add(location);
                     }
@@ -236,7 +238,7 @@ public class DefinitionHandler {
             // Check properties
             for (PropertyNode property : classNode.getProperties()) {
                 if (property.getName().equals(propertyName)) {
-                    Location location = createLocation(currentUri, property);
+                    Location location = LocationUtils.createLocation(currentUri, property);
                     if (location != null) {
                         locations.add(location);
                     }
@@ -279,7 +281,7 @@ public class DefinitionHandler {
 
         // Check if it's a local class
         if (!classNode.isPrimaryClassNode()) {
-            Location location = createLocation(currentUri, classNode);
+            Location location = LocationUtils.createLocation(currentUri, classNode);
             if (location != null) {
                 return Collections.singletonList(location);
             }
@@ -321,23 +323,101 @@ public class DefinitionHandler {
     }
 
     private @Nullable ASTNode findDeclaringNode(Variable variable, ModuleNode moduleNode) {
-        // This is a simplified implementation
-        // In a real implementation, we would need to traverse the AST
-        // to find where the variable is declared
-        return null;
-    }
+        VariableDeclarationVisitor visitor = new VariableDeclarationVisitor(variable);
 
-    private @Nullable Location createLocation(String uri, ASTNode node) {
-        if (node.getLineNumber() < 0 || node.getColumnNumber() < 0) {
-            return null;
+        // Visit all classes in the module
+        for (ClassNode classNode : moduleNode.getClasses()) {
+            classNode.visitContents(visitor);
+            if (visitor.getDeclarationNode() != null) {
+                return visitor.getDeclarationNode();
+            }
         }
 
-        Range range =
-                new Range(
-                        new Position(node.getLineNumber() - 1, node.getColumnNumber() - 1),
-                        new Position(node.getLastLineNumber() - 1, node.getLastColumnNumber() - 1));
+        // Check module-level statements (scripts)
+        if (moduleNode.getStatementBlock() != null) {
+            moduleNode.getStatementBlock().visit(visitor);
+        }
 
-        return new Location(uri, range);
+        return visitor.getDeclarationNode();
+    }
+
+    /**
+     * Visitor to find variable declarations
+     */
+    private static class VariableDeclarationVisitor extends ClassCodeVisitorSupport {
+        private final Variable targetVariable;
+        private ASTNode declarationNode;
+
+        public VariableDeclarationVisitor(Variable targetVariable) {
+            this.targetVariable = targetVariable;
+        }
+
+        public ASTNode getDeclarationNode() {
+            return declarationNode;
+        }
+
+        @Override
+        public void visitDeclarationExpression(DeclarationExpression expression) {
+            Expression leftExpression = expression.getLeftExpression();
+            if (leftExpression instanceof VariableExpression) {
+                VariableExpression varExpr = (VariableExpression) leftExpression;
+                if (varExpr.getName().equals(targetVariable.getName())) {
+                    declarationNode = expression;
+                }
+            }
+            super.visitDeclarationExpression(expression);
+        }
+
+        @Override
+        public void visitMethod(MethodNode node) {
+            // Check method parameters
+            for (Parameter param : node.getParameters()) {
+                if (param.getName().equals(targetVariable.getName())) {
+                    declarationNode = param;
+                    return;
+                }
+            }
+            super.visitMethod(node);
+        }
+
+        @Override
+        public void visitField(FieldNode node) {
+            if (node.getName().equals(targetVariable.getName())) {
+                declarationNode = node;
+            }
+            super.visitField(node);
+        }
+
+        @Override
+        public void visitProperty(PropertyNode node) {
+            if (node.getName().equals(targetVariable.getName())) {
+                declarationNode = node;
+            }
+            super.visitProperty(node);
+        }
+
+        @Override
+        public void visitForLoop(ForStatement forLoop) {
+            Parameter param = forLoop.getVariable();
+            if (param != null && param.getName().equals(targetVariable.getName())) {
+                declarationNode = param;
+            }
+            super.visitForLoop(forLoop);
+        }
+
+        @Override
+        public void visitCatchStatement(CatchStatement statement) {
+            Parameter param = statement.getVariable();
+            if (param != null && param.getName().equals(targetVariable.getName())) {
+                declarationNode = param;
+            }
+            super.visitCatchStatement(statement);
+        }
+
+        @Override
+        protected SourceUnit getSourceUnit() {
+            return null; // Not needed for our use case
+        }
     }
 
     // TODO: Enable when circular dependency is resolved

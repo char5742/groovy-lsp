@@ -295,4 +295,92 @@ class ReferencesHandlerTest {
         List<? extends Location> locations = result.join();
         assertNotNull(locations);
     }
+
+    @Test
+    void testHandleReferences_EmptyFile() {
+        // Arrange
+        String uri = "file:///empty.groovy";
+        String content = "";
+        ReferenceParams params =
+                new ReferenceParams(
+                        new TextDocumentIdentifier(uri),
+                        new Position(0, 0),
+                        new ReferenceContext(false));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+
+        // Act
+        CompletableFuture<List<? extends Location>> result = handler.handleReferences(params);
+
+        // Assert
+        List<? extends Location> locations = result.join();
+        assertTrue(locations.isEmpty());
+    }
+
+    @Test
+    void testHandleReferences_SyntaxError() {
+        // Arrange
+        String uri = "file:///syntax-error.groovy";
+        String content = "class Test { def foo( } }"; // Missing closing parenthesis
+        ReferenceParams params =
+                new ReferenceParams(
+                        new TextDocumentIdentifier(uri),
+                        new Position(0, 18),
+                        new ReferenceContext(false));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        // Parse might succeed but AST might be incomplete
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(moduleNode, 1, 19)).thenReturn(null);
+
+        // Act
+        CompletableFuture<List<? extends Location>> result = handler.handleReferences(params);
+
+        // Assert
+        List<? extends Location> locations = result.join();
+        assertTrue(locations.isEmpty());
+    }
+
+    @Test
+    void testHandleReferences_LargePositionNumbers() {
+        // Arrange - Test with very large line/column numbers
+        String uri = "file:///test.groovy";
+        String content = "class Test {}";
+        Position position = new Position(999999, 999999); // Very large position
+        ReferenceParams params =
+                new ReferenceParams(
+                        new TextDocumentIdentifier(uri), position, new ReferenceContext(false));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(moduleNode, 1000000, 1000000)).thenReturn(null);
+
+        // Act
+        CompletableFuture<List<? extends Location>> result = handler.handleReferences(params);
+
+        // Assert
+        List<? extends Location> locations = result.join();
+        assertTrue(locations.isEmpty());
+    }
+
+    @Test
+    void testHandleReferences_NullContent() {
+        // Arrange
+        String uri = "file:///null-content.groovy";
+        ReferenceParams params =
+                new ReferenceParams(
+                        new TextDocumentIdentifier(uri),
+                        new Position(0, 0),
+                        new ReferenceContext(false));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(null);
+
+        // Act
+        CompletableFuture<List<? extends Location>> result = handler.handleReferences(params);
+
+        // Assert
+        List<? extends Location> locations = result.join();
+        assertTrue(locations.isEmpty());
+    }
 }

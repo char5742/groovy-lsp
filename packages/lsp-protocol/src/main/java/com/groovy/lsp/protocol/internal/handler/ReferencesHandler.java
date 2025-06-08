@@ -3,6 +3,7 @@ package com.groovy.lsp.protocol.internal.handler;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.protocol.internal.util.LocationUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,9 +14,7 @@ import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -294,19 +293,6 @@ public class ReferencesHandler {
         return references;
     }
 
-    private @Nullable Location createLocation(String uri, ASTNode node) {
-        if (node.getLineNumber() < 0 || node.getColumnNumber() < 0) {
-            return null;
-        }
-
-        Range range =
-                new Range(
-                        new Position(node.getLineNumber() - 1, node.getColumnNumber() - 1),
-                        new Position(node.getLastLineNumber() - 1, node.getLastColumnNumber() - 1));
-
-        return new Location(uri, range);
-    }
-
     /**
      * Visitor to find variable references
      */
@@ -324,7 +310,7 @@ public class ReferencesHandler {
         @Override
         public void visitVariableExpression(VariableExpression expression) {
             if (targetName.equals(expression.getName())) {
-                Location location = createLocation(uri, expression);
+                Location location = LocationUtils.createLocation(uri, expression);
                 if (location != null) {
                     references.add(location);
                 }
@@ -361,7 +347,7 @@ public class ReferencesHandler {
         @Override
         public void visitMethod(MethodNode method) {
             if (includeDeclaration && targetName.equals(method.getName())) {
-                Location location = createLocation(uri, method);
+                Location location = LocationUtils.createLocation(uri, method);
                 if (location != null) {
                     references.add(location);
                 }
@@ -372,7 +358,7 @@ public class ReferencesHandler {
         @Override
         public void visitMethodCallExpression(MethodCallExpression call) {
             if (targetName.equals(call.getMethodAsString())) {
-                Location location = createLocation(uri, call);
+                Location location = LocationUtils.createLocation(uri, call);
                 if (location != null) {
                     references.add(location);
                 }
@@ -403,7 +389,7 @@ public class ReferencesHandler {
         @Override
         public void visitClassExpression(ClassExpression expression) {
             if (targetName.equals(expression.getType().getName())) {
-                Location location = createLocation(uri, expression);
+                Location location = LocationUtils.createLocation(uri, expression);
                 if (location != null) {
                     references.add(location);
                 }
@@ -414,7 +400,7 @@ public class ReferencesHandler {
         @Override
         public void visitConstructorCallExpression(ConstructorCallExpression call) {
             if (targetName.equals(call.getType().getName())) {
-                Location location = createLocation(uri, call);
+                Location location = LocationUtils.createLocation(uri, call);
                 if (location != null) {
                     references.add(location);
                 }
@@ -445,7 +431,7 @@ public class ReferencesHandler {
         @Override
         public void visitPropertyExpression(PropertyExpression expression) {
             if (targetName.equals(expression.getPropertyAsString())) {
-                Location location = createLocation(uri, expression);
+                Location location = LocationUtils.createLocation(uri, expression);
                 if (location != null) {
                     references.add(location);
                 }

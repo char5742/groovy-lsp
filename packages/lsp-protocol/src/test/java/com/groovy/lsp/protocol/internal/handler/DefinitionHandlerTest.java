@@ -129,6 +129,84 @@ class DefinitionHandlerTest {
     }
 
     @Test
+    void testHandleDefinition_EmptyFile() {
+        // Arrange
+        String uri = "file:///empty.groovy";
+        String content = "";
+        DefinitionParams params =
+                new DefinitionParams(new TextDocumentIdentifier(uri), new Position(0, 0));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+
+        // Act
+        CompletableFuture<
+                        Either<
+                                List<? extends Location>,
+                                List<? extends org.eclipse.lsp4j.LocationLink>>>
+                result = handler.handleDefinition(params);
+
+        // Assert
+        Either<List<? extends Location>, List<? extends org.eclipse.lsp4j.LocationLink>> either =
+                result.join();
+        assertTrue(either.isLeft());
+        assertTrue(either.getLeft().isEmpty());
+    }
+
+    @Test
+    void testHandleDefinition_SyntaxError() {
+        // Arrange
+        String uri = "file:///syntax-error.groovy";
+        String content = "class Test { def foo( } }"; // Missing closing parenthesis
+        DefinitionParams params =
+                new DefinitionParams(new TextDocumentIdentifier(uri), new Position(0, 18));
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        // Parse might succeed but AST might be incomplete
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(moduleNode, 1, 19)).thenReturn(null);
+
+        // Act
+        CompletableFuture<
+                        Either<
+                                List<? extends Location>,
+                                List<? extends org.eclipse.lsp4j.LocationLink>>>
+                result = handler.handleDefinition(params);
+
+        // Assert
+        Either<List<? extends Location>, List<? extends org.eclipse.lsp4j.LocationLink>> either =
+                result.join();
+        assertTrue(either.isLeft());
+        assertTrue(either.getLeft().isEmpty());
+    }
+
+    @Test
+    void testHandleDefinition_LargePositionNumbers() {
+        // Arrange - Test with very large line/column numbers
+        String uri = "file:///test.groovy";
+        String content = "class Test {}";
+        Position position = new Position(999999, 999999); // Very large position
+        DefinitionParams params = new DefinitionParams(new TextDocumentIdentifier(uri), position);
+
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(moduleNode, 1000000, 1000000)).thenReturn(null);
+
+        // Act
+        CompletableFuture<
+                        Either<
+                                List<? extends Location>,
+                                List<? extends org.eclipse.lsp4j.LocationLink>>>
+                result = handler.handleDefinition(params);
+
+        // Assert
+        Either<List<? extends Location>, List<? extends org.eclipse.lsp4j.LocationLink>> either =
+                result.join();
+        assertTrue(either.isLeft());
+        assertTrue(either.getLeft().isEmpty());
+    }
+
+    @Test
     void testHandleDefinition_MethodCall_LocalMethod() {
         // Arrange
         String uri = "file:///test.groovy";
