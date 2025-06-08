@@ -34,8 +34,10 @@ public class SymbolIndex implements AutoCloseable {
     private static final String DB_SYMBOLS = "symbols";
     private static final String DB_FILES = "files";
     private static final String DB_DEPENDENCIES = "dependencies";
+    private static final long DEFAULT_MAP_SIZE = 1024L * 1024L * 1024L; // 1GB default
 
     private final Path indexPath;
+    private final long mapSize;
     private @Nullable Env<ByteBuffer> env;
     private @Nullable Dbi<ByteBuffer> symbolsDb;
     private @Nullable Dbi<ByteBuffer> filesDb;
@@ -47,7 +49,12 @@ public class SymbolIndex implements AutoCloseable {
     private final Map<String, List<SymbolInfo>> symbolCache = new ConcurrentHashMap<>();
 
     public SymbolIndex(Path indexPath) {
+        this(indexPath, DEFAULT_MAP_SIZE);
+    }
+
+    public SymbolIndex(Path indexPath, long mapSize) {
         this.indexPath = indexPath;
+        this.mapSize = mapSize;
     }
 
     /**
@@ -59,11 +66,7 @@ public class SymbolIndex implements AutoCloseable {
             Files.createDirectories(indexPath);
 
             // Configure LMDB environment
-            env =
-                    Env.create()
-                            .setMaxDbs(3)
-                            .setMapSize(1024L * 1024L * 1024L) // 1GB initial size
-                            .open(indexPath.toFile());
+            env = Env.create().setMaxDbs(3).setMapSize(mapSize).open(indexPath.toFile());
 
             // Open databases
             symbolsDb = env.openDbi(DB_SYMBOLS, DbiFlags.MDB_CREATE);
@@ -151,13 +154,22 @@ public class SymbolIndex implements AutoCloseable {
             ByteBuffer key = toBuffer(file.toString());
             getFilesDb().delete(txn, key);
 
-            // Remove all symbols from this file
-            Set<String> symbols = fileSymbols.remove(file);
-            if (symbols != null) {
-                for (String symbol : symbols) {
-                    removeSymbolEntry(txn, symbol, file);
+            // Remove all symbols from this file by scanning the database
+            try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
+                if (cursor.first()) {
+                    do {
+                        SymbolInfo symbol = deserializeSymbol(cursor.val());
+                        if (symbol != null && symbol.location().equals(file)) {
+                            cursor.delete();
+                        }
+                    } while (cursor.next());
                 }
             }
+
+            // Clear the cache for this file
+            fileSymbols.remove(file);
+            // Clear the symbol cache as symbols have been removed
+            symbolCache.clear();
 
             txn.commit();
         }
@@ -286,28 +298,6 @@ public class SymbolIndex implements AutoCloseable {
     }
 
     /**
-     * Remove a symbol entry for a specific file.
-     */
-    private void removeSymbolEntry(Txn<ByteBuffer> txn, String symbolName, Path file) {
-        try (Cursor<ByteBuffer> cursor = getSymbolsDb().openCursor(txn)) {
-            ByteBuffer key = toBuffer(symbolName);
-            if (cursor.get(key, GetOp.MDB_SET_RANGE)) {
-                do {
-                    String keyStr = toString(cursor.key());
-                    if (!keyStr.startsWith(symbolName)) {
-                        break;
-                    }
-
-                    SymbolInfo symbol = deserializeSymbol(cursor.val());
-                    if (symbol != null && symbol.location().equals(file)) {
-                        cursor.delete();
-                    }
-                } while (cursor.next());
-            }
-        }
-    }
-
-    /**
      * Serialize a symbol to ByteBuffer.
      */
     private ByteBuffer serializeSymbol(SymbolInfo symbol) {
@@ -365,20 +355,26 @@ public class SymbolIndex implements AutoCloseable {
     @Override
     public void close() throws Exception {
         if (env != null) {
-            // Clear caches
-            fileSymbols.clear();
-            symbolCache.clear();
+            try {
+                // Clear caches
+                fileSymbols.clear();
+                symbolCache.clear();
 
-            // Force sync before closing
-            env.sync(true);
-
-            // Close environment
-            env.close();
-            env = null;
-            symbolsDb = null;
-            filesDb = null;
-            dependenciesDb = null;
-            initialized = false;
+                // Force sync before closing
+                env.sync(true);
+            } finally {
+                // Ensure environment is closed even if sync fails
+                try {
+                    env.close();
+                } finally {
+                    // Always clean up references
+                    env = null;
+                    symbolsDb = null;
+                    filesDb = null;
+                    dependenciesDb = null;
+                    initialized = false;
+                }
+            }
         }
     }
 }

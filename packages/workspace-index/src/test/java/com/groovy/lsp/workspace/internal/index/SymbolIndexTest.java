@@ -280,4 +280,32 @@ class SymbolIndexTest {
         assertThat(underscoreResults).hasSize(1);
         assertThat(atResults).hasSize(1);
     }
+
+    @Test
+    void constructor_shouldAcceptCustomMapSize() throws Exception {
+        // Clean up the default index first
+        symbolIndex.close();
+
+        // given
+        long customMapSize = 2L * 1024L * 1024L * 1024L; // 2GB
+        Path customIndexPath = tempDir.resolve("custom-index");
+
+        // when
+        SymbolIndex customIndex = new SymbolIndex(customIndexPath, customMapSize);
+        customIndex.initialize();
+
+        // Add some data to verify it works
+        Path file = Path.of("/test/CustomSize.java");
+        customIndex.addFile(file);
+        customIndex.addSymbol(new SymbolInfo("CustomClass", SymbolKind.CLASS, file, 1, 1));
+
+        // then
+        assertThat(Files.exists(customIndexPath)).isTrue();
+        List<SymbolInfo> symbols = customIndex.getFileSymbols(file).collect(Collectors.toList());
+        assertThat(symbols).hasSize(1);
+        assertThat(symbols.get(0).name()).isEqualTo("CustomClass");
+
+        // Clean up
+        customIndex.close();
+    }
 }
