@@ -355,20 +355,26 @@ public class SymbolIndex implements AutoCloseable {
     @Override
     public void close() throws Exception {
         if (env != null) {
-            // Clear caches
-            fileSymbols.clear();
-            symbolCache.clear();
+            try {
+                // Clear caches
+                fileSymbols.clear();
+                symbolCache.clear();
 
-            // Force sync before closing
-            env.sync(true);
-
-            // Close environment
-            env.close();
-            env = null;
-            symbolsDb = null;
-            filesDb = null;
-            dependenciesDb = null;
-            initialized = false;
+                // Force sync before closing
+                env.sync(true);
+            } finally {
+                // Ensure environment is closed even if sync fails
+                try {
+                    env.close();
+                } finally {
+                    // Always clean up references
+                    env = null;
+                    symbolsDb = null;
+                    filesDb = null;
+                    dependenciesDb = null;
+                    initialized = false;
+                }
+            }
         }
     }
 }
