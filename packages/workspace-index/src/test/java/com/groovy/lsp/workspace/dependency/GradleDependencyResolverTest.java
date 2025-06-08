@@ -3,6 +3,7 @@ package com.groovy.lsp.workspace.dependency;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.groovy.lsp.workspace.dependency.DependencyResolver.BuildSystem;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,6 +106,24 @@ class GradleDependencyResolverTest {
 
         List<Path> dependencies = resolver.resolveDependencies();
 
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void constructor_shouldAcceptCustomTimeout() throws IOException {
+        Path buildFile = tempDir.resolve("build.gradle");
+        Files.writeString(buildFile, "apply plugin: 'java'");
+
+        // Create resolver with custom timeout
+        long customTimeout = 10L;
+        GradleDependencyResolver resolver = new GradleDependencyResolver(tempDir, customTimeout);
+
+        // Verify it can handle Gradle projects
+        assertTrue(resolver.canHandle(tempDir));
+        assertEquals(BuildSystem.GRADLE, resolver.getBuildSystem());
+
+        // In test environment, should return empty list regardless of timeout
+        List<Path> dependencies = resolver.resolveDependencies();
         assertThat(dependencies).isEmpty();
     }
 }

@@ -219,4 +219,60 @@ class JarFileIndexerTest {
         cw.visitEnd();
         return cw.toByteArray();
     }
+
+    @Test
+    void testIndexJar_WithTooManyEntries() throws IOException {
+        // Create JAR with more than MAX_ENTRIES
+        Path jarFile = tempDir.resolve("too-many-entries.jar");
+
+        try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(jarFile.toFile()))) {
+            byte[] classBytes = createTestClass();
+
+            // Try to add more than MAX_ENTRIES (100,000)
+            for (int i = 0; i < 100_005; i++) {
+                JarEntry entry = new JarEntry("com/example/TestClass" + i + ".class");
+                jos.putNextEntry(entry);
+                jos.write(classBytes);
+                jos.closeEntry();
+            }
+        }
+
+        List<SymbolInfo> symbols = jarFileIndexer.indexJar(jarFile);
+
+        // Should process only up to MAX_ENTRIES
+        assertThat(symbols).isNotEmpty();
+        // Each class has 4 symbols (class, field, constructor, method), so 100,000 * 4 = 400,000
+        assertThat(symbols.size()).isLessThanOrEqualTo(400_000);
+    }
+
+    @Test
+    void testIndexJar_WithOversizedEntry() throws IOException {
+        Path jarFile = tempDir.resolve("oversized-entry.jar");
+
+        try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(jarFile.toFile()))) {
+            // Add normal entry
+            byte[] normalClassBytes = createTestClass();
+            JarEntry normalEntry = new JarEntry("com/example/NormalClass.class");
+            jos.putNextEntry(normalEntry);
+            jos.write(normalClassBytes);
+            jos.closeEntry();
+
+            // Try to add oversized entry (> 50MB)
+            JarEntry oversizedEntry = new JarEntry("com/example/OversizedClass.class");
+            oversizedEntry.setSize(60 * 1024 * 1024); // 60MB
+            jos.putNextEntry(oversizedEntry);
+            // Write dummy data
+            byte[] dummyData = new byte[1024];
+            for (int i = 0; i < 60 * 1024; i++) {
+                jos.write(dummyData);
+            }
+            jos.closeEntry();
+        }
+
+        List<SymbolInfo> symbols = jarFileIndexer.indexJar(jarFile);
+
+        // Should process only the normal entry, skip the oversized one
+        assertThat(symbols)
+                .hasSize(4); // Only symbols from NormalClass (class, field, constructor, method)
+    }
 }

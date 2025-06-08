@@ -248,4 +248,32 @@ class GroovyFileParserTest {
                         .orElseThrow();
         assertThat(annotationSymbol.kind()).isEqualTo(SymbolKind.ANNOTATION);
     }
+
+    @Test
+    void testParseNonExistentFile() throws IOException {
+        Path nonExistentFile = tempDir.resolve("NonExistent.groovy");
+
+        List<SymbolInfo> symbols = parser.parseFile(nonExistentFile);
+
+        assertThat(symbols).isEmpty();
+    }
+
+    @Test
+    void testParseLargeFile() throws IOException {
+        // Create a file larger than MAX_FILE_SIZE (10MB)
+        StringBuilder largeContent = new StringBuilder();
+        String line = "class Test { def method() { println 'x'.repeat(1000) } }\n";
+
+        // Each line is about 60 bytes, need ~175,000 lines for > 10MB
+        for (int i = 0; i < 180_000; i++) {
+            largeContent.append(line);
+        }
+
+        Path largeFile = tempDir.resolve("LargeFile.groovy");
+        Files.writeString(largeFile, largeContent.toString());
+
+        List<SymbolInfo> symbols = parser.parseFile(largeFile);
+
+        assertThat(symbols).isEmpty();
+    }
 }
