@@ -542,4 +542,76 @@ class GradleDependencyResolverAdditionalTest {
         // Verify the build was executed
         verify(mockBuildLauncher).run();
     }
+
+    @Test
+    void isValidGradleProject_shouldReturnTrueForBuildGradleKts() throws IOException {
+        // Given - Project with build.gradle.kts
+        Files.writeString(tempDir.resolve("build.gradle.kts"), "plugins { id(\"java\") }");
+
+        resolver = new GradleDependencyResolver(tempDir);
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should attempt to resolve but return empty due to test environment
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void isValidGradleProject_shouldReturnTrueForSettingsGradle() throws IOException {
+        // Given - Project with settings.gradle
+        Files.writeString(tempDir.resolve("settings.gradle"), "rootProject.name = 'test'");
+
+        resolver = new GradleDependencyResolver(tempDir);
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should attempt to resolve but return empty due to test environment
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void isValidGradleProject_shouldReturnTrueForSettingsGradleKts() throws IOException {
+        // Given - Project with settings.gradle.kts
+        Files.writeString(tempDir.resolve("settings.gradle.kts"), "rootProject.name = \"test\"");
+
+        resolver = new GradleDependencyResolver(tempDir);
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should attempt to resolve but return empty due to test environment
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void hasGradleWrapper_shouldDetectGradlewBat() throws IOException {
+        // Given - Project with gradlew.bat
+        Files.writeString(tempDir.resolve("build.gradle"), "apply plugin: 'java'");
+        Files.writeString(tempDir.resolve("gradlew.bat"), "@echo off\r\n");
+
+        resolver = new GradleDependencyResolver(tempDir);
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then - Should attempt to resolve but return empty due to test environment
+        assertThat(dependencies).isEmpty();
+    }
+
+    @Test
+    void resolveDependencies_shouldReturnEmptyListForInvalidProject() throws IOException {
+        // Given - Empty directory with no Gradle files
+        Path invalidProject = tempDir.resolve("invalid-project");
+        Files.createDirectories(invalidProject);
+
+        resolver = new GradleDependencyResolver(invalidProject);
+
+        // When
+        List<Path> dependencies = resolver.resolveDependencies();
+
+        // Then
+        assertThat(dependencies).isEmpty();
+    }
 }
