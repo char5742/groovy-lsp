@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -18,10 +19,9 @@ import org.objectweb.asm.Opcodes;
 public class ClassFileVisitor extends ClassVisitor {
     private final List<SymbolInfo> symbols = new ArrayList<>();
     private final Path jarPath;
-    private String className;
-    private String packageName;
-    private String qualifiedClassName;
-    private Path jarEntryPath;
+    private String className = "";
+    private String qualifiedClassName = "";
+    private Path jarEntryPath = Paths.get("");
 
     public ClassFileVisitor(Path jarPath) {
         super(Opcodes.ASM9);
@@ -39,13 +39,11 @@ public class ClassFileVisitor extends ClassVisitor {
         // Convert internal name (com/example/MyClass) to qualified name (com.example.MyClass)
         qualifiedClassName = name.replace('/', '.');
 
-        // Extract package and simple class name
+        // Extract simple class name
         int lastDot = qualifiedClassName.lastIndexOf('.');
         if (lastDot > 0) {
-            packageName = qualifiedClassName.substring(0, lastDot);
             className = qualifiedClassName.substring(lastDot + 1);
         } else {
-            packageName = "";
             className = qualifiedClassName;
         }
 
@@ -66,6 +64,7 @@ public class ClassFileVisitor extends ClassVisitor {
     }
 
     @Override
+    @Nullable
     public FieldVisitor visitField(
             int access, String name, String descriptor, String signature, Object value) {
         // Create symbol for field
@@ -85,6 +84,7 @@ public class ClassFileVisitor extends ClassVisitor {
     }
 
     @Override
+    @Nullable
     public MethodVisitor visitMethod(
             int access, String name, String descriptor, String signature, String[] exceptions) {
         // Skip synthetic methods

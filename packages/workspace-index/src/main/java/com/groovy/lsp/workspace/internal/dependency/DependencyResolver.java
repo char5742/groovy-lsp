@@ -3,8 +3,6 @@ package com.groovy.lsp.workspace.internal.dependency;
 import com.groovy.lsp.workspace.dependency.MavenAndGradleDependencyResolver;
 import java.nio.file.Path;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Resolves project dependencies using Gradle Tooling API or Maven.
@@ -15,7 +13,6 @@ import org.slf4j.LoggerFactory;
  */
 @Deprecated
 public class DependencyResolver {
-    private static final Logger logger = LoggerFactory.getLogger(DependencyResolver.class);
 
     private final Path workspaceRoot;
     private com.groovy.lsp.workspace.dependency.DependencyResolver resolver;

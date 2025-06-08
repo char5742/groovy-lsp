@@ -80,7 +80,6 @@ public class GradleDependencyResolver implements DependencyResolver {
             // Let Gradle Tooling API use its default distribution
         }
 
-        ProjectConnection connection = null;
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
             // Execute the entire Gradle operation with timeout

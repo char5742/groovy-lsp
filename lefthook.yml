@@ -36,12 +36,24 @@ pre-push:
       run: ./gradlew spotlessCheck
       tags: formatting
 
-    # コンパイルチェックのみ（テストは別途実行）
+    # コンパイルチェック（Error ProneとNullAwayを含む）
     compile-check:
       run: |
         echo "Checking compilation..."
         # コンパイルのみ実行（テストをスキップ）
-        ./gradlew compileJava compileTestJava compileGroovy compileTestGroovy --parallel
+        # --continue オプションで全モジュールのエラーを収集
+        if ! ./gradlew compileJava compileTestJava compileGroovy compileTestGroovy --parallel --continue; then
+          echo ""
+          echo "❌ Compilation failed! Error Prone or NullAway warnings detected."
+          echo "Please fix all warnings before pushing."
+          echo ""
+          echo "Common issues:"
+          echo "- UnusedVariable: Remove unused variables"
+          echo "- NullAway: Initialize @NonNull fields or add @Nullable"
+          echo "- WildcardImport: Avoid wildcard imports"
+          echo ""
+          exit 1
+        fi
       tags: build quality
 
     # 変更されたモジュールのテストのみ実行

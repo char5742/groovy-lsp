@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.jspecify.annotations.Nullable;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -41,9 +42,9 @@ public class MavenDependencyResolver implements DependencyResolver {
     private static final Logger logger = LoggerFactory.getLogger(MavenDependencyResolver.class);
 
     private final Path workspaceRoot;
-    private RepositorySystem repositorySystem;
-    private RepositorySystemSession session;
-    private List<RemoteRepository> repositories;
+    @Nullable private RepositorySystem repositorySystem;
+    @Nullable private RepositorySystemSession session;
+    @Nullable private List<RemoteRepository> repositories;
 
     public MavenDependencyResolver(Path workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
@@ -65,6 +66,11 @@ public class MavenDependencyResolver implements DependencyResolver {
         Path pomPath = workspaceRoot.resolve("pom.xml");
         if (!Files.exists(pomPath)) {
             logger.warn("No pom.xml found at: {}", workspaceRoot);
+            return Collections.emptyList();
+        }
+
+        if (repositorySystem == null || session == null || repositories == null) {
+            logger.error("Maven resolver not properly initialized");
             return Collections.emptyList();
         }
 
@@ -122,7 +128,7 @@ public class MavenDependencyResolver implements DependencyResolver {
                 }
             }
 
-            return dependencies;
+            return new ArrayList<>(dependencies);
 
         } catch (Exception e) {
             logger.error("Failed to resolve Maven dependencies", e);
@@ -193,6 +199,7 @@ public class MavenDependencyResolver implements DependencyResolver {
         return locator.getService(RepositorySystem.class);
     }
 
+    @Nullable
     private Model parsePomFile(Path pomPath) {
         try (var reader = Files.newBufferedReader(pomPath, StandardCharsets.UTF_8)) {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
