@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -76,8 +77,10 @@ public class PerformanceTest {
 
     /**
      * Tests that symbol search completes within 50ms for 100,000 lines of code.
+     * Disabled in CI environment due to resource constraints.
      */
     @Test
+    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void testSearchPerformance() {
         // Warmup - perform searches to warm up caches
         for (int i = 0; i < WARMUP_ITERATIONS; i++) {
@@ -116,8 +119,10 @@ public class PerformanceTest {
 
     /**
      * Tests index creation performance.
+     * Disabled in CI environment due to resource constraints.
      */
     @Test
+    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void testIndexCreationPerformance() {
         // Create a new index
         Path newIndexPath = tempDir.resolve("new-index");
@@ -151,8 +156,10 @@ public class PerformanceTest {
 
     /**
      * Tests concurrent search performance.
+     * Disabled in CI environment due to resource constraints.
      */
     @Test
+    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void testConcurrentSearchPerformance() throws InterruptedException {
         // Warmup
         for (int i = 0; i < WARMUP_ITERATIONS; i++) {
