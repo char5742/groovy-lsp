@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GroovyFileParser {
     private static final Logger logger = LoggerFactory.getLogger(GroovyFileParser.class);
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
     private final ASTService astService;
 
     public GroovyFileParser() {
@@ -33,6 +34,23 @@ public class GroovyFileParser {
      * @throws IOException if the file cannot be read
      */
     public List<SymbolInfo> parseFile(Path file) throws IOException {
+        // Check if file exists
+        if (!Files.exists(file)) {
+            logger.warn("File does not exist: {}", file);
+            return Collections.emptyList();
+        }
+
+        // Check file size to prevent OOM
+        long fileSize = Files.size(file);
+        if (fileSize > MAX_FILE_SIZE) {
+            logger.warn(
+                    "File too large: {} (size: {} bytes, max: {} bytes)",
+                    file,
+                    fileSize,
+                    MAX_FILE_SIZE);
+            return Collections.emptyList();
+        }
+
         String content = Files.readString(file);
         String fileName = file.getFileName().toString();
 

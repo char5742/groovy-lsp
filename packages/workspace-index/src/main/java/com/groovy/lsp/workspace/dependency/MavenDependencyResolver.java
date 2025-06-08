@@ -1,7 +1,7 @@
 package com.groovy.lsp.workspace.dependency;
 
 import java.io.File;
-import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -194,7 +194,7 @@ public class MavenDependencyResolver implements DependencyResolver {
     }
 
     private Model parsePomFile(Path pomPath) {
-        try (FileReader reader = new FileReader(pomPath.toFile())) {
+        try (var reader = Files.newBufferedReader(pomPath, StandardCharsets.UTF_8)) {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
             Model model = pomReader.read(reader);
 

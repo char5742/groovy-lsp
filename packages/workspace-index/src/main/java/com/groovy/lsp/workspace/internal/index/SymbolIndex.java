@@ -34,8 +34,10 @@ public class SymbolIndex implements AutoCloseable {
     private static final String DB_SYMBOLS = "symbols";
     private static final String DB_FILES = "files";
     private static final String DB_DEPENDENCIES = "dependencies";
+    private static final long DEFAULT_MAP_SIZE = 1024L * 1024L * 1024L; // 1GB default
 
     private final Path indexPath;
+    private final long mapSize;
     private @Nullable Env<ByteBuffer> env;
     private @Nullable Dbi<ByteBuffer> symbolsDb;
     private @Nullable Dbi<ByteBuffer> filesDb;
@@ -47,7 +49,12 @@ public class SymbolIndex implements AutoCloseable {
     private final Map<String, List<SymbolInfo>> symbolCache = new ConcurrentHashMap<>();
 
     public SymbolIndex(Path indexPath) {
+        this(indexPath, DEFAULT_MAP_SIZE);
+    }
+
+    public SymbolIndex(Path indexPath, long mapSize) {
         this.indexPath = indexPath;
+        this.mapSize = mapSize;
     }
 
     /**
@@ -59,11 +66,7 @@ public class SymbolIndex implements AutoCloseable {
             Files.createDirectories(indexPath);
 
             // Configure LMDB environment
-            env =
-                    Env.create()
-                            .setMaxDbs(3)
-                            .setMapSize(1024L * 1024L * 1024L) // 1GB initial size
-                            .open(indexPath.toFile());
+            env = Env.create().setMaxDbs(3).setMapSize(mapSize).open(indexPath.toFile());
 
             // Open databases
             symbolsDb = env.openDbi(DB_SYMBOLS, DbiFlags.MDB_CREATE);

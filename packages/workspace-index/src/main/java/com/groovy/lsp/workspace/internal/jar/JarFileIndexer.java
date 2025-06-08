@@ -18,6 +18,10 @@ import org.slf4j.LoggerFactory;
  */
 public class JarFileIndexer {
     private static final Logger logger = LoggerFactory.getLogger(JarFileIndexer.class);
+    private static final int MAX_ENTRIES = 100000; // Maximum number of entries to process
+    private static final long MAX_ENTRY_SIZE = 50 * 1024 * 1024; // 50MB max per entry
+    private static final long MAX_TOTAL_SIZE =
+            500 * 1024 * 1024; // 500MB max total uncompressed size
 
     /**
      * Index a JAR file and extract all symbols.
@@ -36,23 +40,53 @@ public class JarFileIndexer {
         try (JarFile jarFile = new JarFile(jarPath.toFile())) {
             logger.debug("Indexing JAR file: {}", jarPath);
 
-            jarFile.entries()
-                    .asIterator()
-                    .forEachRemaining(
-                            entry -> {
-                                if (isClassFile(entry)) {
-                                    try {
-                                        List<SymbolInfo> classSymbols =
-                                                indexClassEntry(jarFile, entry, jarPath);
-                                        symbols.addAll(classSymbols);
-                                    } catch (Exception e) {
-                                        logger.debug(
-                                                "Error indexing class entry {}: {}",
-                                                entry.getName(),
-                                                e.getMessage());
-                                    }
-                                }
-                            });
+            int entryCount = 0;
+            long totalSize = 0;
+            var entries = jarFile.entries();
+
+            while (entries.hasMoreElements() && entryCount < MAX_ENTRIES) {
+                JarEntry entry = entries.nextElement();
+                entryCount++;
+
+                // Check entry size for Zip Bomb protection
+                long entrySize = entry.getSize();
+                if (entrySize > MAX_ENTRY_SIZE) {
+                    logger.warn(
+                            "Skipping oversized entry {} in {}: {} bytes",
+                            entry.getName(),
+                            jarPath,
+                            entrySize);
+                    continue;
+                }
+
+                totalSize += entrySize > 0 ? entrySize : 0;
+                if (totalSize > MAX_TOTAL_SIZE) {
+                    logger.warn(
+                            "JAR file {} exceeds maximum total size limit, stopping at entry {}",
+                            jarPath,
+                            entryCount);
+                    break;
+                }
+
+                if (isClassFile(entry)) {
+                    try {
+                        List<SymbolInfo> classSymbols = indexClassEntry(jarFile, entry, jarPath);
+                        symbols.addAll(classSymbols);
+                    } catch (Exception e) {
+                        logger.debug(
+                                "Error indexing class entry {}: {}",
+                                entry.getName(),
+                                e.getMessage());
+                    }
+                }
+            }
+
+            if (entryCount >= MAX_ENTRIES) {
+                logger.warn(
+                        "JAR file {} has too many entries (>{} ), processing stopped",
+                        jarPath,
+                        MAX_ENTRIES);
+            }
 
             logger.info("Indexed {} symbols from JAR: {}", symbols.size(), jarPath.getFileName());
         } catch (IOException e) {
@@ -101,9 +135,16 @@ public class JarFileIndexer {
 
         try (JarFile jarFile = new JarFile(jarPath.toFile())) {
             // Check if JAR contains any class files
-            return jarFile.entries()
-                    .asIterator()
-                    .hasNext(); // Simple check - can be enhanced to look for specific patterns
+            var entries = jarFile.entries();
+            int count = 0;
+            while (entries.hasMoreElements() && count < 100) {
+                JarEntry entry = entries.nextElement();
+                count++;
+                if (isClassFile(entry)) {
+                    return true;
+                }
+            }
+            return false;
         } catch (IOException e) {
             logger.debug("Error checking JAR relevance: {}", jarPath, e);
             return false;

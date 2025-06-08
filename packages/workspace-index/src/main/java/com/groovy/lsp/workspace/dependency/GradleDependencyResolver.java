@@ -23,11 +23,18 @@ import org.slf4j.LoggerFactory;
  */
 public class GradleDependencyResolver implements DependencyResolver {
     private static final Logger logger = LoggerFactory.getLogger(GradleDependencyResolver.class);
+    private static final long DEFAULT_TIMEOUT_SECONDS = 5;
 
     private final Path workspaceRoot;
+    private final long timeoutSeconds;
 
     public GradleDependencyResolver(Path workspaceRoot) {
+        this(workspaceRoot, DEFAULT_TIMEOUT_SECONDS);
+    }
+
+    public GradleDependencyResolver(Path workspaceRoot, long timeoutSeconds) {
         this.workspaceRoot = workspaceRoot;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     @Override
@@ -144,14 +151,15 @@ public class GradleDependencyResolver implements DependencyResolver {
                                 }
                             });
 
-            // Wait for completion with aggressive timeout
-            dependencies = future.get(5, TimeUnit.SECONDS);
+            // Wait for completion with configured timeout
+            dependencies = future.get(timeoutSeconds, TimeUnit.SECONDS);
 
         } catch (TimeoutException e) {
             logger.warn(
-                    "Timeout while resolving Gradle dependencies for project at {} (5 second"
+                    "Timeout while resolving Gradle dependencies for project at {} ({} second"
                             + " limit): {}",
                     workspaceRoot,
+                    timeoutSeconds,
                     e.getMessage());
             logger.debug(
                     "Gradle connection timeout - this may indicate an incomplete or invalid project"
