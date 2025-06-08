@@ -225,7 +225,13 @@ public class DefinitionHandler {
                     }
                 }
             } catch (Exception e) {
-                logger.error("Error searching workspace index for method: {}", methodName, e);
+                logger.warn(
+                        "Error searching workspace index for method: {}. Falling back to local"
+                                + " search only.",
+                        methodName,
+                        e);
+                // フォールバック処理：ワークスペース検索が失敗した場合は、ローカル検索結果のみを使用
+                // locationsは既にローカル検索結果を含んでいる可能性があるため、そのまま返す
             }
         }
 
@@ -288,7 +294,12 @@ public class DefinitionHandler {
                     }
                 }
             } catch (Exception e) {
-                logger.error("Error searching workspace index for property: {}", propertyName, e);
+                logger.warn(
+                        "Error searching workspace index for property: {}. Falling back to local"
+                                + " search only.",
+                        propertyName,
+                        e);
+                // フォールバック処理：ワークスペース検索が失敗した場合は、ローカル検索結果のみを使用
             }
         }
 
@@ -323,9 +334,19 @@ public class DefinitionHandler {
                                 .collect(Collectors.toList());
 
                 for (SymbolInfo symbol : symbols) {
-                    // Match fully qualified name or simple name
-                    if (symbol.name().equals(className)
-                            || symbol.name().endsWith("." + className)) {
+                    // Match fully qualified name or simple name with strict matching
+                    String symbolName = symbol.name();
+                    boolean isExactMatch = symbolName.equals(className);
+                    boolean isQualifiedMatch = false;
+
+                    if (!isExactMatch && symbolName.contains(".")) {
+                        // Ensure we match the exact class name after the last dot
+                        int lastDotIndex = symbolName.lastIndexOf('.');
+                        String simpleSymbolName = symbolName.substring(lastDotIndex + 1);
+                        isQualifiedMatch = simpleSymbolName.equals(className);
+                    }
+
+                    if (isExactMatch || isQualifiedMatch) {
                         Location location = createLocation(symbol);
                         if (location != null) {
                             locations.add(location);
@@ -333,7 +354,12 @@ public class DefinitionHandler {
                     }
                 }
             } catch (Exception e) {
-                logger.error("Error searching workspace index for class: {}", className, e);
+                logger.warn(
+                        "Error searching workspace index for class: {}. Falling back to local"
+                                + " search only.",
+                        className,
+                        e);
+                // フォールバック処理：ワークスペース検索が失敗した場合は、ローカル検索結果のみを使用
             }
         }
 
@@ -446,6 +472,10 @@ public class DefinitionHandler {
     private @Nullable Location createLocation(SymbolInfo symbol) {
         Path location = symbol.location();
         if (location == null) {
+            logger.debug(
+                    "Symbol location is null for symbol: {} (kind: {})",
+                    symbol.name(),
+                    symbol.kind());
             return null;
         }
 
@@ -455,6 +485,12 @@ public class DefinitionHandler {
                         new Position(symbol.line() - 1, symbol.column() - 1),
                         new Position(symbol.line() - 1, symbol.column() - 1));
 
+        logger.debug(
+                "Created location for symbol: {} at {}:{}:{}",
+                symbol.name(),
+                uri,
+                symbol.line(),
+                symbol.column());
         return new Location(uri, range);
     }
 }
