@@ -3,8 +3,8 @@ package com.groovy.lsp.workspace.internal.parser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
-import com.groovy.lsp.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

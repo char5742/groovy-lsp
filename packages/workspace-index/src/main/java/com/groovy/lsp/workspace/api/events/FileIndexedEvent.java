@@ -1,7 +1,7 @@
 package com.groovy.lsp.workspace.api.events;
 
 import com.groovy.lsp.shared.event.DomainEvent;
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import java.nio.file.Path;
 import java.util.List;
 

@@ -2,8 +2,8 @@ package com.groovy.lsp.workspace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
-import com.groovy.lsp.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
 import java.nio.file.Files;
 import java.nio.file.Path;

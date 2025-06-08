@@ -10,7 +10,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
-import com.groovy.lsp.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

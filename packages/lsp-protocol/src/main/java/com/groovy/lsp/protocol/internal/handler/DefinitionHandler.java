@@ -4,10 +4,15 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.util.LocationUtils;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
@@ -32,6 +37,7 @@ import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -75,9 +81,8 @@ public class DefinitionHandler {
 
                         // Get services
                         ASTService astService = serviceRouter.getAstService();
-                        // TODO: Get WorkspaceIndexService when circular dependency is resolved
-                        // WorkspaceIndexService indexService =
-                        // serviceRouter.getWorkspaceIndexService();
+                        WorkspaceIndexService indexService =
+                                serviceRouter.getWorkspaceIndexService();
 
                         // Get document content
                         String sourceCode = documentManager.getDocumentContent(uri);
@@ -109,7 +114,8 @@ public class DefinitionHandler {
                         }
 
                         // Find definition locations
-                        List<Location> locations = findDefinitions(node, moduleNode, uri, null);
+                        List<Location> locations =
+                                findDefinitions(node, moduleNode, uri, indexService);
 
                         return Either.forLeft(locations);
 
@@ -129,8 +135,7 @@ public class DefinitionHandler {
             ASTNode node,
             ModuleNode moduleNode,
             String currentUri,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService when dependency
-        // resolved
+            WorkspaceIndexService indexService) {
 
         List<Location> locations = new ArrayList<>();
 
@@ -182,7 +187,7 @@ public class DefinitionHandler {
             MethodCallExpression methodCall,
             ModuleNode moduleNode,
             String currentUri,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String methodName = methodCall.getMethodAsString();
         if (methodName == null) {
@@ -203,25 +208,26 @@ public class DefinitionHandler {
             }
         }
 
-        // TODO: Enable workspace search when circular dependency is resolved
         // If not found locally, search in the workspace index
-        // if (locations.isEmpty() && indexService != null) {
-        //     try {
-        //         List<SymbolInfo> symbols = indexService.searchSymbols(methodName)
-        //                 .get()
-        //                 .filter(symbol -> symbol.kind() == SymbolKind.METHOD)
-        //                 .collect(Collectors.toList());
-        //
-        //         for (SymbolInfo symbol : symbols) {
-        //             Location location = createLocation(symbol);
-        //             if (location != null) {
-        //                 locations.add(location);
-        //             }
-        //         }
-        //     } catch (Exception e) {
-        //         logger.error("Error searching workspace index for method: {}", methodName, e);
-        //     }
-        // }
+        if (locations.isEmpty() && indexService != null) {
+            try {
+                List<SymbolInfo> symbols =
+                        indexService
+                                .searchSymbols(methodName)
+                                .get()
+                                .filter(symbol -> symbol.kind() == SymbolKind.METHOD)
+                                .collect(Collectors.toList());
+
+                for (SymbolInfo symbol : symbols) {
+                    Location location = createLocation(symbol);
+                    if (location != null) {
+                        locations.add(location);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error searching workspace index for method: {}", methodName, e);
+            }
+        }
 
         return locations;
     }
@@ -230,7 +236,7 @@ public class DefinitionHandler {
             PropertyExpression propExpr,
             ModuleNode moduleNode,
             String currentUri,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String propertyName = propExpr.getPropertyAsString();
         if (propertyName == null) {
@@ -262,35 +268,35 @@ public class DefinitionHandler {
             }
         }
 
-        // TODO: Enable workspace search when circular dependency is resolved
         // Search in workspace if not found locally
-        // if (locations.isEmpty() && indexService != null) {
-        //     try {
-        //         List<SymbolInfo> symbols = indexService.searchSymbols(propertyName)
-        //                 .get()
-        //                 .filter(symbol -> symbol.kind() == SymbolKind.FIELD ||
-        //                          symbol.kind() == SymbolKind.PROPERTY)
-        //                 .collect(Collectors.toList());
-        //
-        //         for (SymbolInfo symbol : symbols) {
-        //             Location location = createLocation(symbol);
-        //             if (location != null) {
-        //                 locations.add(location);
-        //             }
-        //         }
-        //     } catch (Exception e) {
-        //         logger.error("Error searching workspace index for property: {}", propertyName,
-        // e);
-        //     }
-        // }
+        if (locations.isEmpty() && indexService != null) {
+            try {
+                List<SymbolInfo> symbols =
+                        indexService
+                                .searchSymbols(propertyName)
+                                .get()
+                                .filter(
+                                        symbol ->
+                                                symbol.kind() == SymbolKind.FIELD
+                                                        || symbol.kind() == SymbolKind.PROPERTY)
+                                .collect(Collectors.toList());
+
+                for (SymbolInfo symbol : symbols) {
+                    Location location = createLocation(symbol);
+                    if (location != null) {
+                        locations.add(location);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error searching workspace index for property: {}", propertyName, e);
+            }
+        }
 
         return locations;
     }
 
     private List<Location> findClassDefinition(
-            ClassNode classNode,
-            String currentUri,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            ClassNode classNode, String currentUri, WorkspaceIndexService indexService) {
 
         String className = classNode.getName();
         List<Location> locations = new ArrayList<>();
@@ -303,38 +309,39 @@ public class DefinitionHandler {
             }
         }
 
-        // TODO: Enable workspace search when circular dependency is resolved
         // Search in workspace index
-        // if (indexService != null) {
-        //     try {
-        //         List<SymbolInfo> symbols = indexService.searchSymbols(className)
-        //                 .get()
-        //                 .filter(symbol -> symbol.kind() == SymbolKind.CLASS ||
-        //                          symbol.kind() == SymbolKind.INTERFACE)
-        //                 .collect(Collectors.toList());
-        //
-        //         for (SymbolInfo symbol : symbols) {
-        //             // Match fully qualified name or simple name
-        //             if (symbol.name().equals(className) || symbol.name().endsWith("." +
-        // className)) {
-        //                 Location location = createLocation(symbol);
-        //                 if (location != null) {
-        //                     locations.add(location);
-        //                 }
-        //             }
-        //         }
-        //     } catch (Exception e) {
-        //         logger.error("Error searching workspace index for class: {}", className, e);
-        //     }
-        // }
+        if (indexService != null) {
+            try {
+                List<SymbolInfo> symbols =
+                        indexService
+                                .searchSymbols(className)
+                                .get()
+                                .filter(
+                                        symbol ->
+                                                symbol.kind() == SymbolKind.CLASS
+                                                        || symbol.kind() == SymbolKind.INTERFACE)
+                                .collect(Collectors.toList());
+
+                for (SymbolInfo symbol : symbols) {
+                    // Match fully qualified name or simple name
+                    if (symbol.name().equals(className)
+                            || symbol.name().endsWith("." + className)) {
+                        Location location = createLocation(symbol);
+                        if (location != null) {
+                            locations.add(location);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error searching workspace index for class: {}", className, e);
+            }
+        }
 
         return locations;
     }
 
     private List<Location> findClassDefinition(
-            ClassExpression classExpr,
-            String currentUri,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            ClassExpression classExpr, String currentUri, WorkspaceIndexService indexService) {
         return findClassDefinition(classExpr.getType(), currentUri, indexService);
     }
 
@@ -436,19 +443,18 @@ public class DefinitionHandler {
         }
     }
 
-    // TODO: Enable when circular dependency is resolved
-    // private @Nullable Location createLocation(SymbolInfo symbol) {
-    //     Path location = symbol.location();
-    //     if (location == null) {
-    //         return null;
-    //     }
-    //
-    //     String uri = location.toUri().toString();
-    //     Range range = new Range(
-    //             new Position(symbol.line() - 1, symbol.column() - 1),
-    //             new Position(symbol.line() - 1, symbol.column() - 1)
-    //     );
-    //
-    //     return new Location(uri, range);
-    // }
+    private @Nullable Location createLocation(SymbolInfo symbol) {
+        Path location = symbol.location();
+        if (location == null) {
+            return null;
+        }
+
+        String uri = location.toUri().toString();
+        Range range =
+                new Range(
+                        new Position(symbol.line() - 1, symbol.column() - 1),
+                        new Position(symbol.line() - 1, symbol.column() - 1));
+
+        return new Location(uri, range);
+    }
 }

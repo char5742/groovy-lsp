@@ -9,7 +9,7 @@ import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
-import com.groovy.lsp.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,6 +131,7 @@ public class ServiceRouter implements IServiceRouter {
      * @return the workspace index service
      * @throws IllegalStateException if the service is not available
      */
+    @Override
     public WorkspaceIndexService getWorkspaceIndexService() {
         ensureServiceAvailable(workspaceIndexService, "WorkspaceIndexService");
         return workspaceIndexService;
