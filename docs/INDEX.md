@@ -34,6 +34,11 @@
   - テストフレームワークとツール
   - カバレッジ目標とベストプラクティス
 
+- **[DEFINITION_REFERENCES.md](DEFINITION_REFERENCES.md)** - 定義ジャンプ・参照検索機能
+  - サポートされる要素と使用方法
+  - 現在の制限事項とパフォーマンス
+  - 技術的詳細とトラブルシューティング
+
 #### 改善・拡張
 
 - **[IMPROVEMENTS.md](IMPROVEMENTS.md)** - 実施済み改善内容

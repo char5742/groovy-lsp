@@ -3,8 +3,10 @@ package com.groovy.lsp.protocol.internal.impl;
 import com.google.inject.Inject;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.protocol.internal.handler.DefinitionHandler;
 import com.groovy.lsp.protocol.internal.handler.DiagnosticsHandler;
 import com.groovy.lsp.protocol.internal.handler.HoverHandler;
+import com.groovy.lsp.protocol.internal.handler.ReferencesHandler;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -247,15 +249,37 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>>
             definition(DefinitionParams params) {
         logger.debug("Definition requested at: {}", params.getPosition());
-        // TODO: Implement go to definition
-        return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+
+        if (serviceRouter == null) {
+            logger.error("ServiceRouter is not initialized");
+            return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+        }
+
+        if (documentManager == null) {
+            logger.error("DocumentManager is not initialized");
+            return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+        }
+
+        DefinitionHandler handler = new DefinitionHandler(serviceRouter, documentManager);
+        return handler.handleDefinition(params);
     }
 
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
         logger.debug("References requested at: {}", params.getPosition());
-        // TODO: Implement find references
-        return CompletableFuture.completedFuture(Collections.emptyList());
+
+        if (serviceRouter == null) {
+            logger.error("ServiceRouter is not initialized");
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        if (documentManager == null) {
+            logger.error("DocumentManager is not initialized");
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        ReferencesHandler handler = new ReferencesHandler(serviceRouter, documentManager);
+        return handler.handleReferences(params);
     }
 
     @Override
