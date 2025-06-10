@@ -55,7 +55,7 @@ spotless {
         targetExclude 'node_modules/**', 'out/**'
         prettier()
     }
-    
+
     typescript {
         target 'src/**/*.ts'
         targetExclude 'node_modules/**', 'out/**'
