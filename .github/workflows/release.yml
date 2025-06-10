@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-jar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build Language Server JAR
+        run: ./gradlew :packages:server-launcher:shadowJar
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: groovy-language-server-jar
+          path: packages/server-launcher/build/libs/*-all.jar
+
+  build-vscode-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: packages/vscode-extension
+        run: npm ci
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Package Extension
+        working-directory: packages/vscode-extension
+        run: vsce package
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-vsix
+          path: packages/vscode-extension/*.vsix
+
+  release:
+    needs: [build-jar, build-vscode-extension]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: groovy-language-server-jar
+          path: ./artifacts
+
+      - name: Download VSIX artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-extension-vsix
+          path: ./artifacts
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Rename artifacts
+        run: |
+          mv ./artifacts/*-all.jar ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar
+          mv ./artifacts/*.vsix ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.vsix
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Groovy Language Server v${{ steps.get_version.outputs.VERSION }}
+
+            ### Downloads
+            - **VS Code Extension**: `groovy-language-server-${{ steps.get_version.outputs.VERSION }}.vsix`
+            - **Language Server JAR**: `groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar`
+
+            ### Installation
+
+            #### VS Code Extension
+            1. Download the VSIX file
+            2. Install using: `code --install-extension groovy-language-server-${{ steps.get_version.outputs.VERSION }}.vsix`
+
+            #### Language Server JAR
+            The JAR file will be automatically downloaded when you first use the extension.
+            If you need to download it manually, place it in:
+            - Windows: `%APPDATA%\Code\User\globalStorage\<publisher>.groovy-language-server\`
+            - macOS/Linux: `~/.config/Code/User/globalStorage/<publisher>.groovy-language-server/`
+
+            ### Changes
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/v${{ steps.get_version.outputs.VERSION }}/CHANGELOG.md) for details.
+          files: |
+            ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar
+            ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.vsix
+          draft: false
+          prerelease: false
