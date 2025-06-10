@@ -121,7 +121,7 @@ public class JsonAssertions extends AbstractAssert<JsonAssertions, String> {
      */
     @Nullable
     private JsonElement getJsonElement(@NonNull String path) {
-        String[] parts = path.split("\\.");
+        String[] parts = path.split("\\.", -1);
         JsonElement current = json;
 
         for (String part : parts) {

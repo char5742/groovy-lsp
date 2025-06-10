@@ -24,7 +24,6 @@ import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.FormattingOptions;
-import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.Position;
@@ -133,7 +132,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         params.setTextDocument(textDocument("file://" + workspaceRoot + "/Hover.groovy"));
         params.setPosition(new Position(1, 11)); // On "String name"
 
-        Hover hover = server.getTextDocumentService().hover(params).get();
+        server.getTextDocumentService().hover(params).get();
         // Mock implementation returns null, but this tests the protocol handling
         // Real implementation would return hover information
     }
@@ -284,9 +283,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
 
         @Override
         public void connect(LanguageClient client) {
-            if (textDocumentService instanceof LanguageClientAware languageClientAware) {
-                languageClientAware.connect(client);
-            }
+            textDocumentService.connect(client);
             if (workspaceService instanceof LanguageClientAware languageClientAware) {
                 languageClientAware.connect(client);
             }

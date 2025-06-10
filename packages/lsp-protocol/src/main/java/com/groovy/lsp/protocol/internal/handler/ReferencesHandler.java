@@ -4,10 +4,15 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.util.LocationUtils;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
@@ -23,7 +28,9 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,9 +74,8 @@ public class ReferencesHandler {
 
                         // Get services
                         ASTService astService = serviceRouter.getAstService();
-                        // TODO: Get WorkspaceIndexService when circular dependency is resolved
-                        // WorkspaceIndexService indexService =
-                        // serviceRouter.getWorkspaceIndexService();
+                        WorkspaceIndexService indexService =
+                                serviceRouter.getWorkspaceIndexService();
 
                         // Get document content
                         String sourceCode = documentManager.getDocumentContent(uri);
@@ -102,7 +108,8 @@ public class ReferencesHandler {
 
                         // Find references
                         List<Location> references =
-                                findReferences(node, moduleNode, uri, includeDeclaration, null);
+                                findReferences(
+                                        node, moduleNode, uri, includeDeclaration, indexService);
 
                         return references;
 
@@ -123,7 +130,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         List<Location> references = new ArrayList<>();
 
@@ -197,7 +204,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String methodName = method.getName();
         return findMethodReferencesByName(
@@ -209,7 +216,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String methodName = methodCall.getMethodAsString();
         if (methodName == null) {
@@ -225,7 +232,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         List<Location> references = new ArrayList<>();
 
@@ -234,9 +241,31 @@ public class ReferencesHandler {
                 new MethodReferenceVisitor(methodName, currentUri, references, includeDeclaration);
         moduleNode.getClasses().forEach(classNode -> classNode.visitContents(visitor));
 
-        // TODO: Search in workspace using indexService
-        // This would require an enhanced workspace index that tracks references
-        // For now, we only search in the current file
+        // Search in workspace using indexService
+        if (indexService != null) {
+            try {
+                List<SymbolInfo> symbols =
+                        indexService
+                                .searchSymbols(methodName)
+                                .get()
+                                .filter(symbol -> symbol.kind() == SymbolKind.METHOD)
+                                .collect(Collectors.toList());
+
+                for (SymbolInfo symbol : symbols) {
+                    Location location = createLocation(symbol);
+                    if (location != null) {
+                        references.add(location);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn(
+                        "Error searching workspace index for method references: {}. Falling back to"
+                                + " local search only.",
+                        methodName,
+                        e);
+                // フォールバック処理：ワークスペース検索が失敗した場合は、ローカル検索結果のみを使用
+            }
+        }
 
         return references;
     }
@@ -246,7 +275,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String className = classNode.getName();
         List<Location> references = new ArrayList<>();
@@ -256,7 +285,48 @@ public class ReferencesHandler {
                 new ClassReferenceVisitor(className, currentUri, references);
         moduleNode.getClasses().forEach(cn -> cn.visitContents(visitor));
 
-        // TODO: Search in workspace
+        // Search in workspace
+        if (indexService != null) {
+            try {
+                List<SymbolInfo> symbols =
+                        indexService
+                                .searchSymbols(className)
+                                .get()
+                                .filter(
+                                        symbol ->
+                                                symbol.kind() == SymbolKind.CLASS
+                                                        || symbol.kind() == SymbolKind.INTERFACE)
+                                .collect(Collectors.toList());
+
+                for (SymbolInfo symbol : symbols) {
+                    // Match fully qualified name or simple name with strict matching
+                    String symbolName = symbol.name();
+                    boolean isExactMatch = symbolName.equals(className);
+                    boolean isQualifiedMatch = false;
+
+                    if (!isExactMatch && symbolName.contains(".")) {
+                        // Ensure we match the exact class name after the last dot
+                        int lastDotIndex = symbolName.lastIndexOf('.');
+                        String simpleSymbolName = symbolName.substring(lastDotIndex + 1);
+                        isQualifiedMatch = simpleSymbolName.equals(className);
+                    }
+
+                    if (isExactMatch || isQualifiedMatch) {
+                        Location location = createLocation(symbol);
+                        if (location != null) {
+                            references.add(location);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn(
+                        "Error searching workspace index for class references: {}. Falling back to"
+                                + " local search only.",
+                        className,
+                        e);
+                // フォールバック処理：ワークスペース検索が失敗した場合は、ローカル検索結果のみを使用
+            }
+        }
 
         return references;
     }
@@ -266,7 +336,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         return findPropertyOrFieldReferences(
                 field.getName(), moduleNode, currentUri, includeDeclaration, indexService);
@@ -277,7 +347,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         return findPropertyOrFieldReferences(
                 property.getName(), moduleNode, currentUri, includeDeclaration, indexService);
@@ -288,7 +358,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         List<Location> references = new ArrayList<>();
 
@@ -297,7 +367,34 @@ public class ReferencesHandler {
                 new PropertyReferenceVisitor(name, currentUri, references);
         moduleNode.getClasses().forEach(classNode -> classNode.visitContents(visitor));
 
-        // TODO: Search in workspace
+        // Search in workspace
+        if (indexService != null) {
+            try {
+                List<SymbolInfo> symbols =
+                        indexService
+                                .searchSymbols(name)
+                                .get()
+                                .filter(
+                                        symbol ->
+                                                symbol.kind() == SymbolKind.FIELD
+                                                        || symbol.kind() == SymbolKind.PROPERTY)
+                                .collect(Collectors.toList());
+
+                for (SymbolInfo symbol : symbols) {
+                    Location location = createLocation(symbol);
+                    if (location != null) {
+                        references.add(location);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn(
+                        "Error searching workspace index for property/field references: {}. Falling"
+                                + " back to local search only.",
+                        name,
+                        e);
+                // フォールバック処理：ワークスペース検索が失敗した場合は、ローカル検索結果のみを使用
+            }
+        }
 
         return references;
     }
@@ -452,5 +549,30 @@ public class ReferencesHandler {
         protected SourceUnit getSourceUnit() {
             return null;
         }
+    }
+
+    private @Nullable Location createLocation(SymbolInfo symbol) {
+        Path location = symbol.location();
+        if (location == null) {
+            logger.debug(
+                    "Symbol location is null for symbol: {} (kind: {})",
+                    symbol.name(),
+                    symbol.kind());
+            return null;
+        }
+
+        String uri = location.toUri().toString();
+        Range range =
+                new Range(
+                        new Position(symbol.line() - 1, symbol.column() - 1),
+                        new Position(symbol.line() - 1, symbol.column() - 1));
+
+        logger.debug(
+                "Created location for symbol: {} at {}:{}:{}",
+                symbol.name(),
+                uri,
+                symbol.line(),
+                symbol.column());
+        return new Location(uri, range);
     }
 }
