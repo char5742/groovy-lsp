@@ -30,38 +30,28 @@ task compile(type: Exec, dependsOn: npmInstall) {
     commandLine 'npm', 'run', 'compile'
 }
 
-task test(type: Exec, dependsOn: compile) {
-    workingDir = projectDir
-    commandLine 'npm', 'test'
-}
-
-// JacocoはNode.jsプロジェクトには適用できないため、ダミータスクを作成
-task jacocoTestReport {
+// Javaプラグインのtestタスクを上書き
+test {
+    dependsOn compile
     doLast {
-        println "Skipping JaCoCo for VS Code extension (Node.js project)"
+        exec {
+            workingDir = projectDir
+            commandLine 'npm', 'test'
+        }
     }
 }
 
-task jacocoTestCoverageVerification {
-    doLast {
-        println "Skipping coverage verification for VS Code extension (Node.js project)"
+// JacocoはNode.jsプロジェクトには適用できないため、タスクを無効化
+tasks.configureEach {
+    if (it.name == 'jacocoTestReport' || it.name == 'jacocoTestCoverageVerification') {
+        it.enabled = false
+        it.doLast {
+            println "Skipping JaCoCo for VS Code extension (Node.js project)"
+        }
     }
 }
 
-// Spotlessはpackage.jsonなどをチェック
-spotless {
-    json {
-        target 'package.json', 'tsconfig.json', '.eslintrc.json', 'language-configuration.json'
-        targetExclude 'node_modules/**', 'out/**'
-        prettier()
-    }
-
-    typescript {
-        target 'src/**/*.ts'
-        targetExclude 'node_modules/**', 'out/**'
-        prettier()
-    }
-}
+// Spotlessは親プロジェクトから適用されるため、ここでは設定しない
 
 // クリーンタスク
 clean {

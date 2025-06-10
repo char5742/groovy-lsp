@@ -5,7 +5,7 @@ spotless {
     // Javaファイルのフォーマット設定
     java {
         target '**/*.java'
-        targetExclude '**/build/**'
+        targetExclude '**/build/**', '**/node_modules/**'
 
         // Google Java Formatを使用
         googleJavaFormat('1.27.0').aosp().reflowLongStrings().skipJavadocFormatting()
@@ -29,7 +29,7 @@ spotless {
     // Groovyファイルのフォーマット設定
     groovy {
         target '**/*.groovy'
-        targetExclude '**/build/**'
+        targetExclude '**/build/**', '**/node_modules/**'
 
         // インポート順序
         importOrder()
@@ -55,7 +55,7 @@ spotless {
     // その他のファイル（JSON, XML, YAMLなど）
     format 'misc', {
         target '**/*.json', '**/*.xml', '**/*.yaml', '**/*.yml', '**/*.md'
-        targetExclude '**/build/**'
+        targetExclude '**/build/**', '**/node_modules/**', '**/.vscode-test/**'
 
         // 行末のホワイトスペースを削除
         trimTrailingWhitespace()
