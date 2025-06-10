@@ -8,8 +8,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -19,7 +21,7 @@ import org.objectweb.asm.Opcodes;
 
 class JarFileIndexerTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     private JarFileIndexer jarFileIndexer;
 
@@ -31,7 +33,9 @@ class JarFileIndexerTest {
     @Test
     void testIndexJar_EmptyJar() throws IOException {
         // Create empty JAR
-        Path jarFile = tempDir.resolve("empty.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("empty.jar");
         try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(jarFile.toFile()))) {
             // Empty JAR
         }
@@ -44,7 +48,9 @@ class JarFileIndexerTest {
     @Test
     void testIndexJar_WithClasses() throws IOException {
         // Create JAR with sample classes
-        Path jarFile = tempDir.resolve("test.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("test.jar");
         createTestJar(jarFile);
 
         List<SymbolInfo> symbols = jarFileIndexer.indexJar(jarFile);
@@ -63,7 +69,11 @@ class JarFileIndexerTest {
                         .findFirst()
                         .orElse(null);
         assertThat(classSymbol).isNotNull();
-        assertThat(classSymbol.location().toString()).contains("test.jar");
+        assertThat(
+                        Objects.requireNonNull(classSymbol, "classSymbol should not be null")
+                                .location()
+                                .toString())
+                .contains("test.jar");
 
         // Verify field symbol
         SymbolInfo fieldSymbol =
@@ -99,7 +109,9 @@ class JarFileIndexerTest {
     @Test
     void testIndexJar_WithInterface() throws IOException {
         // Create JAR with interface
-        Path jarFile = tempDir.resolve("interface.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("interface.jar");
         createJarWithInterface(jarFile);
 
         List<SymbolInfo> symbols = jarFileIndexer.indexJar(jarFile);
@@ -118,7 +130,9 @@ class JarFileIndexerTest {
 
     @Test
     void testIndexJar_NonExistentFile() {
-        Path nonExistentJar = tempDir.resolve("nonexistent.jar");
+        Path nonExistentJar =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("nonexistent.jar");
 
         List<SymbolInfo> symbols = jarFileIndexer.indexJar(nonExistentJar);
 
@@ -128,13 +142,17 @@ class JarFileIndexerTest {
     @Test
     void testIsRelevantJar() throws IOException {
         // Create JAR with classes
-        Path jarFile = tempDir.resolve("relevant.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("relevant.jar");
         createTestJar(jarFile);
 
         assertThat(jarFileIndexer.isRelevantJar(jarFile)).isTrue();
 
         // Test non-existent JAR
-        Path nonExistentJar = tempDir.resolve("nonexistent.jar");
+        Path nonExistentJar =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("nonexistent.jar");
         assertThat(jarFileIndexer.isRelevantJar(nonExistentJar)).isFalse();
     }
 
@@ -223,7 +241,9 @@ class JarFileIndexerTest {
     @Test
     void testIndexJar_WithTooManyEntries() throws IOException {
         // Create JAR with more than MAX_ENTRIES
-        Path jarFile = tempDir.resolve("too-many-entries.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("too-many-entries.jar");
 
         try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(jarFile.toFile()))) {
             byte[] classBytes = createTestClass();
@@ -247,7 +267,9 @@ class JarFileIndexerTest {
 
     @Test
     void testIndexJar_WithOversizedEntry() throws IOException {
-        Path jarFile = tempDir.resolve("oversized-entry.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("oversized-entry.jar");
 
         try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(jarFile.toFile()))) {
             // Add normal entry

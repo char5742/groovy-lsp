@@ -4,9 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.server.launcher.util.ExecutorShutdownHelper.ExecutorWithName;
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,9 +46,14 @@ class ExecutorShutdownHelperTest {
     }
 
     @Test
-    void shutdownExecutor_shouldHandleNullExecutor() {
+    void shutdownExecutor_shouldHandleNullExecutor() throws Exception {
+        // Use reflection to call the method with null parameter
+        Method method =
+                ExecutorShutdownHelper.class.getMethod(
+                        "shutdownExecutor", ExecutorService.class, String.class);
+
         // when - should not throw
-        ExecutorShutdownHelper.shutdownExecutor(null, "test-executor");
+        method.invoke(null, null, "test-executor");
 
         // then - method completes without error
         assertThat(true).isTrue(); // Dummy assertion to show test passed
@@ -58,16 +68,17 @@ class ExecutorShutdownHelperTest {
         CountDownLatch taskCompleted = new CountDownLatch(1);
 
         // Submit a task that signals when it starts and completes
-        executor.submit(
-                () -> {
-                    taskStarted.countDown();
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    taskCompleted.countDown();
-                });
+        var unused =
+                executor.submit(
+                        () -> {
+                            taskStarted.countDown();
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            taskCompleted.countDown();
+                        });
 
         // Wait for task to start
         taskStarted.await();
@@ -121,9 +132,14 @@ class ExecutorShutdownHelperTest {
     }
 
     @Test
-    void shutdownMultipleExecutors_shouldHandleNullArray() {
+    void shutdownMultipleExecutors_shouldHandleNullArray() throws Exception {
+        // Use reflection to call the method with null parameter
+        Method method =
+                ExecutorShutdownHelper.class.getMethod(
+                        "shutdownMultipleExecutors", ExecutorWithName[].class);
+
         // when - should not throw
-        ExecutorShutdownHelper.shutdownMultipleExecutors((ExecutorWithName[]) null);
+        method.invoke(null, (Object) null);
 
         // then - method completes without error
         assertThat(true).isTrue(); // Dummy assertion to show test passed
@@ -160,7 +176,7 @@ class ExecutorShutdownHelperTest {
     }
 
     @Test
-    void shutdownMultipleExecutors_shouldHandleNullExecutorInArray() throws InterruptedException {
+    void shutdownMultipleExecutors_shouldHandleNullExecutorInArray() throws Exception {
         // given
         ExecutorService executor = mock(ExecutorService.class);
         when(executor.awaitTermination(anyLong(), any(TimeUnit.class))).thenReturn(true);
@@ -168,8 +184,11 @@ class ExecutorShutdownHelperTest {
         ExecutorWithName exec1 = new ExecutorWithName(executor, "executor-1");
         ExecutorWithName exec2 = null; // null entry
 
-        // when
-        ExecutorShutdownHelper.shutdownMultipleExecutors(exec1, exec2);
+        // when - Use reflection to pass null in array
+        Method method =
+                ExecutorShutdownHelper.class.getMethod(
+                        "shutdownMultipleExecutors", ExecutorWithName[].class);
+        method.invoke(null, (Object) new ExecutorWithName[] {exec1, exec2});
 
         // then
         verify(executor).shutdown();
@@ -177,16 +196,23 @@ class ExecutorShutdownHelperTest {
     }
 
     @Test
-    void shutdownMultipleExecutors_shouldHandleNullExecutorService() throws InterruptedException {
+    void shutdownMultipleExecutors_shouldHandleNullExecutorService() throws Exception {
         // given
         ExecutorService executor = mock(ExecutorService.class);
         when(executor.awaitTermination(anyLong(), any(TimeUnit.class))).thenReturn(true);
 
         ExecutorWithName exec1 = new ExecutorWithName(executor, "executor-1");
-        ExecutorWithName exec2 = new ExecutorWithName(null, "executor-2"); // null executor
 
-        // when
-        ExecutorShutdownHelper.shutdownMultipleExecutors(exec1, exec2);
+        // when - Use reflection to create ExecutorWithName with null executor
+        Method method =
+                ExecutorShutdownHelper.class.getMethod(
+                        "shutdownMultipleExecutors", ExecutorWithName[].class);
+
+        // Create ExecutorWithName with null using reflection to bypass NullAway check
+        java.lang.reflect.Constructor<ExecutorWithName> constructor =
+                ExecutorWithName.class.getConstructor(ExecutorService.class, String.class);
+        ExecutorWithName exec2 = constructor.newInstance(null, "executor-2");
+        method.invoke(null, (Object) new ExecutorWithName[] {exec1, exec2});
 
         // then
         verify(executor).shutdown();
@@ -287,16 +313,17 @@ class ExecutorShutdownHelperTest {
         CountDownLatch taskCompleted = new CountDownLatch(1);
 
         // Submit a quick task
-        executor.submit(
-                () -> {
-                    taskStarted.countDown();
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    taskCompleted.countDown();
-                });
+        var unused =
+                executor.submit(
+                        () -> {
+                            taskStarted.countDown();
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            taskCompleted.countDown();
+                        });
 
         // Wait for task to start
         taskStarted.await();

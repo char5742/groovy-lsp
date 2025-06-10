@@ -1,13 +1,23 @@
 package com.groovy.lsp.workspace.dependency.cache;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,13 +39,10 @@ class LRUDependencyCacheAdditionalTest {
     @Test
     void testEvictionWhenCacheSizeExceeded() {
         // Force eviction by adding more than MAX_CACHE_SIZE (100) entries
-        List<URLClassLoader> loaders = new ArrayList<>();
-
         // Add 101 different classloaders
         for (int i = 0; i < 101; i++) {
             Set<Path> deps = Set.of(Paths.get("lib" + i + ".jar"));
-            URLClassLoader loader = cache.getOrCreateClassLoader(deps);
-            loaders.add(loader);
+            cache.getOrCreateClassLoader(deps);
         }
 
         // The cache should have evicted the oldest entry
@@ -47,10 +54,7 @@ class LRUDependencyCacheAdditionalTest {
     void testWeakReferenceCollection() throws InterruptedException {
         // Create a classloader that can be garbage collected
         Set<Path> deps = Set.of(Paths.get("gctest.jar"));
-        URLClassLoader loader = cache.getOrCreateClassLoader(deps);
-
-        // Clear strong reference
-        loader = null;
+        cache.getOrCreateClassLoader(deps);
 
         // Force garbage collection
         System.gc();
@@ -58,7 +62,7 @@ class LRUDependencyCacheAdditionalTest {
         System.gc();
 
         // Access the same dependencies again
-        URLClassLoader newLoader = cache.getOrCreateClassLoader(deps);
+        cache.getOrCreateClassLoader(deps);
 
         // This should be a cache miss since the weak reference was collected
         var stats = cache.getStatistics();
@@ -387,7 +391,7 @@ class LRUDependencyCacheAdditionalTest {
     void testInvalidateAllWithNullClassLoader() throws Exception {
         // Add a classloader and then make it null via weak reference
         Set<Path> deps = Set.of(Paths.get("nulltest.jar"));
-        URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+        cache.getOrCreateClassLoader(deps);
 
         // Access the internal cache to manipulate weak reference
         Field classLoaderCacheField = LRUDependencyCache.class.getDeclaredField("classLoaderCache");
@@ -396,7 +400,6 @@ class LRUDependencyCacheAdditionalTest {
                 (Map<String, WeakReference<URLClassLoader>>) classLoaderCacheField.get(cache);
 
         // Replace with a weak reference that returns null
-        String key = cache.getOrCreateClassLoader(deps).toString(); // Get the key
         classLoaderCache.put("test-null", new WeakReference<>(null));
 
         // Should handle null classloader gracefully

@@ -65,9 +65,21 @@ class SymbolInfoTest {
     }
 
     @Test
-    void testSymbolInfoValidation_NullName() {
+    void testSymbolInfoValidation_NullName() throws Exception {
+        // Use reflection to bypass NullAway for null parameter testing
         Path location = Paths.get("/path/to/MyClass.groovy");
-        assertThatThrownBy(() -> new SymbolInfo(null, SymbolKind.CLASS, location, 10, 5))
+        java.lang.reflect.Constructor<SymbolInfo> constructor =
+                SymbolInfo.class.getDeclaredConstructor(
+                        String.class, SymbolKind.class, Path.class, int.class, int.class);
+
+        assertThatThrownBy(
+                        () -> {
+                            try {
+                                constructor.newInstance(null, SymbolKind.CLASS, location, 10, 5);
+                            } catch (java.lang.reflect.InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        })
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Symbol name cannot be null or blank");
     }
@@ -81,16 +93,40 @@ class SymbolInfoTest {
     }
 
     @Test
-    void testSymbolInfoValidation_NullKind() {
+    void testSymbolInfoValidation_NullKind() throws Exception {
+        // Use reflection to bypass NullAway for null parameter testing
         Path location = Paths.get("/path/to/MyClass.groovy");
-        assertThatThrownBy(() -> new SymbolInfo("MyClass", null, location, 10, 5))
+        java.lang.reflect.Constructor<SymbolInfo> constructor =
+                SymbolInfo.class.getDeclaredConstructor(
+                        String.class, SymbolKind.class, Path.class, int.class, int.class);
+
+        assertThatThrownBy(
+                        () -> {
+                            try {
+                                constructor.newInstance("MyClass", null, location, 10, 5);
+                            } catch (java.lang.reflect.InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        })
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Symbol kind cannot be null");
     }
 
     @Test
-    void testSymbolInfoValidation_NullLocation() {
-        assertThatThrownBy(() -> new SymbolInfo("MyClass", SymbolKind.CLASS, null, 10, 5))
+    void testSymbolInfoValidation_NullLocation() throws Exception {
+        // Use reflection to bypass NullAway for null parameter testing
+        java.lang.reflect.Constructor<SymbolInfo> constructor =
+                SymbolInfo.class.getDeclaredConstructor(
+                        String.class, SymbolKind.class, Path.class, int.class, int.class);
+
+        assertThatThrownBy(
+                        () -> {
+                            try {
+                                constructor.newInstance("MyClass", SymbolKind.CLASS, null, 10, 5);
+                            } catch (java.lang.reflect.InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        })
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Symbol location cannot be null");
     }

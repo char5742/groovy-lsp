@@ -16,6 +16,9 @@ dependencies {
     // LSP4J dependencies
     implementation libs.bundles.lsp4j
 
+    // API Guardian (required by LSP4J)
+    compileOnly libs.apiguardian.api
+
     // Guice for dependency injection
     implementation libs.guice
 

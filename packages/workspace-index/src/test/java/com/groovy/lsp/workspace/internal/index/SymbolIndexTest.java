@@ -8,7 +8,9 @@ import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,14 +21,16 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class SymbolIndexTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     private SymbolIndex symbolIndex;
     private Path indexPath;
 
     @BeforeEach
     void setUp() {
-        indexPath = tempDir.resolve("test-index");
+        indexPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("test-index");
         symbolIndex = new SymbolIndex(indexPath);
         symbolIndex.initialize();
     }
@@ -49,7 +53,10 @@ class SymbolIndexTest {
     void checkInitialized_shouldThrowExceptionWhenNotInitialized() throws Exception {
         // given
         symbolIndex.close();
-        SymbolIndex uninitializedIndex = new SymbolIndex(tempDir.resolve("uninit"));
+        SymbolIndex uninitializedIndex =
+                new SymbolIndex(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("uninit"));
 
         // when/then
         assertThatThrownBy(() -> uninitializedIndex.addFile(Path.of("test.groovy")))
@@ -288,7 +295,9 @@ class SymbolIndexTest {
 
         // given
         long customMapSize = 2L * 1024L * 1024L * 1024L; // 2GB
-        Path customIndexPath = tempDir.resolve("custom-index");
+        Path customIndexPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("custom-index");
 
         // when
         SymbolIndex customIndex = new SymbolIndex(customIndexPath, customMapSize);

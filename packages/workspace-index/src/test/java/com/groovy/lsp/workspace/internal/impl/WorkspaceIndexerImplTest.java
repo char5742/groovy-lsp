@@ -11,10 +11,12 @@ import com.groovy.lsp.workspace.internal.index.SymbolIndex;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,13 +24,15 @@ import org.junit.jupiter.api.io.TempDir;
 
 class WorkspaceIndexerImplTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
     private WorkspaceIndexerImpl indexer;
     private EventBus eventBus;
 
     @BeforeEach
     void setUp() {
-        indexer = new WorkspaceIndexerImpl(tempDir);
+        indexer =
+                new WorkspaceIndexerImpl(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
         eventBus = EventBusFactory.getInstance();
     }
 
@@ -40,7 +44,9 @@ class WorkspaceIndexerImplTest {
     @Test
     void initialize_shouldIndexGroovyFiles() throws Exception {
         // Given
-        Path srcDir = tempDir.resolve("src");
+        Path srcDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src");
         Files.createDirectories(srcDir);
         Files.writeString(srcDir.resolve("Test.groovy"), "class Test {}");
         Files.writeString(srcDir.resolve("Example.groovy"), "class Example {}");
@@ -60,17 +66,24 @@ class WorkspaceIndexerImplTest {
         eventLatch.await(1, TimeUnit.SECONDS);
 
         // Then
-        assertThat(Files.exists(tempDir.resolve(".groovy-lsp/index"))).isTrue();
+        assertThat(
+                        Files.exists(
+                                Objects.requireNonNull(
+                                                tempDir, "tempDir should be initialized by JUnit")
+                                        .resolve(".groovy-lsp/index")))
+                .isTrue();
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(2);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
         assertThat(event.getWorkspacePath()).isEqualTo(tempDir);
     }
 
     @Test
     void initialize_shouldIndexJavaFiles() throws Exception {
         // Given
-        Path srcDir = tempDir.resolve("src");
+        Path srcDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src");
         Files.createDirectories(srcDir);
         Files.writeString(srcDir.resolve("Test.java"), "public class Test {}");
 
@@ -83,14 +96,25 @@ class WorkspaceIndexerImplTest {
         eventLatch.await(1, TimeUnit.SECONDS);
 
         // Then
-        assertThat(Files.exists(tempDir.resolve(".groovy-lsp/index"))).isTrue();
+        assertThat(
+                        Files.exists(
+                                Objects.requireNonNull(
+                                                tempDir, "tempDir should be initialized by JUnit")
+                                        .resolve(".groovy-lsp/index")))
+                .isTrue();
     }
 
     @Test
     void initialize_shouldIndexGradleFiles() throws Exception {
         // Given
-        Files.writeString(tempDir.resolve("build.gradle"), "apply plugin: 'java'");
-        Files.writeString(tempDir.resolve("settings.gradle.kts"), "rootProject.name = 'test'");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"),
+                "apply plugin: 'java'");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle.kts"),
+                "rootProject.name = 'test'");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
         AtomicReference<WorkspaceIndexedEvent> capturedEvent = new AtomicReference<>();
@@ -109,7 +133,7 @@ class WorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(2);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
     }
 
     @Test
@@ -133,16 +157,24 @@ class WorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(0);
-        assertThat(event.getTotalSymbols()).isEqualTo(0);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(0);
+        assertThat(Objects.requireNonNull(event).getTotalSymbols()).isEqualTo(0);
     }
 
     @Test
     void initialize_shouldSkipNonIndexableFiles() throws Exception {
         // Given
-        Files.writeString(tempDir.resolve("readme.txt"), "This is a text file");
-        Files.writeString(tempDir.resolve("image.png"), "fake image data");
-        Files.createDirectories(tempDir.resolve("empty-dir"));
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("readme.txt"),
+                "This is a text file");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("image.png"),
+                "fake image data");
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("empty-dir"));
 
         CountDownLatch eventLatch = new CountDownLatch(1);
         AtomicReference<WorkspaceIndexedEvent> capturedEvent = new AtomicReference<>();
@@ -161,14 +193,17 @@ class WorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(0); // No indexable files
+        assertThat(Objects.requireNonNull(event).getTotalFiles())
+                .isEqualTo(0); // No indexable files
     }
 
     @Test
     void updateFile_shouldIndexNewFile() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
-        Path newFile = tempDir.resolve("New.groovy");
+        Path newFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("New.groovy");
         Files.writeString(newFile, "class New {}");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
@@ -188,14 +223,16 @@ class WorkspaceIndexerImplTest {
         // Then
         FileIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getFilePath()).isEqualTo(newFile);
+        assertThat(Objects.requireNonNull(event).getFilePath()).isEqualTo(newFile);
         assertThat(event.isSuccess()).isTrue();
     }
 
     @Test
     void updateFile_shouldRemoveDeletedFile() throws Exception {
         // Given
-        Path file = tempDir.resolve("ToDelete.groovy");
+        Path file =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("ToDelete.groovy");
         Files.writeString(file, "class ToDelete {}");
         indexer.initialize().get(5, TimeUnit.SECONDS);
 
@@ -257,7 +294,9 @@ class WorkspaceIndexerImplTest {
     @Test
     void initialize_shouldHandleIOException() throws Exception {
         // Given - Create a file where the index directory should be
-        Path indexPath = tempDir.resolve(".groovy-lsp/index");
+        Path indexPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve(".groovy-lsp/index");
         Files.createDirectories(indexPath.getParent());
         Files.writeString(indexPath, "This is a file, not a directory");
 
@@ -272,7 +311,9 @@ class WorkspaceIndexerImplTest {
     @Test
     void shouldHandleNestedDirectoryStructure() throws Exception {
         // Given
-        Path deepPath = tempDir.resolve("src/main/groovy/com/example/deep");
+        Path deepPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/main/groovy/com/example/deep");
         Files.createDirectories(deepPath);
         Files.writeString(deepPath.resolve("DeepClass.groovy"), "class DeepClass {}");
         Files.writeString(deepPath.resolve("DeepInterface.java"), "interface DeepInterface {}");
@@ -294,17 +335,21 @@ class WorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(2);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
     }
 
     @Test
     void shouldHandleSymbolicLinks() throws Exception {
         // Given
-        Path targetDir = tempDir.resolve("target");
+        Path targetDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("target");
         Files.createDirectories(targetDir);
         Files.writeString(targetDir.resolve("Target.groovy"), "class Target {}");
 
-        Path linkDir = tempDir.resolve("link");
+        Path linkDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("link");
         try {
             Files.createSymbolicLink(linkDir, targetDir);
         } catch (IOException e) {
@@ -321,6 +366,11 @@ class WorkspaceIndexerImplTest {
         eventLatch.await(1, TimeUnit.SECONDS);
 
         // Then - should index files from both paths
-        assertThat(Files.exists(tempDir.resolve(".groovy-lsp/index"))).isTrue();
+        assertThat(
+                        Files.exists(
+                                Objects.requireNonNull(
+                                                tempDir, "tempDir should be initialized by JUnit")
+                                        .resolve(".groovy-lsp/index")))
+                .isTrue();
     }
 }

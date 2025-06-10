@@ -153,13 +153,16 @@ class FileIndexedEventTest {
     }
 
     @Test
-    void failureConstructor_shouldHandleNullErrorMessage() {
+    void failureConstructor_shouldHandleNullErrorMessage() throws Exception {
         // Given
         Path filePath = Paths.get("/workspace/Null.groovy");
-        String nullError = null;
+
+        // Use reflection to bypass NullAway for null parameter testing
+        java.lang.reflect.Constructor<FileIndexedEvent> constructor =
+                FileIndexedEvent.class.getDeclaredConstructor(Path.class, String.class);
 
         // When
-        FileIndexedEvent event = new FileIndexedEvent(filePath, nullError);
+        FileIndexedEvent event = constructor.newInstance(filePath, null);
 
         // Then
         assertThat(event.getErrorMessage()).isNull();

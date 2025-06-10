@@ -2,14 +2,16 @@ package com.groovy.lsp.workspace.dependency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.gradle.tooling.BuildLauncher;
@@ -24,7 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class GradleDependencyResolverAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir Path tempDir = Path.of("");
     private GradleDependencyResolver resolver;
 
     @BeforeEach
@@ -225,18 +227,11 @@ class GradleDependencyResolverAdditionalTest {
         // This test simulates the case where dependencies are resolved but files don't exist
         // We'll use reflection to test the filtering logic
 
-        // Given - Create a list with non-existent paths
-        List<Path> mockDependencies = new ArrayList<>();
-        mockDependencies.add(Paths.get("/non/existent/file1.jar"));
-        mockDependencies.add(Paths.get("/non/existent/file2.jar"));
-
+        // Test the filtering logic - since we can't easily mock the entire flow,
+        // we'll test that our resolver properly handles different file scenarios
         // Create a valid file that should be included
         Path validJar = tempDir.resolve("valid.jar");
         Files.createFile(validJar);
-        mockDependencies.add(validJar);
-
-        // Test the filtering logic - since we can't easily mock the entire flow,
-        // we'll test that our resolver properly handles different file scenarios
         Files.createFile(tempDir.resolve("build.gradle"));
         var dependencies = resolver.resolveDependencies();
 
@@ -452,7 +447,7 @@ class GradleDependencyResolverAdditionalTest {
         // Create a resolver with no build files
         Path emptyDir = tempDir.resolve("empty");
         Files.createDirectories(emptyDir);
-        GradleDependencyResolver emptyResolver = new GradleDependencyResolver(emptyDir);
+        // emptyResolver not needed, using customResolver below
 
         // Clear test environment to trigger real Gradle resolution attempt
         String originalTestMode = System.getProperty("test.mode");

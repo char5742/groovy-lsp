@@ -9,13 +9,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class GroovyFileParserTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     private GroovyFileParser parser;
 
@@ -43,7 +45,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("SimpleClass.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("SimpleClass.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -85,7 +87,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("MyInterface.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("MyInterface.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -113,7 +115,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("MyTrait.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("MyTrait.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -137,7 +139,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("Color.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("Color.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -166,7 +168,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("ClosureExample.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("ClosureExample.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -184,7 +186,7 @@ class GroovyFileParserTest {
                 }  // Missing closing brace
                 """;
 
-        Path file = tempDir.resolve("Invalid.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("Invalid.groovy");
         Files.writeString(file, invalidCode);
 
         List<SymbolInfo> symbols = assertDoesNotThrow(() -> parser.parseFile(file));
@@ -206,7 +208,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("PropertyExample.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("PropertyExample.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -234,7 +236,7 @@ class GroovyFileParserTest {
                 }
                 """;
 
-        Path file = tempDir.resolve("MyAnnotation.groovy");
+        Path file = Objects.requireNonNull(tempDir).resolve("MyAnnotation.groovy");
         Files.writeString(file, groovyCode);
 
         List<SymbolInfo> symbols = parser.parseFile(file);
@@ -251,7 +253,7 @@ class GroovyFileParserTest {
 
     @Test
     void testParseNonExistentFile() throws IOException {
-        Path nonExistentFile = tempDir.resolve("NonExistent.groovy");
+        Path nonExistentFile = Objects.requireNonNull(tempDir).resolve("NonExistent.groovy");
 
         List<SymbolInfo> symbols = parser.parseFile(nonExistentFile);
 
@@ -269,7 +271,7 @@ class GroovyFileParserTest {
             largeContent.append(line);
         }
 
-        Path largeFile = tempDir.resolve("LargeFile.groovy");
+        Path largeFile = Objects.requireNonNull(tempDir).resolve("LargeFile.groovy");
         Files.writeString(largeFile, largeContent.toString());
 
         List<SymbolInfo> symbols = parser.parseFile(largeFile);

@@ -7,6 +7,7 @@ import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
@@ -72,7 +73,7 @@ class ClassFileVisitorTest {
         SymbolInfo enumSymbol =
                 symbols.stream().filter(s -> s.kind() == SymbolKind.ENUM).findFirst().orElse(null);
         assertThat(enumSymbol).isNotNull();
-        assertThat(enumSymbol.name()).isEqualTo("TestEnum");
+        assertThat(Objects.requireNonNull(enumSymbol).name()).isEqualTo("TestEnum");
     }
 
     @Test

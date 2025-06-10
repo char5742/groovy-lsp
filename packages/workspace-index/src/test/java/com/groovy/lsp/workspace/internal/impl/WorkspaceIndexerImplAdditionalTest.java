@@ -11,9 +11,11 @@ import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
 import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,20 +37,24 @@ import org.mockito.Mockito;
  */
 class WorkspaceIndexerImplAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
     private WorkspaceIndexerImpl indexer;
     private EventBus eventBus;
 
     @BeforeEach
     void setUp() {
-        indexer = new WorkspaceIndexerImpl(tempDir);
+        indexer =
+                new WorkspaceIndexerImpl(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
         eventBus = EventBusFactory.getInstance();
     }
 
     @Test
     void initialize_shouldIndexDependencies() throws Exception {
         // Given - Create a workspace with dependencies
-        Path libDir = tempDir.resolve("lib");
+        Path libDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("lib");
         Files.createDirectories(libDir);
 
         // Create a JAR file as dependency
@@ -54,10 +62,15 @@ class WorkspaceIndexerImplAdditionalTest {
         createTestJar(jarFile);
 
         // Create a source file
-        Files.writeString(tempDir.resolve("Test.groovy"), "class Test {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Test.groovy"),
+                "class Test {}");
 
         // Mock dependency resolver to return our JAR
-        Path dependencyResolverMock = tempDir.resolve(".dependency-mock");
+        Path dependencyResolverMock =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve(".dependency-mock");
         Files.createFile(dependencyResolverMock);
 
         CountDownLatch eventLatch = new CountDownLatch(1);
@@ -77,27 +90,32 @@ class WorkspaceIndexerImplAdditionalTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(1);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
     }
 
     @Test
     void initialize_shouldHandleDependencyDirectories() throws Exception {
         // Given - Create a dependency directory structure
-        Path depDir = tempDir.resolve("dependency");
+        Path depDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("dependency");
         Files.createDirectories(depDir);
         Path depSrc = depDir.resolve("src");
         Files.createDirectories(depSrc);
         Files.writeString(depSrc.resolve("Dep.groovy"), "class Dep {}");
 
         // Create a main source file
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
         AtomicInteger totalFiles = new AtomicInteger(0);
         eventBus.subscribe(
                 WorkspaceIndexedEvent.class,
                 event -> {
-                    totalFiles.set(event.getTotalFiles());
+                    totalFiles.set(Objects.requireNonNull(event).getTotalFiles());
                     eventLatch.countDown();
                 });
 
@@ -113,11 +131,16 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void initialize_shouldHandleJarIndexingErrors() throws Exception {
         // Given - Create a corrupted JAR file
-        Path badJar = tempDir.resolve("bad.jar");
+        Path badJar =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("bad.jar");
         Files.writeString(badJar, "This is not a valid JAR file");
 
         // Create a source file
-        Files.writeString(tempDir.resolve("Test.groovy"), "class Test {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Test.groovy"),
+                "class Test {}");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
         AtomicReference<WorkspaceIndexedEvent> capturedEvent = new AtomicReference<>();
@@ -142,7 +165,9 @@ class WorkspaceIndexerImplAdditionalTest {
     void updateFile_shouldHandleKotlinScriptFiles() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
-        Path kotlinScript = tempDir.resolve("build.gradle.kts");
+        Path kotlinScript =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle.kts");
         Files.writeString(kotlinScript, "plugins { kotlin(\"jvm\") }");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
@@ -162,15 +187,17 @@ class WorkspaceIndexerImplAdditionalTest {
         // Then
         FileIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getFilePath()).isEqualTo(kotlinScript);
+        assertThat(Objects.requireNonNull(event).getFilePath()).isEqualTo(kotlinScript);
         // Kotlin script parsing not implemented yet, so should have empty symbols
-        assertThat(event.getSymbols()).isEmpty();
+        assertThat(Objects.requireNonNull(event).getSymbols()).isEmpty();
     }
 
     @Test
     void indexFile_shouldHandleParsingErrors() throws Exception {
         // Given - Create a file with invalid syntax
-        Path errorFile = tempDir.resolve("Error.groovy");
+        Path errorFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Error.groovy");
         // Create more severe syntax error to ensure parsing fails
         Files.writeString(errorFile, "class { } invalid syntax $#@!");
 
@@ -182,7 +209,7 @@ class WorkspaceIndexerImplAdditionalTest {
         eventBus.subscribe(
                 FileIndexedEvent.class,
                 event -> {
-                    if (event.getFilePath().equals(errorFile)) {
+                    if (Objects.requireNonNull(event).getFilePath().equals(errorFile)) {
                         errorEventReceived.set(true);
                         capturedEvent.set(event);
                         eventLatch.countDown();
@@ -198,7 +225,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(errorEventReceived.get()).isTrue();
         FileIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getFilePath()).isEqualTo(errorFile);
+        assertThat(Objects.requireNonNull(event).getFilePath()).isEqualTo(errorFile);
     }
 
     private void createTestJar(Path jarPath) throws IOException {
@@ -207,7 +234,7 @@ class WorkspaceIndexerImplAdditionalTest {
             JarEntry entry = new JarEntry("com/test/TestClass.class");
             jos.putNextEntry(entry);
             // Write minimal class file bytes (not a valid class, but enough for testing)
-            jos.write("PK".getBytes());
+            jos.write("PK".getBytes(StandardCharsets.UTF_8));
             jos.closeEntry();
         }
     }
@@ -215,13 +242,18 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void initialize_shouldIndexDependencyDirectories() throws Exception {
         // Given - Create a dependency directory with Groovy files
-        Path depDir = tempDir.resolve("dependencies/lib1");
+        Path depDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("dependencies/lib1");
         Files.createDirectories(depDir);
         Files.writeString(depDir.resolve("DepClass.groovy"), "class DepClass {}");
         Files.writeString(depDir.resolve("DepClass2.java"), "public class DepClass2 {}");
 
         // Create main workspace file
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         // Mock DependencyResolver to return our dependency directory
         // For this test, we'll leverage the fact that the resolver looks for dependencies
@@ -243,17 +275,22 @@ class WorkspaceIndexerImplAdditionalTest {
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
         // Should have indexed at least the Main.groovy file
-        assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(1);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
     }
 
     @Test
     void initialize_shouldHandleJarDependencies() throws Exception {
         // Given - Create a proper JAR file
-        Path jarFile = tempDir.resolve("lib.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("lib.jar");
         createTestJar(jarFile);
 
         // Create workspace file
-        Files.writeString(tempDir.resolve("Test.groovy"), "class Test {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Test.groovy"),
+                "class Test {}");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
         AtomicReference<WorkspaceIndexedEvent> capturedEvent = new AtomicReference<>();
@@ -272,13 +309,15 @@ class WorkspaceIndexerImplAdditionalTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(1);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
     }
 
     @Test
     void indexFileWithResult_shouldHandleParsingException() throws Exception {
         // Given - Create a file with content that will cause parsing to fail
-        Path problemFile = tempDir.resolve("Problem.groovy");
+        Path problemFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Problem.groovy");
         // Write content that will cause a parsing exception
         Files.writeString(problemFile, "class Test { invalid syntax $#@! }");
 
@@ -290,7 +329,7 @@ class WorkspaceIndexerImplAdditionalTest {
         eventBus.subscribe(
                 FileIndexedEvent.class,
                 event -> {
-                    if (event.getFilePath().equals(problemFile)) {
+                    if (Objects.requireNonNull(event).getFilePath().equals(problemFile)) {
                         errorEventReceived.set(true);
                         capturedEvent.set(event);
                         eventLatch.countDown();
@@ -307,8 +346,8 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(errorEventReceived.get()).isTrue();
         FileIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.isSuccess()).isTrue();
-        assertThat(event.getSymbols()).isEmpty();
+        assertThat(Objects.requireNonNull(event).isSuccess()).isTrue();
+        assertThat(Objects.requireNonNull(event).getSymbols()).isEmpty();
     }
 
     @Test
@@ -326,7 +365,9 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void indexWorkspaceFiles_shouldHandleFileWalkException() throws Exception {
         // Given - Create a directory that will be deleted during walk
-        Path volatileDir = tempDir.resolve("volatile");
+        Path volatileDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("volatile");
         Files.createDirectories(volatileDir);
         Files.writeString(volatileDir.resolve("Test.groovy"), "class Test {}");
 
@@ -340,20 +381,22 @@ class WorkspaceIndexerImplAdditionalTest {
                             try {
                                 Thread.sleep(50); // Give time for file walk to start
                                 // Delete the directory during walk to cause an exception
-                                Files.walk(volatileDir)
-                                        .sorted(
-                                                (a, b) ->
-                                                        b.compareTo(
-                                                                a)) // reverse order to delete files
-                                        // first
-                                        .forEach(
-                                                path -> {
-                                                    try {
-                                                        Files.deleteIfExists(path);
-                                                    } catch (IOException e) {
-                                                        // Ignore
-                                                    }
-                                                });
+                                try (Stream<Path> stream = Files.walk(volatileDir)) {
+                                    stream.sorted(
+                                                    (a, b) ->
+                                                            b.compareTo(
+                                                                    a)) // reverse order to delete
+                                            // files
+                                            // first
+                                            .forEach(
+                                                    path -> {
+                                                        try {
+                                                            Files.deleteIfExists(path);
+                                                        } catch (IOException e) {
+                                                            // Ignore
+                                                        }
+                                                    });
+                                }
                             } catch (Exception e) {
                                 // Ignore
                             }
@@ -378,7 +421,9 @@ class WorkspaceIndexerImplAdditionalTest {
     void updateFile_shouldHandleNonExistentFile() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
-        Path nonExistentFile = tempDir.resolve("DoesNotExist.groovy");
+        Path nonExistentFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("DoesNotExist.groovy");
 
         // When
         var future = indexer.updateFile(nonExistentFile);
@@ -392,10 +437,14 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void indexFile_shouldHandleNullSymbols() throws Exception {
         // Given - Create files that will result in empty symbol lists
-        Path emptyGroovyFile = tempDir.resolve("Empty.groovy");
+        Path emptyGroovyFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Empty.groovy");
         Files.writeString(emptyGroovyFile, ""); // Empty file
 
-        Path javaFile = tempDir.resolve("Test.java");
+        Path javaFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Test.java");
         Files.writeString(javaFile, "public class Test {}"); // Java files not fully supported yet
 
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -422,18 +471,25 @@ class WorkspaceIndexerImplAdditionalTest {
     void indexDependency_shouldIndexDirectoryDependency() throws Exception {
         // Given - Create a workspace structure with a build.gradle that will trigger dependency
         // resolution
-        Path buildFile = tempDir.resolve("build.gradle");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
 
         // Create a directory that will be treated as a dependency
-        Path depDir = tempDir.resolve("libs/dep1");
+        Path depDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("libs/dep1");
         Files.createDirectories(depDir);
         Files.writeString(depDir.resolve("Dep.groovy"), "class Dep {}");
         Files.writeString(depDir.resolve("DepJava.java"), "public class DepJava {}");
         Files.writeString(depDir.resolve("build.gradle"), "// Build file");
 
         // Create a main source file
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         // Mock the DependencyResolver to return our dependency directory
         try (MockedConstruction<com.groovy.lsp.workspace.internal.dependency.DependencyResolver>
@@ -467,7 +523,7 @@ class WorkspaceIndexerImplAdditionalTest {
             WorkspaceIndexedEvent event = capturedEvent.get();
             assertThat(event).isNotNull();
             // Should have indexed Main.groovy (1) + Dep.groovy (1) = at least 2 files
-            assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(2);
+            assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(2);
 
             mockedIndexer.close();
         }
@@ -476,16 +532,23 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void indexDependency_shouldIndexJarDependency() throws Exception {
         // Given - Create a workspace with a JAR dependency
-        Path buildFile = tempDir.resolve("build.gradle");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
 
         // Create a JAR file
-        Path jarFile = tempDir.resolve("libs/test-lib.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("libs/test-lib.jar");
         Files.createDirectories(jarFile.getParent());
         createTestJar(jarFile);
 
         // Create a main source file
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         // Mock the DependencyResolver to return our JAR file
         try (MockedConstruction<com.groovy.lsp.workspace.internal.dependency.DependencyResolver>
@@ -519,7 +582,7 @@ class WorkspaceIndexerImplAdditionalTest {
             WorkspaceIndexedEvent event = capturedEvent.get();
             assertThat(event).isNotNull();
             // Should have indexed at least Main.groovy
-            assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(1);
+            assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
 
             mockedIndexer.close();
         }
@@ -528,14 +591,21 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void indexDependency_shouldHandleExceptionDuringIndexing() throws Exception {
         // Given - Create a workspace with an invalid path as dependency
-        Path buildFile = tempDir.resolve("build.gradle");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
 
         // Create a non-existent path that will cause an exception
-        Path nonExistentDep = tempDir.resolve("non-existent-dep.jar");
+        Path nonExistentDep =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("non-existent-dep.jar");
 
         // Create a main source file
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         // Mock the DependencyResolver to return the non-existent dependency
         try (MockedConstruction<com.groovy.lsp.workspace.internal.dependency.DependencyResolver>
@@ -569,7 +639,7 @@ class WorkspaceIndexerImplAdditionalTest {
             WorkspaceIndexedEvent event = capturedEvent.get();
             assertThat(event).isNotNull();
             // Should have indexed at least Main.groovy
-            assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(1);
+            assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
 
             mockedIndexer.close();
         }
@@ -578,12 +648,19 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void indexDependency_shouldHandleJarWithSymbols() throws Exception {
         // Given - Create a JAR with symbols that will be indexed
-        Path jarFile = tempDir.resolve("lib-with-symbols.jar");
+        Path jarFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("lib-with-symbols.jar");
         createJarWithClasses(jarFile);
 
-        Path buildFile = tempDir.resolve("build.gradle");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         // Mock JarFileIndexer to return symbols
         List<SymbolInfo> mockSymbols =
@@ -627,9 +704,9 @@ class WorkspaceIndexerImplAdditionalTest {
             WorkspaceIndexedEvent event = capturedEvent.get();
             assertThat(event).isNotNull();
             // Should have indexed Main.groovy (1) + JAR (1) + build.gradle (1) = 3 files
-            assertThat(event.getTotalFiles()).isEqualTo(3);
+            assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(3);
             // Should have indexed class symbols from Main + JAR symbols
-            assertThat(event.getTotalSymbols())
+            assertThat(Objects.requireNonNull(event).getTotalSymbols())
                     .isGreaterThanOrEqualTo(3); // Main class + 2 JAR symbols
 
             mockedIndexer.close();
@@ -656,16 +733,23 @@ class WorkspaceIndexerImplAdditionalTest {
     @Test
     void indexDependency_shouldHandleExceptionDuringDependencyWalk() throws Exception {
         // Test exception handling in the indexDependency method
-        Path depDir = tempDir.resolve("dep-dir");
+        Path depDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("dep-dir");
         Files.createDirectories(depDir);
 
         // Create a file that will cause issues during walk
         Path problemFile = depDir.resolve("Problem.groovy");
         Files.writeString(problemFile, "class Problem {}");
 
-        Path buildFile = tempDir.resolve("build.gradle");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
-        Files.writeString(tempDir.resolve("Main.groovy"), "class Main {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Main.groovy"),
+                "class Main {}");
 
         // Mock the dependency resolver to return a directory that will cause issues
         try (MockedConstruction<com.groovy.lsp.workspace.internal.dependency.DependencyResolver>
@@ -687,7 +771,12 @@ class WorkspaceIndexerImplAdditionalTest {
                                                                 .class));
                                     } catch (UnsupportedOperationException e) {
                                         // On non-POSIX systems, use a non-existent path instead
-                                        restrictedPath = tempDir.resolve("non-existent-path");
+                                        restrictedPath =
+                                                Objects.requireNonNull(
+                                                                tempDir,
+                                                                "tempDir should be initialized by"
+                                                                        + " JUnit")
+                                                        .resolve("non-existent-path");
                                     }
                                     Mockito.when(mock.resolveDependencies())
                                             .thenReturn(List.of(restrictedPath));
@@ -730,7 +819,9 @@ class WorkspaceIndexerImplAdditionalTest {
             "GroovyFileParser no longer returns null, always returns a List")
     void indexFileWithResult_shouldReturnEmptyListOnNullFromParser() throws Exception {
         // Test the case where parser returns null (though it shouldn't in practice)
-        Path nullResultFile = tempDir.resolve("NullResult.groovy");
+        Path nullResultFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("NullResult.groovy");
         Files.writeString(nullResultFile, "// This file might return null from parser");
 
         // Mock the parser to return null
@@ -748,7 +839,7 @@ class WorkspaceIndexerImplAdditionalTest {
             eventBus.subscribe(
                     FileIndexedEvent.class,
                     event -> {
-                        if (event.getFilePath().equals(nullResultFile)) {
+                        if (Objects.requireNonNull(event).getFilePath().equals(nullResultFile)) {
                             capturedEvent.set(event);
                             eventLatch.countDown();
                         }
@@ -762,8 +853,8 @@ class WorkspaceIndexerImplAdditionalTest {
             // Then - Should receive event with success (empty symbols)
             FileIndexedEvent event = capturedEvent.get();
             assertThat(event).isNotNull();
-            assertThat(event.isSuccess()).isTrue();
-            assertThat(event.getSymbols()).isEmpty();
+            assertThat(Objects.requireNonNull(event).isSuccess()).isTrue();
+            assertThat(Objects.requireNonNull(event).getSymbols()).isEmpty();
 
             mockedIndexer.close();
         }

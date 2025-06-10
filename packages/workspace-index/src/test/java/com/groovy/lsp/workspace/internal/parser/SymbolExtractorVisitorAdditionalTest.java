@@ -9,10 +9,15 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +27,7 @@ import org.junit.jupiter.api.Test;
 class SymbolExtractorVisitorAdditionalTest {
 
     private Path testPath;
-    private SymbolExtractorVisitor visitor;
+    private @Nullable SymbolExtractorVisitor visitor;
 
     @BeforeEach
     void setUp() {

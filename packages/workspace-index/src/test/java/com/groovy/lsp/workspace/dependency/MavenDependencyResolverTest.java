@@ -1,7 +1,9 @@
 package com.groovy.lsp.workspace.dependency;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,7 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class MavenDependencyResolverTest {
 
-    @TempDir Path tempDir;
+    @TempDir Path tempDir = Path.of("");
 
     @Test
     void canHandle_withPomXml_returnsTrue() throws IOException {

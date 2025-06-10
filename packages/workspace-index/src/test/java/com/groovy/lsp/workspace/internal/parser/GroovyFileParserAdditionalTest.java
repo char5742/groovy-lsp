@@ -2,7 +2,9 @@ package com.groovy.lsp.workspace.internal.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.GroovyCoreFactory;
@@ -12,7 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -23,7 +27,7 @@ import org.mockito.MockedStatic;
  */
 class GroovyFileParserAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     private GroovyFileParser parser;
 
@@ -35,7 +39,7 @@ class GroovyFileParserAdditionalTest {
     @Test
     void parseFile_shouldReturnEmptyListForOversizedFile() throws IOException {
         // Given - Create a file that's too large (> 10MB)
-        Path largeFile = tempDir.resolve("large.groovy");
+        Path largeFile = Objects.requireNonNull(tempDir).resolve("large.groovy");
 
         // Create a string that's over 10MB
         StringBuilder content = new StringBuilder();
@@ -72,7 +76,7 @@ class GroovyFileParserAdditionalTest {
             // Create parser with mocked dependencies
             GroovyFileParser testParser = new GroovyFileParser();
 
-            Path testFile = tempDir.resolve("empty.groovy");
+            Path testFile = Objects.requireNonNull(tempDir).resolve("empty.groovy");
             Files.writeString(testFile, "// Just comments, no classes");
 
             // When
@@ -98,7 +102,7 @@ class GroovyFileParserAdditionalTest {
             // Create parser with mocked dependencies
             GroovyFileParser testParser = new GroovyFileParser();
 
-            Path testFile = tempDir.resolve("error.groovy");
+            Path testFile = Objects.requireNonNull(tempDir).resolve("error.groovy");
             Files.writeString(testFile, "class Test { invalid syntax }");
 
             // When
@@ -127,7 +131,7 @@ class GroovyFileParserAdditionalTest {
             // Create parser with mocked dependencies
             GroovyFileParser testParser = new GroovyFileParser();
 
-            Path testFile = tempDir.resolve("exception.groovy");
+            Path testFile = Objects.requireNonNull(tempDir).resolve("exception.groovy");
             Files.writeString(testFile, "class Test {}");
 
             // When
@@ -141,7 +145,7 @@ class GroovyFileParserAdditionalTest {
     @Test
     void parseFile_shouldHandleEmptyFileContent() throws IOException {
         // Given - File with empty content (empty groovy files create script classes)
-        Path emptyFile = tempDir.resolve("empty.groovy");
+        Path emptyFile = Objects.requireNonNull(tempDir).resolve("empty.groovy");
         Files.writeString(emptyFile, "");
 
         // When
@@ -173,7 +177,7 @@ class GroovyFileParserAdditionalTest {
                 longContent.append("a");
             }
 
-            Path testFile = tempDir.resolve("long.groovy");
+            Path testFile = Objects.requireNonNull(tempDir).resolve("long.groovy");
             Files.writeString(testFile, longContent.toString());
 
             // When

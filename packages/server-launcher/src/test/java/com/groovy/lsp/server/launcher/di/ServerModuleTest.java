@@ -14,9 +14,11 @@ import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -25,12 +27,14 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class ServerModuleTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     @Test
     void serverModule_shouldProvideLanguageServer() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -44,7 +48,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldProvideSingletonLanguageServer() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -59,7 +65,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldProvideLanguageServerInterface() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -74,7 +82,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldProvideAllServices() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -92,7 +102,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldProvideSingletonServices() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -116,7 +128,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldProvideExecutorServices() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -141,7 +155,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldUseSystemPropertyForDefaultWorkspace() {
         // given
-        String expectedWorkspace = tempDir.toString();
+        String expectedWorkspace =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         String originalProperty = System.getProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY);
         try {
             System.setProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY, expectedWorkspace);
@@ -184,7 +200,15 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldHandleNullWorkspaceRoot() {
         // given
-        ServerModule module = new ServerModule(null);
+        // Use reflection to test null handling since direct null passing causes NullAway warning
+        ServerModule module;
+        try {
+            java.lang.reflect.Constructor<ServerModule> constructor =
+                    ServerModule.class.getConstructor(String.class);
+            module = constructor.newInstance((String) null);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create ServerModule with null", e);
+        }
 
         // when/then - Should not throw during construction
         assertThat(module).isNotNull();
@@ -224,7 +248,11 @@ class ServerModuleTest {
         String originalProperty = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
         try {
             System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "100");
-            ServerModule module = new ServerModule(tempDir.toString());
+            ServerModule module =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
             Injector injector = Guice.createInjector(module);
 
             // when
@@ -252,7 +280,11 @@ class ServerModuleTest {
         String originalProperty = System.getProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
         try {
             System.setProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY, "4");
-            ServerModule module = new ServerModule(tempDir.toString());
+            ServerModule module =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
             Injector injector = Guice.createInjector(module);
 
             // when
@@ -286,7 +318,11 @@ class ServerModuleTest {
             System.clearProperty(ServerConstants.MAX_THREADS_ENV_KEY);
             System.clearProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
 
-            ServerModule module = new ServerModule(tempDir.toString());
+            ServerModule module =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
             Injector injector = Guice.createInjector(module);
 
             // when
@@ -325,7 +361,11 @@ class ServerModuleTest {
             // Set invalid value (non-numeric)
             System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "invalid");
 
-            ServerModule module = new ServerModule(tempDir.toString());
+            ServerModule module =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
             Injector injector = Guice.createInjector(module);
 
             // when - should fall back to default
@@ -356,7 +396,11 @@ class ServerModuleTest {
             // Set invalid value (non-numeric)
             System.setProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY, "invalid");
 
-            ServerModule module = new ServerModule(tempDir.toString());
+            ServerModule module =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
             Injector injector = Guice.createInjector(module);
 
             // when - should fall back to default
@@ -383,7 +427,9 @@ class ServerModuleTest {
     @Test
     void namedThreadFactory_shouldCreateDaemonThreadsWithCorrectNames() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -425,7 +471,9 @@ class ServerModuleTest {
     @Test
     void namedThreadFactory_shouldCreateSchedulerThreadsWithCorrectNames() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -468,7 +516,9 @@ class ServerModuleTest {
     @Test
     void serverModule_shouldCreateExecutorWithCorrectConfiguration() {
         // given
-        String workspaceRoot = tempDir.toString();
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         ServerModule module = new ServerModule(workspaceRoot);
         Injector injector = Guice.createInjector(module);
 
@@ -503,7 +553,11 @@ class ServerModuleTest {
             System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "");
             System.setProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY, "");
 
-            ServerModule module = new ServerModule(tempDir.toString());
+            ServerModule module =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
             Injector injector = Guice.createInjector(module);
 
             // when - should fall back to defaults
@@ -545,31 +599,35 @@ class ServerModuleTest {
         try {
             // Test zero - should fail gracefully during injector creation
             System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "0");
-            final ServerModule zeroModule = new ServerModule(tempDir.toString());
+            final ServerModule zeroModule =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
 
             assertThatCode(
                             () -> {
                                 Injector injector = Guice.createInjector(zeroModule);
-                                ExecutorService serverExecutor =
-                                        injector.getInstance(
-                                                com.google.inject.Key.get(
-                                                        ExecutorService.class,
-                                                        ServerExecutor.class));
+                                injector.getInstance(
+                                        com.google.inject.Key.get(
+                                                ExecutorService.class, ServerExecutor.class));
                             })
                     .isInstanceOf(com.google.inject.ProvisionException.class);
 
             // Test negative - should also fail gracefully
             System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "-5");
-            final ServerModule negativeModule = new ServerModule(tempDir.toString());
+            final ServerModule negativeModule =
+                    new ServerModule(
+                            Objects.requireNonNull(
+                                            tempDir, "tempDir should be initialized by JUnit")
+                                    .toString());
 
             assertThatCode(
                             () -> {
                                 Injector injector = Guice.createInjector(negativeModule);
-                                ExecutorService serverExecutor =
-                                        injector.getInstance(
-                                                com.google.inject.Key.get(
-                                                        ExecutorService.class,
-                                                        ServerExecutor.class));
+                                injector.getInstance(
+                                        com.google.inject.Key.get(
+                                                ExecutorService.class, ServerExecutor.class));
                             })
                     .isInstanceOf(com.google.inject.ProvisionException.class);
 

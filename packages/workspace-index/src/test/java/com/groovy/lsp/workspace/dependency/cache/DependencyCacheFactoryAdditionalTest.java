@@ -1,6 +1,10 @@
 package com.groovy.lsp.workspace.dependency.cache;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -27,7 +31,7 @@ class DependencyCacheFactoryAdditionalTest {
         DependencyCacheFactory.reset();
 
         // Get the instance to trigger memory monitoring
-        DependencyCache cache = DependencyCacheFactory.getInstance();
+        DependencyCacheFactory.getInstance();
 
         // Access the private memoryMonitor field
         Field memoryMonitorField = DependencyCacheFactory.class.getDeclaredField("memoryMonitor");

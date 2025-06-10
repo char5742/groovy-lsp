@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ class MainAdditionalTest {
     private final PrintStream originalErr = System.err;
     private final PrintStream originalOut = System.out;
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -63,7 +65,9 @@ class MainAdditionalTest {
     @Test
     void main_shouldHandleFileAsWorkspace() throws Exception {
         // given
-        Path file = tempDir.resolve("file.txt");
+        Path file =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("file.txt");
         Files.createFile(file);
         String[] args = {"--workspace", file.toString()};
 
@@ -119,7 +123,9 @@ class MainAdditionalTest {
     @Test
     void main_shouldHandleNonReadableWorkspace() throws Exception {
         // given
-        Path nonReadable = tempDir.resolve("non-readable");
+        Path nonReadable =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("non-readable");
         Files.createDirectory(nonReadable);
 
         // Try to make it non-readable (this might not work on all platforms)
@@ -141,7 +147,9 @@ class MainAdditionalTest {
     @Test
     void main_shouldHandleWorkspaceShortForm() throws Exception {
         // given
-        String workspace = tempDir.toString();
+        String workspace =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         String[] args = {"-w", workspace};
 
         // when
@@ -226,7 +234,9 @@ class MainAdditionalTest {
     @Test
     void main_shouldHandleValidWorkspaceDirectory() throws Exception {
         // given
-        String workspace = tempDir.toString();
+        String workspace =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         String[] args = {"--workspace", workspace};
 
         // when
@@ -262,7 +272,9 @@ class MainAdditionalTest {
     @Test
     void main_shouldHandleAllArgumentCombinations() throws Exception {
         // given
-        String workspace = tempDir.toString();
+        String workspace =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
         String[] args = {"--dry-run", "-s", "-h", "0.0.0.0", "-p", "12345", "-w", workspace};
 
         // when
@@ -272,10 +284,20 @@ class MainAdditionalTest {
     @Test
     void main_shouldHandleRepeatedArguments() throws Exception {
         // given - repeated workspace arguments
-        String workspace1 = tempDir.resolve("ws1").toString();
-        String workspace2 = tempDir.resolve("ws2").toString();
-        Files.createDirectory(tempDir.resolve("ws1"));
-        Files.createDirectory(tempDir.resolve("ws2"));
+        String workspace1 =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("ws1")
+                        .toString();
+        String workspace2 =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("ws2")
+                        .toString();
+        Files.createDirectory(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("ws1"));
+        Files.createDirectory(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("ws2"));
 
         String[] args = {"--workspace", workspace1, "--workspace", workspace2};
 
@@ -340,7 +362,9 @@ class MainAdditionalTest {
     @Test
     void main_shouldValidateWorkspaceExists() throws Exception {
         // given
-        Path nonExistent = tempDir.resolve("does-not-exist");
+        Path nonExistent =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("does-not-exist");
         String[] args = {"--workspace", nonExistent.toString()};
 
         // when/then

@@ -1,6 +1,15 @@
 package com.groovy.lsp.server.launcher.di;
 
-import static com.groovy.lsp.server.launcher.di.ServerConstants.*;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.CORE_THREAD_POOL_SIZE;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.DEFAULT_SCHEDULER_THREADS;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.DEFAULT_WORKSPACE_ROOT;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.MAX_THREADS_ENV_KEY;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.MAX_THREAD_POOL_SIZE;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.SCHEDULER_THREADS_ENV_KEY;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.SCHEDULER_THREAD_PREFIX;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.SERVER_THREAD_PREFIX;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.THREAD_KEEP_ALIVE_TIME;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.WORKSPACE_ROOT_ENV_KEY;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

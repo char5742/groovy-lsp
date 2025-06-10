@@ -1,16 +1,26 @@
 package com.groovy.lsp.workspace.dependency.cache;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -21,7 +31,7 @@ import org.junit.jupiter.api.Timeout;
  */
 class ClassLoaderLeakTest {
 
-    private LRUDependencyCache cache;
+    private @Nullable LRUDependencyCache cache;
 
     @BeforeEach
     void setUp() {
@@ -33,11 +43,11 @@ class ClassLoaderLeakTest {
     void testWeakReferenceGarbageCollection() throws Exception {
         // Create a ClassLoader and keep only a weak reference
         Set<Path> deps = Set.of(Paths.get("test.jar"));
-        URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+        URLClassLoader loader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
         WeakReference<URLClassLoader> weakRef = new WeakReference<>(loader);
 
         // Verify the loader is cached
-        URLClassLoader cachedLoader = cache.getOrCreateClassLoader(deps);
+        URLClassLoader cachedLoader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
         assertSame(loader, cachedLoader, "Should return cached instance");
 
         // Clear strong reference
@@ -63,7 +73,7 @@ class ClassLoaderLeakTest {
                 "ClassLoader should be garbage collected when no strong references exist");
 
         // Verify cache returns a new instance after GC
-        URLClassLoader newLoader = cache.getOrCreateClassLoader(deps);
+        URLClassLoader newLoader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
         assertNotNull(newLoader, "Should create new ClassLoader after previous was GC'd");
     }
 
@@ -73,7 +83,7 @@ class ClassLoaderLeakTest {
         AtomicBoolean closeCalled = new AtomicBoolean(false);
 
         // Create a custom URLClassLoader that tracks close() calls
-        Set<Path> deps = Set.of(Paths.get("test.jar"));
+        // Note: deps not used here as we're creating a custom loader for testing
         URLClassLoader testLoader =
                 new URLClassLoader(new java.net.URL[0]) {
                     @Override
@@ -84,10 +94,10 @@ class ClassLoaderLeakTest {
                 };
 
         // Inject the test loader into cache using reflection
-        injectClassLoaderIntoCache(cache, "test-key", testLoader);
+        injectClassLoaderIntoCache(Objects.requireNonNull(cache), "test-key", testLoader);
 
         // Invalidate all should close the ClassLoader
-        cache.invalidateAll();
+        Objects.requireNonNull(cache).invalidateAll();
 
         assertTrue(closeCalled.get(), "ClassLoader.close() should be called on invalidateAll()");
     }
@@ -95,14 +105,14 @@ class ClassLoaderLeakTest {
     @Test
     void testNoCircularReferencesInClassLoader() throws Exception {
         Set<Path> deps = Set.of(Paths.get("lib1.jar"), Paths.get("lib2.jar"));
-        URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+        URLClassLoader loader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
 
         // Track initial references
         WeakReference<URLClassLoader> loaderRef = new WeakReference<>(loader);
         WeakReference<LRUDependencyCache> cacheRef = new WeakReference<>(cache);
 
         // Clear the cache to remove loader from cache
-        cache.invalidateAll();
+        Objects.requireNonNull(cache).invalidateAll();
 
         // Clear local references
         loader = null;
@@ -134,12 +144,12 @@ class ClassLoaderLeakTest {
         // Create 50 ClassLoaders
         for (int i = 0; i < 50; i++) {
             Set<Path> deps = Set.of(Paths.get("lib" + i + ".jar"));
-            URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+            URLClassLoader loader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
             weakRefs.add(new WeakReference<>(loader));
         }
 
         // Clear the cache
-        cache.invalidateAll();
+        Objects.requireNonNull(cache).invalidateAll();
 
         // Force garbage collection
         forceGarbageCollection();
@@ -162,7 +172,7 @@ class ClassLoaderLeakTest {
         // Create more than MAX_CACHE_SIZE entries
         for (int i = 0; i < 105; i++) {
             Set<Path> deps = Set.of(Paths.get("lib" + i + ".jar"));
-            URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+            URLClassLoader loader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
             if (i < 10) { // Track first 10 loaders
                 weakRefs.add(new WeakReference<>(loader));
             }
@@ -200,11 +210,16 @@ class ClassLoaderLeakTest {
                                                         Paths.get(
                                                                 "thread" + index + "_lib" + j
                                                                         + ".jar"));
-                                        URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+                                        URLClassLoader loader =
+                                                Objects.requireNonNull(cache)
+                                                        .getOrCreateClassLoader(deps);
                                         weakRefs.add(new WeakReference<>(loader));
                                     }
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    // Log the exception - in a real system this would use a proper
+                                    // logger
+                                    System.err.println(
+                                            "Error in concurrent test thread: " + e.getMessage());
                                 } finally {
                                     endLatch.countDown();
                                 }
@@ -219,7 +234,7 @@ class ClassLoaderLeakTest {
         assertTrue(endLatch.await(10, TimeUnit.SECONDS), "Threads should complete within timeout");
 
         // Clear cache and force GC
-        cache.invalidateAll();
+        Objects.requireNonNull(cache).invalidateAll();
         forceGarbageCollection();
 
         // Verify ClassLoaders can be garbage collected
@@ -235,7 +250,7 @@ class ClassLoaderLeakTest {
     void testParentClassLoaderDoesNotPreventGC() throws Exception {
         // Verify that the parent ClassLoader doesn't prevent GC
         Set<Path> deps = Set.of(Paths.get("test.jar"));
-        URLClassLoader loader = cache.getOrCreateClassLoader(deps);
+        URLClassLoader loader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
 
         // Get the parent ClassLoader
         ClassLoader parent = loader.getParent();
@@ -246,7 +261,7 @@ class ClassLoaderLeakTest {
         loader = null;
 
         // Clear from cache
-        cache.invalidateAll();
+        Objects.requireNonNull(cache).invalidateAll();
 
         // Force GC
         forceGarbageCollection();
@@ -266,7 +281,10 @@ class ClassLoaderLeakTest {
         try {
             // Create temporary objects to increase memory pressure
             for (int i = 0; i < 5; i++) {
-                byte[] waste = new byte[1024 * 1024]; // 1MB
+                @SuppressWarnings("unused")
+                byte[] waste =
+                        new byte[1024 * 1024]; // 1MB - Intentionally unused to increase memory
+                // pressure
                 System.gc();
                 // System.runFinalization() is deprecated, just use System.gc()
                 Thread.sleep(50);

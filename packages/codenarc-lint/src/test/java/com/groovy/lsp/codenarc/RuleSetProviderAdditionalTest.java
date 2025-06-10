@@ -1,12 +1,13 @@
 package com.groovy.lsp.codenarc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import org.codenarc.ruleset.RuleSet;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -16,7 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class RuleSetProviderAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     private RuleSetProvider ruleSetProvider;
 
@@ -25,6 +26,7 @@ class RuleSetProviderAdditionalTest {
         // Save original user.dir
         String originalUserDir = System.getProperty("user.dir");
         if (originalUserDir == null) {
+            Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
             System.setProperty("user.dir", tempDir.toString());
         }
         ruleSetProvider = new RuleSetProvider();
@@ -54,6 +56,7 @@ class RuleSetProviderAdditionalTest {
     void reloadRuleSet_shouldClearCacheAndReturnNewRuleSet() {
         // given
         RuleSet firstRuleSet = ruleSetProvider.getRuleSet();
+        assertThat(firstRuleSet).isNotNull();
 
         // when
         RuleSet reloadedRuleSet = ruleSetProvider.reloadRuleSet();
@@ -61,20 +64,26 @@ class RuleSetProviderAdditionalTest {
         // then
         assertThat(reloadedRuleSet).isNotNull();
         assertThat(reloadedRuleSet.getRules()).isNotEmpty();
+        // Verify that a new RuleSet instance is returned (cache was cleared)
+        assertThat(reloadedRuleSet).isNotSameAs(firstRuleSet);
     }
 
     @Test
     void addRuleSetPath_shouldAddPathAndClearCache() {
         // given
         RuleSet initialRuleSet = ruleSetProvider.getRuleSet();
+        assertThat(initialRuleSet).isNotNull();
         String newPath = "rulesets/extra.xml";
 
         // when
         ruleSetProvider.addRuleSetPath(newPath);
         List<String> paths = ruleSetProvider.getRuleSetPaths();
+        RuleSet newRuleSet = ruleSetProvider.getRuleSet();
 
         // then
         assertThat(paths).contains(newPath);
+        // Verify that cache was cleared (new instance returned)
+        assertThat(newRuleSet).isNotSameAs(initialRuleSet);
     }
 
     @Test
@@ -107,6 +116,7 @@ class RuleSetProviderAdditionalTest {
     @Test
     void loadRuleSet_shouldHandleCustomRuleSetFile() throws Exception {
         // given
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         System.setProperty("user.dir", tempDir.toString());
         Path customRuleSet = tempDir.resolve("codenarc-ruleset.xml");
         Files.writeString(
@@ -132,6 +142,7 @@ class RuleSetProviderAdditionalTest {
     @Test
     void loadRuleSet_shouldHandleCustomPropertiesFile() throws Exception {
         // given
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         System.setProperty("user.dir", tempDir.toString());
         Path propertiesFile = tempDir.resolve("codenarc.properties");
         Files.writeString(
@@ -155,6 +166,7 @@ class RuleSetProviderAdditionalTest {
     @Test
     void findProjectRoot_shouldFindGradleProject() throws Exception {
         // given
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         System.setProperty("user.dir", tempDir.toString());
         Path buildGradle = tempDir.resolve("build.gradle");
         Files.writeString(buildGradle, "// build file");
@@ -172,6 +184,7 @@ class RuleSetProviderAdditionalTest {
     @Test
     void findProjectRoot_shouldFindMavenProject() throws Exception {
         // given
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         System.setProperty("user.dir", tempDir.toString());
         Path pomXml = tempDir.resolve("pom.xml");
         Files.writeString(pomXml, "<project/>");
@@ -189,6 +202,7 @@ class RuleSetProviderAdditionalTest {
     @Test
     void loadRuleSetFromPath_shouldHandlePropertiesFile() {
         // given
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path propertiesPath = tempDir.resolve("rules.properties");
 
         // when
@@ -271,6 +285,7 @@ class RuleSetProviderAdditionalTest {
     @Test
     void loadCustomProperties_shouldHandleInvalidPropertyValues() throws Exception {
         // given
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         System.setProperty("user.dir", tempDir.toString());
         Path propertiesFile = tempDir.resolve("codenarc.properties");
         Files.writeString(
