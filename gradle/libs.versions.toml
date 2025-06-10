@@ -141,7 +141,7 @@ maven-resolver-transport-file = { module = "org.apache.maven.resolver:maven-reso
 maven-resolver-transport-http = { module = "org.apache.maven.resolver:maven-resolver-transport-http", version.ref = "maven-resolver-transport-http" }
 maven-model = { module = "org.apache.maven:maven-model", version = "3.9.10" }
 maven-model-builder = { module = "org.apache.maven:maven-model-builder", version = "3.9.10" }
-maven-repository-metadata = { module = "org.apache.maven:maven-repository-metadata", version = "3.9.9" }
+maven-repository-metadata = { module = "org.apache.maven:maven-repository-metadata", version = "3.9.10" }
 maven-resolver-provider = { module = "org.apache.maven:maven-resolver-provider", version = "3.9.9" }
 
 [bundles]
