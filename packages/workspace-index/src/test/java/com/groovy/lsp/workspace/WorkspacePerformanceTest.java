@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
  * Performance tests for the workspace index module.
  * Tests that search operations complete within 50ms for 100,000 lines of code.
  */
-public class PerformanceTest {
+public class WorkspacePerformanceTest {
 
     private static final int TOTAL_LINES = 100_000;
     private static final int CLASSES_PER_FILE = 10;
