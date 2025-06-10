@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.Objects;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +20,14 @@ import org.junit.jupiter.api.Test;
 class ASTServiceImplTest {
 
     private ASTServiceImpl astService;
+
+    /**
+     * Helper method to safely pass nullable ModuleNode to methods that require non-null.
+     * This is used for testing null handling behavior.
+     */
+    private static ModuleNode requireNonNullForTest(@Nullable ModuleNode moduleNode) {
+        return Objects.requireNonNull(moduleNode, "Test expects non-null moduleNode");
+    }
 
     @BeforeEach
     void setUp() {
@@ -44,8 +54,9 @@ class ASTServiceImplTest {
 
         // then
         assertThat(moduleNode).isNotNull();
-        assertThat(moduleNode.getClasses()).hasSize(1);
-        assertThat(moduleNode.getClasses().get(0).getName()).isEqualTo("TestClass");
+        assertThat(requireNonNullForTest(moduleNode).getClasses()).hasSize(1);
+        assertThat(requireNonNullForTest(moduleNode).getClasses().get(0).getName())
+                .isEqualTo("TestClass");
     }
 
     @Test
@@ -94,15 +105,30 @@ class ASTServiceImplTest {
     @Test
     void parseSource_shouldThrowExceptionForNullParameters() {
         // when/then
-        assertThatThrownBy(() -> astService.parseSource(null, "test.groovy"))
+        // Testing null source code parameter
+        String nullSourceCode = null;
+        assertThatThrownBy(
+                        () ->
+                                astService.parseSource(
+                                        Objects.requireNonNull(nullSourceCode), "test.groovy"))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Source code cannot be null");
 
-        assertThatThrownBy(() -> astService.parseSource("code", null))
+        // Testing null source name parameter
+        String nullSourceName = null;
+        assertThatThrownBy(
+                        () ->
+                                astService.parseSource(
+                                        "code", Objects.requireNonNull(nullSourceName)))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Source name cannot be null");
 
-        assertThatThrownBy(() -> astService.parseSource("code", "test.groovy", null))
+        // Testing null compiler configuration parameter
+        CompilerConfiguration nullConfig = null;
+        assertThatThrownBy(
+                        () ->
+                                astService.parseSource(
+                                        "code", "test.groovy", Objects.requireNonNull(nullConfig)))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Compiler configuration cannot be null");
     }
@@ -123,13 +149,16 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "Test.groovy");
 
         // when
-        ASTNode node = astService.findNodeAtPosition(moduleNode, 2, 12); // "String" position
+        ASTNode node =
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 2, 12); // "String" position
 
         // then
         assertThat(node).isNotNull();
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Intentionally testing null parameter handling
     void findNodeAtPosition_shouldReturnNullForNullModule() {
         // when
         ASTNode node = astService.findNodeAtPosition(null, 1, 1);
@@ -157,7 +186,8 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "Variables.groovy");
 
         // when
-        List<VariableExpression> variables = astService.findAllVariables(moduleNode);
+        List<VariableExpression> variables =
+                astService.findAllVariables(requireNonNullForTest(moduleNode));
 
         // then
         assertThat(variables).isNotEmpty();
@@ -165,6 +195,7 @@ class ASTServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Intentionally testing null parameter handling
     void findAllVariables_shouldReturnEmptyListForNullModule() {
         // when
         List<VariableExpression> variables = astService.findAllVariables(null);
@@ -193,7 +224,8 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "MethodCalls.groovy");
 
         // when
-        List<MethodCallExpression> methodCalls = astService.findAllMethodCalls(moduleNode);
+        List<MethodCallExpression> methodCalls =
+                astService.findAllMethodCalls(requireNonNullForTest(moduleNode));
 
         // then
         assertThat(methodCalls).isNotEmpty();
@@ -203,6 +235,7 @@ class ASTServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Intentionally testing null parameter handling
     void findAllMethodCalls_shouldReturnEmptyListForNullModule() {
         // when
         List<MethodCallExpression> methodCalls = astService.findAllMethodCalls(null);
@@ -286,15 +319,16 @@ class ASTServiceImplTest {
 
         // then
         assertThat(moduleNode).isNotNull();
-        assertThat(moduleNode.getPackage()).isNotNull();
+        ModuleNode nonNullModule = requireNonNullForTest(moduleNode);
+        assertThat(nonNullModule.getPackage()).isNotNull();
         // The package name might have a trailing dot, so let's handle that
-        String packageName = moduleNode.getPackage().getName();
+        String packageName = nonNullModule.getPackage().getName();
         if (packageName.endsWith(".")) {
             packageName = packageName.substring(0, packageName.length() - 1);
         }
         assertThat(packageName).isEqualTo("com.example");
-        assertThat(moduleNode.getClasses()).hasSize(1);
-        assertThat(moduleNode.getClasses().get(0).getMethods()).hasSizeGreaterThan(1);
+        assertThat(nonNullModule.getClasses()).hasSize(1);
+        assertThat(nonNullModule.getClasses().get(0).getMethods()).hasSizeGreaterThan(1);
     }
 
     @Test
@@ -320,8 +354,8 @@ class ASTServiceImplTest {
 
         // then
         assertThat(moduleNode).isNotNull();
-        assertThat(moduleNode.getImports()).isNotEmpty();
-        assertThat(moduleNode.getStatementBlock()).isNotNull();
+        assertThat(requireNonNullForTest(moduleNode).getImports()).isNotEmpty();
+        assertThat(requireNonNullForTest(moduleNode).getStatementBlock()).isNotNull();
     }
 
     @Test
@@ -337,7 +371,9 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "FieldTest.groovy");
 
         // when - Find the field declaration
-        ASTNode node = astService.findNodeAtPosition(moduleNode, 2, 15); // Position of "myField"
+        ASTNode node =
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 2, 15); // Position of "myField"
 
         // then
         assertThat(node).isNotNull();
@@ -357,7 +393,9 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "BinaryTest.groovy");
 
         // when - Find binary expression
-        ASTNode node = astService.findNodeAtPosition(moduleNode, 3, 25); // Position of "+"
+        ASTNode node =
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 3, 25); // Position of "+"
 
         // then
         assertThat(node).isNotNull();
@@ -379,7 +417,8 @@ class ASTServiceImplTest {
 
         // when - Find property expression
         ASTNode node =
-                astService.findNodeAtPosition(moduleNode, 4, 23); // Position of "text.length"
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 4, 23); // Position of "text.length"
 
         // then
         assertThat(node).isNotNull();
@@ -402,7 +441,8 @@ class ASTServiceImplTest {
 
         // when - Find field expression
         ASTNode node =
-                astService.findNodeAtPosition(moduleNode, 5, 29); // Position of "this.myField"
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 5, 29); // Position of "this.myField"
 
         // then
         assertThat(node).isNotNull();
@@ -423,7 +463,8 @@ class ASTServiceImplTest {
 
         // when - Find class expression
         ASTNode node =
-                astService.findNodeAtPosition(moduleNode, 3, 30); // Position of "String.class"
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 3, 30); // Position of "String.class"
 
         // then
         assertThat(node).isNotNull();
@@ -445,7 +486,8 @@ class ASTServiceImplTest {
 
         // when - Find constant expression
         ASTNode node =
-                astService.findNodeAtPosition(moduleNode, 3, 31); // Position of "Hello World"
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 3, 31); // Position of "Hello World"
 
         // then
         assertThat(node).isNotNull();
@@ -464,7 +506,9 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "ScriptBodyTest.groovy");
 
         // when - Find node in script body
-        ASTNode node = astService.findNodeAtPosition(moduleNode, 3, 15); // Position in "10 * 20"
+        ASTNode node =
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 3, 15); // Position in "10 * 20"
 
         // then
         assertThat(node).isNotNull();
@@ -482,7 +526,9 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(sourceCode, "OutOfBoundsTest.groovy");
 
         // when - Try to find node at position outside any node bounds
-        ASTNode node = astService.findNodeAtPosition(moduleNode, 10, 10); // Beyond source
+        ASTNode node =
+                astService.findNodeAtPosition(
+                        requireNonNullForTest(moduleNode), 10, 10); // Beyond source
 
         // then
         assertThat(node).isNull();
@@ -506,7 +552,8 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(scriptCode, "ScriptVars.groovy");
 
         // when
-        List<VariableExpression> variables = astService.findAllVariables(moduleNode);
+        List<VariableExpression> variables =
+                astService.findAllVariables(requireNonNullForTest(moduleNode));
 
         // then
         assertThat(variables).isNotEmpty();
@@ -533,7 +580,8 @@ class ASTServiceImplTest {
         ModuleNode moduleNode = astService.parseSource(scriptCode, "ScriptCalls.groovy");
 
         // when
-        List<MethodCallExpression> methodCalls = astService.findAllMethodCalls(moduleNode);
+        List<MethodCallExpression> methodCalls =
+                astService.findAllMethodCalls(requireNonNullForTest(moduleNode));
 
         // then
         assertThat(methodCalls).isNotEmpty();
