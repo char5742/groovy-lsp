@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+}
+
+// Node.jsベースのプロジェクトなので、Javaソースは存在しない
+sourceSets {
+    main {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+    test {
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+}
+
+// JARタスクを無効化
+jar {
+    enabled = false
+}
+
+// npmコマンドをラップするタスク
+task npmInstall(type: Exec) {
+    workingDir = projectDir
+    commandLine 'npm', 'install'
+}
+
+task compile(type: Exec, dependsOn: npmInstall) {
+    workingDir = projectDir
+    commandLine 'npm', 'run', 'compile'
+}
+
+task test(type: Exec, dependsOn: compile) {
+    workingDir = projectDir
+    commandLine 'npm', 'test'
+}
+
+// JacocoはNode.jsプロジェクトには適用できないため、ダミータスクを作成
+task jacocoTestReport {
+    doLast {
+        println "Skipping JaCoCo for VS Code extension (Node.js project)"
+    }
+}
+
+task jacocoTestCoverageVerification {
+    doLast {
+        println "Skipping coverage verification for VS Code extension (Node.js project)"
+    }
+}
+
+// Spotlessはpackage.jsonなどをチェック
+spotless {
+    json {
+        target 'package.json', 'tsconfig.json', '.eslintrc.json', 'language-configuration.json'
+        targetExclude 'node_modules/**', 'out/**'
+        prettier()
+    }
+    
+    typescript {
+        target 'src/**/*.ts'
+        targetExclude 'node_modules/**', 'out/**'
+        prettier()
+    }
+}
+
+// クリーンタスク
+clean {
+    delete 'out'
+    delete 'node_modules'
+    delete '*.vsix'
+}
