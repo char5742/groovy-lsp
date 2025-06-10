@@ -1,0 +1,83 @@
+# octocov configuration for Groovy LSP project
+coverage:
+  # 統合カバレッジレポートのパスを指定
+  paths:
+    - build/reports/jacoco/test/jacocoTestReport.xml
+
+  # カバレッジバッジの保存先
+  badge:
+    path: docs/coverage.svg
+
+  # カバレッジ計算から除外するパターン
+  exclude:
+    - "**/test/**"
+    - "**/tests/**"
+    - "**/benchmarks/**"
+    - "**/vscode-extension/**"
+    - "**/*Test.java"
+    - "**/*Spec.groovy"
+    - "**/generated/**"
+    - "**/Main.java"
+    - "**/Launcher*"
+    - "**/Module*"
+    - "**/Constants*"
+
+# テスト実行時間の表示
+testExecutionTime:
+  if: true
+
+# デフォルトブランチとの差分比較
+diff:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+
+# プルリクエストへのコメント
+comment:
+  if: is_pull_request
+  hideFooterLink: false
+  deletePrevious: true  # 以前のコメントを削除して新しいコメントを投稿
+
+# デフォルトブランチのレポート保存
+report:
+  if: is_default_branch
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+
+# ジョブサマリーへの出力
+summary:
+  if: true
+
+# コードとテストの比率
+codeToTestRatio:
+  code:
+    - "packages/**/src/main/**/*.java"
+    - "packages/**/src/main/**/*.groovy"
+    - "!packages/integration-tests/**"
+    - "!packages/benchmarks/**"
+    - "!packages/vscode-extension/**"
+  test:
+    - "packages/**/src/test/**/*.java"
+    - "packages/**/src/test/**/*.groovy"
+    - "packages/integration-tests/**/*.java"
+    - "packages/integration-tests/**/*.groovy"
+
+# カスタムメトリクス（オプション）
+# customMetrics:
+#   - name: "Module Count"
+#     value: 10
+
+# タイムアウト設定（大規模プロジェクト用）
+timeout: 60s
+
+# 中央レポート機能
+central:
+  enable: false  # 複数リポジトリの統合レポートが必要な場合に有効化
+
+# プッシュ時の動作
+push:
+  if: is_default_branch
+
+# カバレッジ閾値（オプション）
+# coverage:
+#   acceptable: 60%
+#   healthy: 80%
