@@ -42,7 +42,9 @@ class WorkspaceIndexFactoryTest {
         var method =
                 WorkspaceIndexFactory.class.getMethod("createWorkspaceIndexService", Path.class);
         assertThatThrownBy(() -> method.invoke(null, (Path) null))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(IllegalArgumentException.class)
+                .getCause()
                 .hasMessageContaining("Workspace root cannot be null");
     }
 

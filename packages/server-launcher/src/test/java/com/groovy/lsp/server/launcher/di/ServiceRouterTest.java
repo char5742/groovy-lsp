@@ -87,7 +87,9 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("ASTService must not be null");
     }
 
@@ -115,7 +117,9 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("CompilerConfigurationService must not be null");
     }
 
@@ -143,7 +147,9 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("IncrementalCompilationService must not be null");
     }
 
@@ -171,7 +177,9 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("TypeInferenceService must not be null");
     }
 
@@ -199,7 +207,9 @@ class ServiceRouterTest {
                                         null,
                                         formattingService,
                                         lintEngine))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("WorkspaceIndexService must not be null");
     }
 
@@ -227,7 +237,9 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         null,
                                         lintEngine))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("FormattingService must not be null");
     }
 
@@ -255,7 +267,9 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         null))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
                 .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
                 .hasMessageContaining("LintEngine must not be null");
     }
 

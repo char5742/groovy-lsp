@@ -1,6 +1,7 @@
 package com.groovy.lsp.server.launcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -231,11 +232,9 @@ class MainTest {
                 Main.class.getDeclaredMethod("parseArguments", String[].class);
         parseArgumentsMethod.setAccessible(true);
 
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    parseArgumentsMethod.invoke(null, (Object) null);
-                });
+        assertThatThrownBy(() -> parseArgumentsMethod.invoke(null, (Object) null))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class);
     }
 
     @Test
