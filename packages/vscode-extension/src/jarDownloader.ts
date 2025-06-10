@@ -2,10 +2,15 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
+import * as crypto from 'crypto';
 import { promisify } from 'util';
 
 const mkdir = promisify(fs.mkdir);
 const writeFile = promisify(fs.writeFile);
+const readFile = promisify(fs.readFile);
+const unlink = promisify(fs.unlink);
+const readdir = promisify(fs.readdir);
+const stat = promisify(fs.stat);
 
 interface GitHubRelease {
     tag_name: string;
@@ -14,6 +19,11 @@ interface GitHubRelease {
         browser_download_url: string;
         size: number;
     }>;
+}
+
+interface GitHubChecksumAsset {
+    name: string;
+    browser_download_url: string;
 }
 
 export class JarDownloader {
@@ -44,6 +54,9 @@ export class JarDownloader {
         if (fs.existsSync(bundledJar)) {
             return bundledJar;
         }
+
+        // Clean up old JAR files before checking/downloading
+        await this.cleanupOldJars();
 
         // Check global storage
         const globalJar = path.join(this.context.globalStorageUri.fsPath, this.jarFileName);
@@ -87,12 +100,41 @@ export class JarDownloader {
                 const storageDir = this.context.globalStorageUri.fsPath;
                 await mkdir(storageDir, { recursive: true });
 
-                // Download the JAR
+                // Download the JAR with verification
                 const jarPath = path.join(storageDir, this.jarFileName);
-                await this.downloadFile(asset.browser_download_url, jarPath, progress, token, asset.size);
+                const tempPath = `${jarPath}.tmp`;
+                
+                try {
+                    // Download to temporary file first
+                    await this.downloadFile(asset.browser_download_url, tempPath, progress, token, asset.size);
 
-                vscode.window.showInformationMessage('Groovy Language Server downloaded successfully');
-                return jarPath;
+                    // Download and verify checksum if available
+                    const checksumAsset = release.assets.find(a => a.name === `${this.jarFileName}.sha256`);
+                    if (checksumAsset) {
+                        const isValid = await this.verifyChecksum(tempPath, checksumAsset.browser_download_url);
+                        if (!isValid) {
+                            throw new Error('Checksum verification failed');
+                        }
+                    }
+
+                    // Verify file size
+                    const stats = await stat(tempPath);
+                    if (stats.size !== asset.size) {
+                        throw new Error(`File size mismatch: expected ${asset.size}, got ${stats.size}`);
+                    }
+
+                    // Move to final location
+                    await fs.promises.rename(tempPath, jarPath);
+                    
+                    vscode.window.showInformationMessage('Groovy Language Server downloaded and verified successfully');
+                    return jarPath;
+                } catch (error) {
+                    // Clean up temporary file on error
+                    try {
+                        await unlink(tempPath);
+                    } catch {}
+                    throw error;
+                }
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Unknown error';
                 vscode.window.showErrorMessage(`Failed to download Groovy Language Server: ${message}`);
@@ -238,5 +280,72 @@ export class JarDownloader {
             )
         );
         return packageJson.version;
+    }
+
+    private async verifyChecksum(filePath: string, checksumUrl: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            https.get(checksumUrl, { headers: { 'User-Agent': 'groovy-language-server-vscode' } }, (res) => {
+                let checksumData = '';
+                res.on('data', chunk => checksumData += chunk);
+                res.on('end', async () => {
+                    if (res.statusCode !== 200) {
+                        console.warn('Checksum file not found, skipping verification');
+                        resolve(true); // Skip verification if no checksum available
+                        return;
+                    }
+
+                    try {
+                        // Expected format: "<hash>  <filename>"
+                        const expectedChecksum = checksumData.trim().split(/\s+/)[0];
+                        const fileContent = await readFile(filePath);
+                        const actualChecksum = crypto.createHash('sha256').update(fileContent).digest('hex');
+                        
+                        if (expectedChecksum === actualChecksum) {
+                            console.log('Checksum verification passed');
+                            resolve(true);
+                        } else {
+                            console.error(`Checksum mismatch: expected ${expectedChecksum}, got ${actualChecksum}`);
+                            resolve(false);
+                        }
+                    } catch (error) {
+                        console.error('Error during checksum verification:', error);
+                        resolve(false);
+                    }
+                });
+            }).on('error', (error) => {
+                console.error('Error downloading checksum:', error);
+                resolve(true); // Skip verification on error
+            });
+        });
+    }
+
+    private async cleanupOldJars(): Promise<void> {
+        try {
+            const storageDir = this.context.globalStorageUri.fsPath;
+            if (!fs.existsSync(storageDir)) {
+                return;
+            }
+
+            const files = await readdir(storageDir);
+            const jarFiles = files.filter(f => f.startsWith('groovy-language-server-') && f.endsWith('.jar'));
+            
+            // Keep only the current version and delete others
+            const currentVersion = this.getExtensionVersion();
+            const deletePromises = jarFiles
+                .filter(f => f !== this.jarFileName)
+                .map(async f => {
+                    const filePath = path.join(storageDir, f);
+                    try {
+                        await unlink(filePath);
+                        console.log(`Cleaned up old JAR: ${f}`);
+                    } catch (error) {
+                        console.warn(`Failed to delete old JAR ${f}:`, error);
+                    }
+                });
+
+            await Promise.all(deletePromises);
+        } catch (error) {
+            console.error('Error during JAR cleanup:', error);
+        }
     }
 }

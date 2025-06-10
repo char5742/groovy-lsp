@@ -23,11 +23,18 @@ jobs:
       - name: Build Language Server JAR
         run: ./gradlew :packages:server-launcher:shadowJar
 
+      - name: Generate JAR checksum
+        run: |
+          cd packages/server-launcher/build/libs
+          sha256sum *-all.jar > groovy-language-server.jar.sha256
+
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: groovy-language-server-jar
-          path: packages/server-launcher/build/libs/*-all.jar
+          path: |
+            packages/server-launcher/build/libs/*-all.jar
+            packages/server-launcher/build/libs/*.sha256
 
   build-vscode-extension:
     runs-on: ubuntu-latest
@@ -84,6 +91,10 @@ jobs:
         run: |
           mv ./artifacts/*-all.jar ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar
           mv ./artifacts/*.vsix ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.vsix
+          if [ -f ./artifacts/groovy-language-server.jar.sha256 ]; then
+            sed -i "s/*-all.jar/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar/" ./artifacts/groovy-language-server.jar.sha256
+            mv ./artifacts/groovy-language-server.jar.sha256 ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar.sha256
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -112,6 +123,7 @@ jobs:
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/v${{ steps.get_version.outputs.VERSION }}/CHANGELOG.md) for details.
           files: |
             ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar
+            ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.jar.sha256
             ./artifacts/groovy-language-server-${{ steps.get_version.outputs.VERSION }}.vsix
           draft: false
           prerelease: false

@@ -199,15 +199,27 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
         )
     }
 
-    // Aggressive exclusions for VS Code extension
-    exclude 'META-INF/**'
+    // Balanced exclusions for VS Code extension
+    // Keep service loader configurations
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/MANIFEST.MF'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/NOTICE*'
+    exclude 'META-INF/DEPENDENCIES'
+    exclude 'META-INF/maven/**'
+
     exclude 'about.html'
     exclude '**/*.groovy'
     exclude '**/*.html'
     exclude '**/*.txt'
     exclude '**/*.md'
-    exclude '**/*.properties'
-    exclude '**/*.xml'
+    // Keep important properties files
+    exclude 'log4j.properties'
+    exclude 'log4j2.properties'
+    exclude 'logging.properties'
+
     exclude '**/*.xsd'
     exclude '**/*.dtd'
     exclude 'schema/**'
@@ -285,8 +297,8 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
     // Exclude JavaParser (used for Java parsing, not Groovy)
     exclude 'com/github/javaparser/**'
 
-    // Exclude Sentry error tracking (optional)
-    exclude 'io/sentry/**'
+    // Keep Sentry for production debugging
+    // exclude 'io/sentry/**' // Commented out - needed for error tracking
 
     // Dependencies exclusions
     dependencies {
@@ -295,7 +307,8 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
         exclude(dependency('org.apache.maven:.*'))
         exclude(dependency('org.apache.maven.resolver:.*'))
         exclude(dependency('com.github.javaparser:.*'))
-        exclude(dependency('io.sentry:.*'))
+        // Keep Sentry for production debugging
+        // exclude(dependency('io.sentry:.*'))
         exclude(dependency('org.lmdbjava:.*'))
         exclude(dependency('com.sun.jna:.*'))
         exclude(dependency('jnr:.*'))
