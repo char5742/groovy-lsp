@@ -3,3 +3,4 @@
  - Prohibited: git commit --no-verfify
  - github操作にはghコマンドを使用してください
  - 短絡的な対応はせず、常に根本原因を追求し、ベストプラクティスに従ってください
+- lefthookを変更した際は`lefthook install`を実行してください
