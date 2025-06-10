@@ -63,7 +63,7 @@ jobs:
 
 
       - name: Run tests for ${{ matrix.module }}
-        run: ./gradlew :${{ matrix.module }}:test :${{ matrix.module }}:jacocoTestReport --no-daemon
+        run: ./gradlew :${{ matrix.module }}:test --no-daemon
 
       - name: Upload test results
         if: always()
@@ -76,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.module }}
-          path: packages/${{ matrix.module }}/build/reports/jacoco/test/jacocoTestReport.xml
+          path: packages/${{ matrix.module }}/build/jacoco/test.exec
 
   # 統合テストは別ジョブで実行
   integration-test:
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-integration-tests
-          path: packages/integration-tests/build/reports/jacoco/test/jacocoTestReport.xml
+          path: packages/integration-tests/build/jacoco/test.exec
 
   # カバレッジレポートの集約とoctocov実行
   coverage:
@@ -140,20 +140,21 @@ jobs:
       # カバレッジレポートを正しい場所に配置
       - name: Organize coverage reports
         run: |
-          for module in shared server-launcher lsp-protocol groovy-core jdt-adapter codenarc-lint workspace-index formatting integration-tests; do
-            if [ -d "coverage-${module}" ]; then
-              mkdir -p "packages/${module}/build/reports/jacoco/test/"
-              cp "coverage-${module}/jacocoTestReport.xml" "packages/${module}/build/reports/jacoco/test/" || true
+          for m in shared server-launcher lsp-protocol groovy-core jdt-adapter \
+                  codenarc-lint workspace-index formatting integration-tests; do
+            if [ -d "coverage-${m}" ]; then
+              mkdir -p "packages/${m}/build/jacoco/"
+              cp "coverage-${m}/test.exec" "packages/${m}/build/jacoco/" || true
             fi
           done
 
       # Gradleのビルドディレクトリ構造を再構築（クラスファイルが必要）
       - name: Build all modules (for coverage aggregation)
-        run: ./gradlew classes testClasses --no-daemon
+        run: ./gradlew classes testClasses -x test --no-daemon
 
       # 統合カバレッジレポートの生成
       - name: Generate aggregated coverage report
-        run: ./gradlew jacocoRootReport --no-daemon
+        run: ./gradlew jacocoRootReport -x test --no-daemon
 
       # octocovでカバレッジレポートを表示
       - name: Generate coverage report with octocov
