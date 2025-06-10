@@ -9,7 +9,45 @@
     "@typescript-eslint"
   ],
   "rules": {
-    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": "default",
+        "format": ["camelCase"]
+      },
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": "parameter",
+        "format": ["camelCase"]
+      },
+      {
+        "selector": "memberLike",
+        "format": ["camelCase"]
+      },
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      },
+      {
+        "selector": "objectLiteralProperty",
+        "format": null,
+        "filter": {
+          "regex": "^(Accept|User-Agent|groovy\\.lsp\\.debug|groovy\\.lsp\\.client\\.version)$",
+          "match": true
+        }
+      },
+      {
+        "selector": "typeProperty",
+        "format": ["camelCase", "snake_case"]
+      },
+      {
+        "selector": "enumMember",
+        "format": ["PascalCase"]
+      }
+    ],
     "@typescript-eslint/semi": "warn",
     "curly": "warn",
     "eqeqeq": "warn",

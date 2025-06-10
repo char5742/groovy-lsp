@@ -152,7 +152,7 @@ export class JarDownloader {
                 path: `/repos/${this.githubRepo}/releases/tags/v${this.getExtensionVersion()}`,
                 headers: {
                     'User-Agent': 'groovy-language-server-vscode',
-                    'Accept': 'application/vnd.github.v3+json'
+                    Accept: 'application/vnd.github.v3+json'
                 }
             };
 
@@ -185,7 +185,7 @@ export class JarDownloader {
                 path: `/repos/${this.githubRepo}/releases/latest`,
                 headers: {
                     'User-Agent': 'groovy-language-server-vscode',
-                    'Accept': 'application/vnd.github.v3+json'
+                    Accept: 'application/vnd.github.v3+json'
                 }
             };
 
