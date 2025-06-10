@@ -32,6 +32,10 @@
         "format": ["PascalCase"]
       },
       {
+        "selector": "import",
+        "format": ["camelCase", "PascalCase"]
+      },
+      {
         "selector": "objectLiteralProperty",
         "format": null,
         "filter": {
