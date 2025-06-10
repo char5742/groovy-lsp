@@ -58,6 +58,8 @@ class DocumentManagerTest {
 
         // then
         TextDocumentItem updatedDoc = documentManager.getDocument("file:///test.groovy");
+        assertThat(updatedDoc).isNotNull();
+        java.util.Objects.requireNonNull(updatedDoc);
         assertThat(updatedDoc.getText()).isEqualTo("class UpdatedTest {}");
         assertThat(updatedDoc.getVersion()).isEqualTo(2);
     }
@@ -173,6 +175,8 @@ class DocumentManagerTest {
 
         // then
         TextDocumentItem doc = documentManager.getDocument("file:///test.groovy");
+        assertThat(doc).isNotNull();
+        java.util.Objects.requireNonNull(doc);
         assertThat(doc.getUri()).isEqualTo("file:///test.groovy");
         assertThat(doc.getLanguageId()).isEqualTo("groovy");
         assertThat(doc.getText()).isEqualTo("updated content");

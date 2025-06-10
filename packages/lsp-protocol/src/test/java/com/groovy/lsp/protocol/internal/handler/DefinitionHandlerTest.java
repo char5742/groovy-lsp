@@ -1,10 +1,11 @@
 package com.groovy.lsp.protocol.internal.handler;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
-import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import java.util.List;
@@ -33,8 +34,6 @@ class DefinitionHandlerTest {
 
     @Mock private ASTService astService;
 
-    @Mock private TypeInferenceService typeInferenceService;
-
     // TODO: Enable when circular dependency is resolved
     // @Mock
     // private WorkspaceIndexService workspaceIndexService;
@@ -46,8 +45,6 @@ class DefinitionHandlerTest {
     @BeforeEach
     void setUp() {
         when(serviceRouter.getAstService()).thenReturn(astService);
-        // TypeInferenceService is not needed for DefinitionHandler
-        // when(serviceRouter.getTypeInferenceService()).thenReturn(typeInferenceService);
         // TODO: Enable when circular dependency is resolved
         // when(serviceRouter.getWorkspaceIndexService()).thenReturn(workspaceIndexService);
 

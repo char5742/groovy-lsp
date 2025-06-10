@@ -60,7 +60,6 @@ public class CrossFileDefinitionHandlerTest {
     void testCrossFileMethodDefinition() throws Exception {
         // Arrange
         String currentUri = "file:///project/src/main.groovy";
-        String targetUri = "file:///project/src/utils.groovy";
         String sourceCode = "class Main { void test() { Utils.doSomething() } }";
 
         ModuleNode moduleNode = new ModuleNode((org.codehaus.groovy.control.SourceUnit) null);

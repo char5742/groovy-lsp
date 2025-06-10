@@ -103,32 +103,59 @@ class ASTServiceImplTest {
     }
 
     @Test
-    void parseSource_shouldThrowExceptionForNullParameters() {
+    void parseSource_shouldThrowExceptionForNullParameters() throws Exception {
         // when/then
-        // Testing null source code parameter
-        String nullSourceCode = null;
+        // Testing null source code parameter using reflection to bypass NullAway
         assertThatThrownBy(
-                        () ->
-                                astService.parseSource(
-                                        Objects.requireNonNull(nullSourceCode), "test.groovy"))
+                        () -> {
+                            try {
+                                java.lang.reflect.Method method =
+                                        astService
+                                                .getClass()
+                                                .getMethod(
+                                                        "parseSource", String.class, String.class);
+                                method.invoke(astService, null, "test.groovy");
+                            } catch (java.lang.reflect.InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        })
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Source code cannot be null");
 
-        // Testing null source name parameter
-        String nullSourceName = null;
+        // Testing null source name parameter using reflection to bypass NullAway
         assertThatThrownBy(
-                        () ->
-                                astService.parseSource(
-                                        "code", Objects.requireNonNull(nullSourceName)))
+                        () -> {
+                            try {
+                                java.lang.reflect.Method method =
+                                        astService
+                                                .getClass()
+                                                .getMethod(
+                                                        "parseSource", String.class, String.class);
+                                method.invoke(astService, "code", null);
+                            } catch (java.lang.reflect.InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        })
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Source name cannot be null");
 
-        // Testing null compiler configuration parameter
-        CompilerConfiguration nullConfig = null;
+        // Testing null compiler configuration parameter using reflection to bypass NullAway
         assertThatThrownBy(
-                        () ->
-                                astService.parseSource(
-                                        "code", "test.groovy", Objects.requireNonNull(nullConfig)))
+                        () -> {
+                            try {
+                                java.lang.reflect.Method method =
+                                        astService
+                                                .getClass()
+                                                .getMethod(
+                                                        "parseSource",
+                                                        String.class,
+                                                        String.class,
+                                                        CompilerConfiguration.class);
+                                method.invoke(astService, "code", "test.groovy", null);
+                            } catch (java.lang.reflect.InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        })
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Compiler configuration cannot be null");
     }

@@ -126,33 +126,31 @@ public class HoverHandler {
         StringBuilder content = new StringBuilder();
 
         // Check more specific types first before checking interfaces
-        if (node instanceof FieldNode) {
-            generateFieldHover((FieldNode) node, content);
-        } else if (node instanceof PropertyNode) {
-            generatePropertyHover((PropertyNode) node, content);
-        } else if (node instanceof MethodNode) {
-            generateMethodHover((MethodNode) node, content);
-        } else if (node instanceof ClassNode) {
-            generateClassHover((ClassNode) node, content);
-        } else if (node instanceof VariableExpression) {
-            VariableExpression varExpr = (VariableExpression) node;
+        if (node instanceof FieldNode fieldNode) {
+            generateFieldHover(fieldNode, content);
+        } else if (node instanceof PropertyNode propertyNode) {
+            generatePropertyHover(propertyNode, content);
+        } else if (node instanceof MethodNode methodNode) {
+            generateMethodHover(methodNode, content);
+        } else if (node instanceof ClassNode classNode) {
+            generateClassHover(classNode, content);
+        } else if (node instanceof VariableExpression varExpr) {
             Variable variable = varExpr.getAccessedVariable();
             if (variable != null) {
-                generateVariableHover(variable, content, typeService);
+                generateVariableHover(variable, content);
             } else {
                 generateExpressionHover(varExpr, content, typeService, moduleNode);
             }
-        } else if (node instanceof Variable) {
-            generateVariableHover((Variable) node, content, typeService);
-        } else if (node instanceof Expression) {
-            generateExpressionHover((Expression) node, content, typeService, moduleNode);
+        } else if (node instanceof Variable variable) {
+            generateVariableHover(variable, content);
+        } else if (node instanceof Expression expression) {
+            generateExpressionHover(expression, content, typeService, moduleNode);
         }
 
         return content.length() > 0 ? content.toString() : null;
     }
 
-    private void generateVariableHover(
-            Variable variable, StringBuilder content, TypeInferenceService typeService) {
+    private void generateVariableHover(Variable variable, StringBuilder content) {
         content.append("```groovy\n");
 
         // Variable declaration
@@ -319,14 +317,11 @@ public class HoverHandler {
             content.append(inferredType.getName());
             content.append("\n```\n");
 
-            if (expr instanceof VariableExpression) {
-                VariableExpression varExpr = (VariableExpression) expr;
+            if (expr instanceof VariableExpression varExpr) {
                 content.append("\n**Variable:** ").append(varExpr.getName());
-            } else if (expr instanceof MethodCallExpression) {
-                MethodCallExpression methodCall = (MethodCallExpression) expr;
+            } else if (expr instanceof MethodCallExpression methodCall) {
                 content.append("\n**Method call:** ").append(methodCall.getMethodAsString());
-            } else if (expr instanceof PropertyExpression) {
-                PropertyExpression propExpr = (PropertyExpression) expr;
+            } else if (expr instanceof PropertyExpression propExpr) {
                 content.append("\n**Property:** ").append(propExpr.getPropertyAsString());
             }
         }
@@ -365,18 +360,16 @@ public class HoverHandler {
         }
 
         // Add basic documentation based on node type
-        if (node instanceof MethodNode) {
+        if (node instanceof MethodNode method) {
             logger.debug("Node is MethodNode");
-            MethodNode method = (MethodNode) node;
             if (method.isAbstract()) {
                 doc.append("\n*Abstract method*");
             }
             if (method.isSynthetic()) {
                 doc.append("\n*Synthetic method*");
             }
-        } else if (node instanceof FieldNode) {
+        } else if (node instanceof FieldNode field) {
             logger.debug("Node is FieldNode");
-            FieldNode field = (FieldNode) node;
             logger.debug("Field.isEnum() = {}", field.isEnum());
             if (field.isEnum()) {
                 doc.append("\n*Enum constant*");
@@ -385,9 +378,8 @@ public class HoverHandler {
             if (field.isSynthetic()) {
                 doc.append("\n*Synthetic field*");
             }
-        } else if (node instanceof ClassNode) {
+        } else if (node instanceof ClassNode clazz) {
             logger.debug("Node is ClassNode");
-            ClassNode clazz = (ClassNode) node;
             if (clazz.isAbstract()) {
                 doc.append("\n*Abstract class*");
             }

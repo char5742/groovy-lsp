@@ -1,6 +1,7 @@
 package com.groovy.lsp.groovy.core.internal.impl;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.groovy.lsp.groovy.core.api.CompilationResult;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService.CompilationPhase;
@@ -963,14 +964,28 @@ class IncrementalCompilationServiceImplTest {
 
         @Test
         @DisplayName("Should handle unexpected exception during compilation")
-        void shouldHandleUnexpectedException() {
+        void shouldHandleUnexpectedException() throws Exception {
             // Test with null source code to trigger unexpected exception
             CompilationUnit unit = service.createCompilationUnit(config);
 
             // The implementation catches exceptions and returns a failure result
+            // Using reflection to bypass NullAway check - we're intentionally testing null handling
+            var method =
+                    service.getClass()
+                            .getMethod(
+                                    "compileToPhaseWithResult",
+                                    CompilationUnit.class,
+                                    String.class,
+                                    String.class,
+                                    CompilationPhase.class);
             CompilationResult result =
-                    service.compileToPhaseWithResult(
-                            unit, null, "Test.groovy", CompilationPhase.CONVERSION);
+                    (CompilationResult)
+                            method.invoke(
+                                    service,
+                                    unit,
+                                    null,
+                                    "Test.groovy",
+                                    CompilationPhase.CONVERSION);
 
             // Should return a failure result with error
             assertThat(result).isNotNull();
@@ -1187,6 +1202,9 @@ class IncrementalCompilationServiceImplTest {
                     assertThat(result)
                             .as("Compilation to phase %s should produce a module", phase)
                             .isNotNull();
+                    // NullAway doesn't understand AssertJ's isNotNull() assertion
+                    Objects.requireNonNull(
+                            result, "result should not be null after isNotNull() assertion");
                     assertThat(result.getClasses())
                             .as("Module for phase %s should have classes", phase)
                             .hasSize(1);
@@ -1248,14 +1266,28 @@ class IncrementalCompilationServiceImplTest {
 
         @Test
         @DisplayName("Should handle null source code with proper error in compileToPhaseWithResult")
-        void shouldHandleNullSourceCodeInCompileToPhaseWithResult() {
+        void shouldHandleNullSourceCodeInCompileToPhaseWithResult() throws Exception {
             CompilationUnit unit = service.createCompilationUnit(config);
 
             // This should trigger the null check at line 181, throw NPE, which gets caught at line
             // 294
+            // Using reflection to bypass NullAway check - we're intentionally testing null handling
+            var method =
+                    service.getClass()
+                            .getMethod(
+                                    "compileToPhaseWithResult",
+                                    CompilationUnit.class,
+                                    String.class,
+                                    String.class,
+                                    CompilationPhase.class);
             CompilationResult result =
-                    service.compileToPhaseWithResult(
-                            unit, null, "NullTest.groovy", CompilationPhase.CONVERSION);
+                    (CompilationResult)
+                            method.invoke(
+                                    service,
+                                    unit,
+                                    null,
+                                    "NullTest.groovy",
+                                    CompilationPhase.CONVERSION);
 
             // The NPE is caught and converted to a CompilationResult.failure
             assertThat(result).isNotNull();
