@@ -12,7 +12,7 @@ import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.shared.event.EventBus;
-import com.groovy.lsp.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;

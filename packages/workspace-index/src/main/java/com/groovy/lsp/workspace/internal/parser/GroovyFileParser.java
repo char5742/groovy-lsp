@@ -2,7 +2,7 @@ package com.groovy.lsp.workspace.internal.parser;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.GroovyCoreFactory;
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

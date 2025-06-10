@@ -3,6 +3,7 @@ package com.groovy.lsp.protocol.api;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 
 /**
  * Interface for service routing to avoid circular dependencies.
@@ -34,4 +35,12 @@ public interface IServiceRouter {
      * @throws IllegalStateException if the service is not available
      */
     IncrementalCompilationService getIncrementalCompilationService();
+
+    /**
+     * Get the workspace index service for symbol search and navigation.
+     *
+     * @return the workspace index service
+     * @throws IllegalStateException if the service is not available
+     */
+    WorkspaceIndexService getWorkspaceIndexService();
 }

@@ -1,5 +1,6 @@
 package com.groovy.lsp.workspace.api;
 
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.workspace.internal.impl.WorkspaceIndexerImpl;
 import java.nio.file.Path;
 import org.jmolecules.ddd.annotation.Factory;

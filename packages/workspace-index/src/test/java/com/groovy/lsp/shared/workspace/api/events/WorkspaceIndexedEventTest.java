@@ -1,4 +1,4 @@
-package com.groovy.lsp.workspace.api.events;
+package com.groovy.lsp.shared.workspace.api.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

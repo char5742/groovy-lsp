@@ -1,6 +1,6 @@
-package com.groovy.lsp.workspace.api;
+package com.groovy.lsp.shared.workspace.api;
 
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;

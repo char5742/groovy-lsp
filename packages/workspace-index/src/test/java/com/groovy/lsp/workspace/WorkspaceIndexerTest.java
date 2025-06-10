@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
-import com.groovy.lsp.workspace.api.WorkspaceIndexService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;

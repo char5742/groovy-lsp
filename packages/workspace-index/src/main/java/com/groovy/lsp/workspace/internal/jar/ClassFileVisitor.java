@@ -1,7 +1,7 @@
 package com.groovy.lsp.workspace.internal.jar;
 
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
-import com.groovy.lsp.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;

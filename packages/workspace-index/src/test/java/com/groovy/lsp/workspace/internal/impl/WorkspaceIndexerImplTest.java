@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
-import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
-import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
+import com.groovy.lsp.shared.workspace.api.events.FileIndexedEvent;
+import com.groovy.lsp.shared.workspace.api.events.WorkspaceIndexedEvent;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
 import java.io.IOException;
 import java.nio.file.Files;

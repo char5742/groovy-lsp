@@ -1,4 +1,4 @@
-package com.groovy.lsp.workspace.api.events;
+package com.groovy.lsp.shared.workspace.api.events;
 
 import com.groovy.lsp.shared.event.DomainEvent;
 import java.nio.file.Path;

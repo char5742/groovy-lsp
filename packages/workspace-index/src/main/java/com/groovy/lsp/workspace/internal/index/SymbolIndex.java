@@ -1,7 +1,7 @@
 package com.groovy.lsp.workspace.internal.index;
 
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
-import com.groovy.lsp.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

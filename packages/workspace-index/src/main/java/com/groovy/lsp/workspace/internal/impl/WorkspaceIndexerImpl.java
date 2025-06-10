@@ -2,10 +2,10 @@ package com.groovy.lsp.workspace.internal.impl;
 
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
-import com.groovy.lsp.workspace.api.WorkspaceIndexService;
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
-import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
-import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.events.FileIndexedEvent;
+import com.groovy.lsp.shared.workspace.api.events.WorkspaceIndexedEvent;
 import com.groovy.lsp.workspace.internal.dependency.DependencyResolver;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
 import com.groovy.lsp.workspace.internal.jar.JarFileIndexer;

@@ -1,4 +1,4 @@
-package com.groovy.lsp.workspace.api.dto;
+package com.groovy.lsp.shared.workspace.api.dto;
 
 import java.nio.file.Path;
 import org.jmolecules.ddd.annotation.ValueObject;

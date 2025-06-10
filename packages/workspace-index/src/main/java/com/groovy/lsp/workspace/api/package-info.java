@@ -8,8 +8,8 @@
  * <p>Key components:</p>
  * <ul>
  *   <li>{@link com.groovy.lsp.workspace.api.WorkspaceIndexService} - Main service interface</li>
- *   <li>{@link com.groovy.lsp.workspace.api.dto.SymbolInfo} - Symbol information DTO</li>
- *   <li>{@link com.groovy.lsp.workspace.api.dto.SymbolKind} - Symbol type enumeration</li>
+ *   <li>{@link com.groovy.lsp.shared.workspace.api.dto.SymbolInfo} - Symbol information DTO</li>
+ *   <li>{@link com.groovy.lsp.shared.workspace.api.dto.SymbolKind} - Symbol type enumeration</li>
  * </ul>
  *
  * <p>This package is null-safe by default. All types are non-null unless

@@ -4,6 +4,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.util.LocationUtils;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -67,9 +68,8 @@ public class ReferencesHandler {
 
                         // Get services
                         ASTService astService = serviceRouter.getAstService();
-                        // TODO: Get WorkspaceIndexService when circular dependency is resolved
-                        // WorkspaceIndexService indexService =
-                        // serviceRouter.getWorkspaceIndexService();
+                        WorkspaceIndexService indexService =
+                                serviceRouter.getWorkspaceIndexService();
 
                         // Get document content
                         String sourceCode = documentManager.getDocumentContent(uri);
@@ -102,7 +102,8 @@ public class ReferencesHandler {
 
                         // Find references
                         List<Location> references =
-                                findReferences(node, moduleNode, uri, includeDeclaration, null);
+                                findReferences(
+                                        node, moduleNode, uri, includeDeclaration, indexService);
 
                         return references;
 
@@ -123,7 +124,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         List<Location> references = new ArrayList<>();
 
@@ -197,7 +198,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String methodName = method.getName();
         return findMethodReferencesByName(
@@ -209,7 +210,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String methodName = methodCall.getMethodAsString();
         if (methodName == null) {
@@ -225,7 +226,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         List<Location> references = new ArrayList<>();
 
@@ -246,7 +247,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         String className = classNode.getName();
         List<Location> references = new ArrayList<>();
@@ -266,7 +267,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         return findPropertyOrFieldReferences(
                 field.getName(), moduleNode, currentUri, includeDeclaration, indexService);
@@ -277,7 +278,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         return findPropertyOrFieldReferences(
                 property.getName(), moduleNode, currentUri, includeDeclaration, indexService);
@@ -288,7 +289,7 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration,
-            Object indexService) { // TODO: Change back to WorkspaceIndexService
+            WorkspaceIndexService indexService) {
 
         List<Location> references = new ArrayList<>();
 

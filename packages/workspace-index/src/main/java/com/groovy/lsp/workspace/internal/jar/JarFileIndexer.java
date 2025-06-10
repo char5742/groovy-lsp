@@ -1,6 +1,6 @@
 package com.groovy.lsp.workspace.internal.jar;
 
-import com.groovy.lsp.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;

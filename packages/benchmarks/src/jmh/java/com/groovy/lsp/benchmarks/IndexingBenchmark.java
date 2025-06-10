@@ -1,7 +1,7 @@
 package com.groovy.lsp.benchmarks;
 
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
-import com.groovy.lsp.workspace.api.WorkspaceIndexService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
