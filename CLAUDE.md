@@ -1,3 +1,4 @@
  - 極力@SuppressWarningsを使用しないでください
  - Prohibited: git push --no-verfify
  - Prohibited: git commit --no-verfify
+ - github操作にはghコマンドを使用してください

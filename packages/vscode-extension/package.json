@@ -1,0 +1,102 @@
+{
+  "name": "groovy-language-server",
+  "displayName": "Groovy Language Server",
+  "description": "Language support for Groovy",
+  "version": "0.1.0",
+  "publisher": "groovy-lsp",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "groovy",
+    "language-server",
+    "lsp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/groovy-lsp/groovy-lsp"
+  },
+  "license": "Apache-2.0",
+  "activationEvents": [
+    "onLanguage:groovy"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "groovy",
+        "aliases": [
+          "Groovy",
+          "groovy"
+        ],
+        "extensions": [
+          ".groovy",
+          ".gradle"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Groovy Language Server",
+      "properties": {
+        "groovyLanguageServer.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "groovyLanguageServer.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        },
+        "groovyLanguageServer.javaHome": {
+          "scope": "window",
+          "type": "string",
+          "default": null,
+          "description": "Specifies the folder path to the JDK used to launch the Groovy Language Server."
+        },
+        "groovyLanguageServer.serverJar": {
+          "scope": "window",
+          "type": "string",
+          "default": null,
+          "description": "Path to the Groovy Language Server JAR file. If not specified, the extension will look for it in the default locations."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
+    "@vscode/test-electron": "^2.2.3",
+    "eslint": "^8.34.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  }
+}

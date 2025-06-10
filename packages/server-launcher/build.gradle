@@ -50,6 +50,82 @@ shadowJar {
             'Built-JDK': System.getProperty('java.version')
         )
     }
+
+    // Exclude unnecessary files to reduce size
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/NOTICE*'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/DEPENDENCIES*'
+    exclude 'META-INF/maven/**'
+    exclude 'about.html'
+    exclude '**/*.groovy'
+    exclude '**/*.html'
+    exclude '**/*.txt'
+    exclude '**/*.md'
+    exclude 'plugin.properties'
+    exclude '.api_description'
+    exclude 'lib/**'
+
+    // Exclude test dependencies
+    dependencies {
+        exclude(dependency('junit:junit'))
+        exclude(dependency('org.junit.jupiter:.*'))
+        exclude(dependency('org.mockito:.*'))
+        exclude(dependency('org.assertj:.*'))
+        exclude(dependency('ch.qos.logback:logback-test'))
+    }
+
+    // Exclude unnecessary Groovy modules to reduce size
+    dependencies {
+        exclude(dependency('org.apache.groovy:groovy-ant'))
+        exclude(dependency('org.apache.groovy:groovy-cli-commons'))
+        exclude(dependency('org.apache.groovy:groovy-cli-picocli'))
+        exclude(dependency('org.apache.groovy:groovy-console'))
+        exclude(dependency('org.apache.groovy:groovy-contracts'))
+        exclude(dependency('org.apache.groovy:groovy-datetime'))
+        exclude(dependency('org.apache.groovy:groovy-dateutil'))
+        exclude(dependency('org.apache.groovy:groovy-docgenerator'))
+        exclude(dependency('org.apache.groovy:groovy-groovydoc'))
+        exclude(dependency('org.apache.groovy:groovy-groovysh'))
+        exclude(dependency('org.apache.groovy:groovy-jmx'))
+        exclude(dependency('org.apache.groovy:groovy-jsr223'))
+        exclude(dependency('org.apache.groovy:groovy-macro'))
+        exclude(dependency('org.apache.groovy:groovy-servlet'))
+        exclude(dependency('org.apache.groovy:groovy-sql'))
+        exclude(dependency('org.apache.groovy:groovy-swing'))
+        exclude(dependency('org.apache.groovy:groovy-test'))
+        exclude(dependency('org.apache.groovy:groovy-testng'))
+        exclude(dependency('org.apache.groovy:groovy-toml'))
+        exclude(dependency('org.apache.groovy:groovy-typecheckers'))
+    }
+
+    // Exclude unused Eclipse dependencies
+    dependencies {
+        exclude(dependency('org.eclipse.core:org.eclipse.core.filesystem'))
+        exclude(dependency('org.eclipse.core:org.eclipse.core.contenttype'))
+        exclude(dependency('org.eclipse.core:org.eclipse.core.expressions'))
+        exclude(dependency('org.eclipse.core:org.eclipse.core.variables'))
+        exclude(dependency('org.eclipse.jdt:org.eclipse.jdt.launching'))
+        exclude(dependency('org.eclipse.debug:org.eclipse.debug.core'))
+    }
+}
+
+// Task to build VSCode extension JAR
+task buildVSCodeJar(type: Copy, dependsOn: shadowJar) {
+    from shadowJar
+    into "${rootProject.projectDir}/packages/vscode-extension/server"
+    rename { 'groovy-language-server.jar' }
+
+    doLast {
+        def jarFile = file("${rootProject.projectDir}/packages/vscode-extension/server/groovy-language-server.jar")
+        def size = jarFile.length() / 1024 / 1024
+        println "JAR size: ${size.round(2)} MB"
+        if (size > 18) {
+            throw new GradleException("JAR size (${size.round(2)} MB) exceeds 18MB limit for VS Code extension")
+        }
+    }
 }
 
 
