@@ -8,6 +8,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -36,7 +37,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -67,7 +67,7 @@ class DefinitionHandlerAdditionalTest {
         return new DefinitionParams(new TextDocumentIdentifier(uri), new Position(line, character));
     }
 
-    @Test
+    @UnitTest
     void testDefinition_catchVariable() {
         String sourceCode =
                 """
@@ -131,7 +131,7 @@ class DefinitionHandlerAdditionalTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(19); // 20 - 1 (0-based)
     }
 
-    @Test
+    @UnitTest
     void testDefinition_fieldVariable() {
         String sourceCode =
                 """
@@ -185,7 +185,7 @@ class DefinitionHandlerAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testDefinition_propertyVariable() {
         String sourceCode =
                 """
@@ -237,7 +237,7 @@ class DefinitionHandlerAdditionalTest {
         assertThat(locations).isEmpty(); // プロパティは現在の実装では見つからない（DynamicVariableのため）
     }
 
-    @Test
+    @UnitTest
     void testDefinition_forLoopVariable() {
         String sourceCode =
                 """
@@ -303,7 +303,7 @@ class DefinitionHandlerAdditionalTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(12); // 13 - 1 (0-based)
     }
 
-    @Test
+    @UnitTest
     void testDefinition_scriptWithStatementBlock() {
         String sourceCode =
                 """
@@ -357,7 +357,7 @@ class DefinitionHandlerAdditionalTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(4); // 5 - 1 (0-based)
     }
 
-    @Test
+    @UnitTest
     void testDefinition_nullStatementBlock() {
         String sourceCode = "class TestClass {}";
 

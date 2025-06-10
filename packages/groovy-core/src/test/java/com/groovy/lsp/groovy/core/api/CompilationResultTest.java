@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +14,6 @@ import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CompilationResultTest {
 
-    @Test
+    @UnitTest
     void success_shouldCreateSuccessResult() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -38,7 +38,7 @@ class CompilationResultTest {
         assertThat(result.hasErrors()).isFalse();
     }
 
-    @Test
+    @UnitTest
     void failure_shouldCreateFailureResult() {
         // given
         List<CompilationResult.CompilationError> errors =
@@ -66,7 +66,7 @@ class CompilationResultTest {
         assertThat(result.hasErrors()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void partial_shouldCreatePartialResult() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -89,7 +89,7 @@ class CompilationResultTest {
         assertThat(result.hasErrors()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void getErrors_shouldReturnImmutableList() {
         // given
         List<CompilationResult.CompilationError> errors =
@@ -106,7 +106,7 @@ class CompilationResultTest {
         assertThat(result.getErrors()).isUnmodifiable().hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_shouldSetPropertiesCorrectly() {
         // given
         String message = "Test error message";
@@ -128,7 +128,7 @@ class CompilationResultTest {
         assertThat(error.getType()).isEqualTo(type);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_fromGroovyMessage_shouldHandleSyntaxErrorMessage() {
         // given
         SyntaxException syntaxException = new SyntaxException("Unexpected token", 15, 25);
@@ -150,7 +150,7 @@ class CompilationResultTest {
         assertThat(error.getType()).isEqualTo(CompilationResult.CompilationError.ErrorType.SYNTAX);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_fromGroovyMessage_shouldHandleNullSyntaxException() {
         // given
         // Create a mock SyntaxErrorMessage that returns null for getCause()
@@ -172,7 +172,7 @@ class CompilationResultTest {
         assertThat(error.getType()).isEqualTo(CompilationResult.CompilationError.ErrorType.SYNTAX);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_fromGroovyMessage_shouldHandleSimpleMessage() {
         // given
         SimpleMessage simpleMessage = new SimpleMessage("Simple error message", null);
@@ -190,7 +190,7 @@ class CompilationResultTest {
         assertThat(error.getType()).isEqualTo(CompilationResult.CompilationError.ErrorType.SYNTAX);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_fromGroovyMessage_shouldParseMessageWithPosition() {
         // given
         Message customMessage =
@@ -220,7 +220,7 @@ class CompilationResultTest {
         assertThat(error.getSourceName()).isEqualTo(sourceName);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_fromGroovyMessage_shouldHandleInvalidPosition() {
         // given
         Message customMessage =
@@ -250,7 +250,7 @@ class CompilationResultTest {
         assertThat(error.getSourceName()).isEqualTo(sourceName);
     }
 
-    @Test
+    @UnitTest
     void CompilationError_ErrorType_shouldDefineAllTypes() {
         // when
         CompilationResult.CompilationError.ErrorType[] types =

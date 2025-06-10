@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -33,7 +34,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,7 +60,7 @@ class DefinitionHandlerBranchTest {
         handler = new DefinitionHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle PropertyExpression for property definition")
     void testHandleDefinition_PropertyExpression() throws Exception {
         // Arrange
@@ -117,7 +117,7 @@ class DefinitionHandlerBranchTest {
         assertNotNull(either.getLeft());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle ClassExpression for class definition")
     void testHandleDefinition_ClassExpression() throws Exception {
         // Arrange
@@ -167,7 +167,7 @@ class DefinitionHandlerBranchTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle ConstructorCallExpression for class definition")
     void testHandleDefinition_ConstructorCallExpression() throws Exception {
         // Arrange
@@ -218,7 +218,7 @@ class DefinitionHandlerBranchTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle exception during AST parsing")
     void testHandleDefinition_ExceptionHandling() throws Exception {
         // Arrange
@@ -246,7 +246,7 @@ class DefinitionHandlerBranchTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle null variable in findVariableDefinition")
     void testFindVariableDefinition_NullVariable() throws Exception {
         // Arrange
@@ -283,7 +283,7 @@ class DefinitionHandlerBranchTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle method with null method name")
     void testFindMethodDefinition_NullMethodName() throws Exception {
         // Arrange
@@ -323,7 +323,7 @@ class DefinitionHandlerBranchTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle property with null property name")
     void testFindPropertyDefinition_NullPropertyName() throws Exception {
         // Arrange
@@ -364,7 +364,7 @@ class DefinitionHandlerBranchTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle script with multiple classes for findDeclaringNode")
     void testFindDeclaringNode_MultipleClasses() throws Exception {
         // Arrange

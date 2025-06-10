@@ -10,6 +10,7 @@ import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -29,7 +30,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for cross-file definition functionality in DefinitionHandler
@@ -55,7 +55,7 @@ public class CrossFileDefinitionHandlerTest {
         definitionHandler = new DefinitionHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find method definition in external file via WorkspaceIndexService")
     void testCrossFileMethodDefinition() throws Exception {
         // Arrange
@@ -103,7 +103,7 @@ public class CrossFileDefinitionHandlerTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(4); // 0-based
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find class definition in external file via WorkspaceIndexService")
     void testCrossFileClassDefinition() throws Exception {
         // Arrange
@@ -148,7 +148,7 @@ public class CrossFileDefinitionHandlerTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find property definition in external file via WorkspaceIndexService")
     void testCrossFilePropertyDefinition() throws Exception {
         // Arrange
@@ -194,7 +194,7 @@ public class CrossFileDefinitionHandlerTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(9);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should return empty list when workspace index returns no results")
     void testCrossFileNoResults() throws Exception {
         // Arrange
@@ -233,7 +233,7 @@ public class CrossFileDefinitionHandlerTest {
         assertThat(locations).isEmpty();
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle workspace index service errors gracefully")
     void testCrossFileIndexServiceError() throws Exception {
         // Arrange

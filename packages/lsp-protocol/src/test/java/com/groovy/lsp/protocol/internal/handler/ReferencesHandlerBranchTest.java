@@ -10,6 +10,7 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -36,7 +37,6 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -63,7 +63,7 @@ class ReferencesHandlerBranchTest {
         handler = new ReferencesHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find class references in constructor calls")
     void testClassReferenceVisitor_ConstructorCall() throws Exception {
         // Arrange
@@ -127,7 +127,7 @@ class ReferencesHandlerBranchTest {
         assertTrue(locations.size() >= 2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find class references in variable types")
     void testClassReferenceVisitor_VariableType() throws Exception {
         // Arrange
@@ -184,7 +184,7 @@ class ReferencesHandlerBranchTest {
         assertTrue(locations.size() >= 2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find class references in extends clause")
     void testClassReferenceVisitor_ExtendsClause() throws Exception {
         // Arrange
@@ -233,7 +233,7 @@ class ReferencesHandlerBranchTest {
         // Should find extends references
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle MethodReferenceVisitor for static method calls")
     void testMethodReferenceVisitor_StaticMethodCall() throws Exception {
         // Arrange
@@ -294,7 +294,7 @@ class ReferencesHandlerBranchTest {
         // Should find static method calls
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle PropertyReferenceVisitor for property with same name as field")
     void testPropertyReferenceVisitor_PropertyAndField() throws Exception {
         // Arrange
@@ -358,7 +358,7 @@ class ReferencesHandlerBranchTest {
         // Should find property accesses
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle ReferenceVisitor for variable in closure")
     void testReferenceVisitor_VariableInClosure() throws Exception {
         // Arrange

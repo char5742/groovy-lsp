@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -13,7 +14,6 @@ import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -42,14 +42,14 @@ class SymbolIndexTest {
         }
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldCreateIndexDirectory() {
         // then
         assertThat(Files.exists(indexPath)).isTrue();
         assertThat(Files.isDirectory(indexPath)).isTrue();
     }
 
-    @Test
+    @UnitTest
     void checkInitialized_shouldThrowExceptionWhenNotInitialized() throws Exception {
         // given
         symbolIndex.close();
@@ -64,7 +64,7 @@ class SymbolIndexTest {
                 .hasMessageContaining("Symbol index is not initialized");
     }
 
-    @Test
+    @UnitTest
     void addFile_shouldAddFileToIndex() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -76,7 +76,7 @@ class SymbolIndexTest {
         // (実際のテストでは、getFileSymbolsなどで確認)
     }
 
-    @Test
+    @UnitTest
     void removeFile_shouldRemoveFileFromIndex() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -93,7 +93,7 @@ class SymbolIndexTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void addDependency_shouldAddDependencyToIndex() {
         // given
         Path dependency = Path.of("/libs/groovy-all-3.0.9.jar");
@@ -105,7 +105,7 @@ class SymbolIndexTest {
         // (実際のLMDBでは内部的に保存される)
     }
 
-    @Test
+    @UnitTest
     void addSymbol_shouldAddSymbolToIndex() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -123,7 +123,7 @@ class SymbolIndexTest {
         assertThat(results.get(0).column()).isEqualTo(5);
     }
 
-    @Test
+    @UnitTest
     void search_shouldFindSymbolsByPrefix() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -141,7 +141,7 @@ class SymbolIndexTest {
                 .containsExactlyInAnyOrder("TestClass", "TestMethod");
     }
 
-    @Test
+    @UnitTest
     void search_shouldReturnCachedResults() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -161,7 +161,7 @@ class SymbolIndexTest {
         assertThat(cachedResults).hasSize(1); // キャッシュから返されるので新しいシンボルは含まれない
     }
 
-    @Test
+    @UnitTest
     void getFileSymbols_shouldRetrieveAllSymbolsInFile() {
         // given
         Path file1 = Path.of("/test/File1.groovy");
@@ -188,7 +188,7 @@ class SymbolIndexTest {
         assertThat(file2Symbols.get(0).name()).isEqualTo("Class2");
     }
 
-    @Test
+    @UnitTest
     void addSymbol_shouldAllowMultipleSymbolsWithSameName() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -205,7 +205,7 @@ class SymbolIndexTest {
         assertThat(results).extracting(SymbolInfo::line).containsExactlyInAnyOrder(10, 20);
     }
 
-    @Test
+    @UnitTest
     void removeFile_shouldRemoveRelatedSymbols() {
         // given
         Path file = Path.of("/test/ToDelete.groovy");
@@ -226,7 +226,7 @@ class SymbolIndexTest {
         assertThat(deletedMethodResults).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void search_shouldHandleEmptyQuery() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -239,7 +239,7 @@ class SymbolIndexTest {
         assertThat(results).isNotEmpty(); // 空のクエリはすべてのシンボルにマッチ
     }
 
-    @Test
+    @UnitTest
     void close_shouldProperlyCleanupResources() throws Exception {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -253,7 +253,7 @@ class SymbolIndexTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    @Test
+    @UnitTest
     void shouldHandleJapaneseSymbolNames() {
         // given
         Path file = Path.of("/test/Japanese.groovy");
@@ -268,7 +268,7 @@ class SymbolIndexTest {
         assertThat(results.get(0).name()).isEqualTo("テストクラス");
     }
 
-    @Test
+    @UnitTest
     void shouldHandleSymbolNamesWithSpecialCharacters() {
         // given
         Path file = Path.of("/test/Special.groovy");
@@ -288,7 +288,7 @@ class SymbolIndexTest {
         assertThat(atResults).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldAcceptCustomMapSize() throws Exception {
         // Clean up the default index first
         symbolIndex.close();

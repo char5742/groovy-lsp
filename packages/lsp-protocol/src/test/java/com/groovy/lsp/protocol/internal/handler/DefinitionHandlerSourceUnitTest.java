@@ -3,6 +3,7 @@ package com.groovy.lsp.protocol.internal.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -19,7 +20,6 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,7 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DefinitionHandlerSourceUnitTest {
 
-    @Test
+    @UnitTest
     void testVariableDeclarationVisitor_getSourceUnit() throws Exception {
         // リフレクションを使用して内部クラスのインスタンスを作成
         Class<?> visitorClass = null;
@@ -61,7 +61,7 @@ class DefinitionHandlerSourceUnitTest {
         assertNull(result);
     }
 
-    @Test
+    @UnitTest
     void testVariableDeclarationVisitor_visitField() throws Exception {
         // リフレクションを使用して内部クラスのインスタンスを作成
         Class<?> visitorClass = null;
@@ -100,7 +100,7 @@ class DefinitionHandlerSourceUnitTest {
         assertThat(declarationNode).isEqualTo(fieldNode);
     }
 
-    @Test
+    @UnitTest
     void testVariableDeclarationVisitor_visitProperty() throws Exception {
         // リフレクションを使用して内部クラスのインスタンスを作成
         Class<?> visitorClass = null;
@@ -141,7 +141,7 @@ class DefinitionHandlerSourceUnitTest {
         assertThat(declarationNode).isEqualTo(propertyNode);
     }
 
-    @Test
+    @UnitTest
     void testVariableDeclarationVisitor_visitForLoop() throws Exception {
         // リフレクションを使用して内部クラスのインスタンスを作成
         Class<?> visitorClass = null;
@@ -183,7 +183,7 @@ class DefinitionHandlerSourceUnitTest {
         assertThat(declarationNode).isEqualTo(forParam);
     }
 
-    @Test
+    @UnitTest
     void testVariableDeclarationVisitor_visitForLoop_nullParameter() throws Exception {
         // リフレクションを使用して内部クラスのインスタンスを作成
         Class<?> visitorClass = null;
@@ -223,7 +223,7 @@ class DefinitionHandlerSourceUnitTest {
         assertNull(declarationNode);
     }
 
-    @Test
+    @UnitTest
     void testVariableDeclarationVisitor_visitDeclarationExpression_notMatch() throws Exception {
         // リフレクションを使用して内部クラスのインスタンスを作成
         Class<?> visitorClass = null;

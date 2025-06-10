@@ -5,14 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 class SymbolInfoTest {
 
-    @Test
+    @UnitTest
     @DisplayName("Should create SymbolInfo with valid parameters")
     void testValidSymbolInfo() {
         // Arrange
@@ -33,7 +33,7 @@ class SymbolInfoTest {
         assertEquals(column, symbolInfo.column());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for null name")
     @SuppressWarnings("NullAway")
     void testNullName() {
@@ -49,7 +49,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(null, kind, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for empty name")
     void testEmptyName() {
         // Arrange
@@ -64,7 +64,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo("", kind, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for null kind")
     @SuppressWarnings("NullAway")
     void testNullKind() {
@@ -80,7 +80,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(name, null, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for null location")
     @SuppressWarnings("NullAway")
     void testNullLocation() {
@@ -96,7 +96,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(name, kind, null, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for negative line")
     void testNegativeLine() {
         // Arrange
@@ -112,7 +112,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(name, kind, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for zero line")
     void testZeroLine() {
         // Arrange
@@ -128,7 +128,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(name, kind, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for negative column")
     void testNegativeColumn() {
         // Arrange
@@ -144,7 +144,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(name, kind, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw IllegalArgumentException for zero column")
     void testZeroColumn() {
         // Arrange
@@ -160,7 +160,7 @@ class SymbolInfoTest {
                 () -> new SymbolInfo(name, kind, location, line, column));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals for same values")
     void testEqualsWithSameValues() {
         // Arrange
@@ -178,7 +178,7 @@ class SymbolInfoTest {
         assertEquals(symbolInfo1.hashCode(), symbolInfo2.hashCode());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals for different values")
     void testEqualsWithDifferentValues() {
         // Arrange
@@ -190,7 +190,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo1, symbolInfo2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with different kind")
     void testEqualsWithDifferentKind() {
         // Arrange
@@ -202,7 +202,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo1, symbolInfo2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with different location")
     void testEqualsWithDifferentLocation() {
         // Arrange
@@ -215,7 +215,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo1, symbolInfo2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with different line")
     void testEqualsWithDifferentLine() {
         // Arrange
@@ -227,7 +227,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo1, symbolInfo2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with different column")
     void testEqualsWithDifferentColumn() {
         // Arrange
@@ -239,7 +239,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo1, symbolInfo2);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test toString method")
     void testToString() {
         // Arrange
@@ -262,7 +262,7 @@ class SymbolInfoTest {
         assertTrue(result.contains("5"));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle large line and column numbers")
     void testLargeLineAndColumnNumbers() {
         // Arrange
@@ -280,7 +280,7 @@ class SymbolInfoTest {
         assertEquals(column, symbolInfo.column());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test all SymbolKind values")
     void testAllSymbolKindValues() {
         // Arrange
@@ -293,7 +293,7 @@ class SymbolInfoTest {
         }
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with null")
     void testEqualsWithNull() {
         // Arrange
@@ -303,7 +303,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo, null);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with different class")
     void testEqualsWithDifferentClass() {
         // Arrange
@@ -314,7 +314,7 @@ class SymbolInfoTest {
         assertNotEquals(symbolInfo, other);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals with same object")
     void testEqualsWithSameObject() {
         // Arrange

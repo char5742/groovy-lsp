@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -13,7 +14,6 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -40,7 +40,7 @@ class MainAdditionalTest {
         System.setOut(originalOut);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleInvalidPortFormat() {
         // given
         String[] args = {"--socket", "--port", "abc123"};
@@ -51,7 +51,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Invalid port number");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleNonExistentWorkspace() {
         // given
         String[] args = {"--workspace", "/non/existent/path"};
@@ -62,7 +62,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Workspace directory does not exist");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleFileAsWorkspace() throws Exception {
         // given
         Path file =
@@ -77,7 +77,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Workspace path is not a directory");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMissingWorkspaceValue() {
         // given
         String[] args = {"--workspace"};
@@ -88,7 +88,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Missing value for --workspace");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMissingPortValue() {
         // given
         String[] args = {"--socket", "--port"};
@@ -99,7 +99,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Missing value for --port");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMissingHostValue() {
         // given
         String[] args = {"--socket", "--host"};
@@ -110,7 +110,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Missing value for --host");
     }
 
-    @Test
+    @UnitTest
     void main_shouldPrintHelp() throws Exception {
         // given
         String[] args = {"--help"};
@@ -120,7 +120,7 @@ class MainAdditionalTest {
                 .isInstanceOf(Main.HelpRequestedException.class);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleNonReadableWorkspace() throws Exception {
         // given
         Path nonReadable =
@@ -144,7 +144,7 @@ class MainAdditionalTest {
         // If we can't set permissions, just skip this test
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleWorkspaceShortForm() throws Exception {
         // given
         String workspace =
@@ -159,7 +159,7 @@ class MainAdditionalTest {
         assertThat(mode.workspaceRoot).isEqualTo(workspace);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandlePortShortForm() throws Exception {
         // given
         String[] args = {"-s", "-p", "8080"};
@@ -172,7 +172,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(8080);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleHostShortForm() throws Exception {
         // given
         String[] args = {"-s", "-h", "localhost"};
@@ -185,7 +185,7 @@ class MainAdditionalTest {
         assertThat(mode.host).isEqualTo("localhost");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleSocketShortForm() throws Exception {
         // given
         String[] args = {"-s"};
@@ -197,7 +197,7 @@ class MainAdditionalTest {
         assertThat(mode.type).isEqualTo(Main.LaunchType.SOCKET);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleUnknownArgument() throws Exception {
         // given
         String[] args = {"--unknown-argument"};
@@ -209,7 +209,7 @@ class MainAdditionalTest {
         assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandlePortOutOfRange() {
         // given
         String[] args = {"--socket", "--port", "70000"}; // Port > 65535
@@ -220,7 +220,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Port number must be between 1 and 65535");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleNegativePort() {
         // given
         String[] args = {"--socket", "--port", "-1"};
@@ -231,7 +231,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("Port number must be between 1 and 65535");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleValidWorkspaceDirectory() throws Exception {
         // given
         String workspace =
@@ -246,7 +246,7 @@ class MainAdditionalTest {
         assertThat(mode.workspaceRoot).isEqualTo(workspace);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleDryRunFlag() throws Exception {
         // given
         String[] args = {"--dry-run", "--socket", "--port", "8080"};
@@ -260,7 +260,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(8080);
     }
 
-    @Test
+    @UnitTest
     void main_shouldNotHangWithDryRun() throws Exception {
         // given
         String[] args = {"--dry-run"};
@@ -269,7 +269,7 @@ class MainAdditionalTest {
         assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleAllArgumentCombinations() throws Exception {
         // given
         String workspace =
@@ -281,7 +281,7 @@ class MainAdditionalTest {
         assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleRepeatedArguments() throws Exception {
         // given - repeated workspace arguments
         String workspace1 =
@@ -308,7 +308,7 @@ class MainAdditionalTest {
         assertThat(mode.workspaceRoot).isEqualTo(workspace2);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleHostOnlyWithoutSocket() throws Exception {
         // given
         String[] args = {"--host", "example.com"};
@@ -321,7 +321,7 @@ class MainAdditionalTest {
         assertThat(mode.host).isEqualTo("example.com");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandlePortOnlyWithoutSocket() throws Exception {
         // given
         String[] args = {"--port", "8888"};
@@ -334,7 +334,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(8888);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMixedValidAndInvalidArgs() throws Exception {
         // given - valid args mixed with unknown args
         String[] args = {"--socket", "--unknown", "--port", "5555", "--another-unknown"};
@@ -347,7 +347,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(5555);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleArgumentsWithEquals() throws Exception {
         // given - some systems pass args like --port=8080
         String[] args = {"--port=8080"};
@@ -359,7 +359,7 @@ class MainAdditionalTest {
         assertThat(mode.type).isEqualTo(Main.LaunchType.STDIO);
     }
 
-    @Test
+    @UnitTest
     void main_shouldValidateWorkspaceExists() throws Exception {
         // given
         Path nonExistent =
@@ -373,7 +373,7 @@ class MainAdditionalTest {
                 .hasMessageContaining("does not exist");
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleSocketModeWithDefaults() throws Exception {
         // given
         String[] args = {"-s"};
@@ -387,7 +387,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(4389);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleDryRunWithSocket() throws Exception {
         // given
         String[] args = {"--dry-run", "--socket", "--host", "test.com", "--port", "9999"};
@@ -396,7 +396,7 @@ class MainAdditionalTest {
         assertThatCode(() -> Main.runServer(args)).doesNotThrowAnyException();
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleEmptyHost() throws Exception {
         // given
         String[] args = {"--socket", "--host", ""};
@@ -408,7 +408,7 @@ class MainAdditionalTest {
         assertThat(mode.host).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMaxPortBoundary() throws Exception {
         // given
         String[] args = {"--socket", "--port", "65535"};
@@ -420,7 +420,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(65535);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMinPortBoundary() throws Exception {
         // given
         String[] args = {"--socket", "--port", "1"};
@@ -432,7 +432,7 @@ class MainAdditionalTest {
         assertThat(mode.port).isEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void main_shouldHandleMissingWorkspaceValueShortForm() {
         // given
         String[] args = {"-w"};

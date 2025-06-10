@@ -2,14 +2,14 @@ package com.groovy.lsp.groovy.core.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
+import com.groovy.lsp.test.annotations.UnitTest;
 
 /**
  * GroovyCoreFactoryのテストクラス。
  */
 class GroovyCoreFactoryTest {
 
-    @Test
+    @UnitTest
     void getInstance_shouldReturnSingletonInstance() {
         // when
         GroovyCoreFactory instance1 = GroovyCoreFactory.getInstance();
@@ -21,7 +21,7 @@ class GroovyCoreFactoryTest {
         assertThat(instance1).isSameAs(instance2);
     }
 
-    @Test
+    @UnitTest
     void createASTService_shouldCreateNewInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -36,7 +36,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isNotSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void createCompilerConfigurationService_shouldCreateNewInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -51,7 +51,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isNotSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void createTypeInferenceService_shouldCreateNewInstanceWithASTService() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -67,7 +67,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isNotSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void createIncrementalCompilationService_shouldCreateNewInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -82,7 +82,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isNotSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void getASTService_shouldReturnSharedInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -97,7 +97,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void getCompilerConfigurationService_shouldReturnSharedInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -112,7 +112,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void getTypeInferenceService_shouldReturnSharedInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -127,7 +127,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void getIncrementalCompilationService_shouldReturnSharedInstance() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();
@@ -142,7 +142,7 @@ class GroovyCoreFactoryTest {
         assertThat(service1).isSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void getInstance_shouldReturnSameInstanceInMultithreadedEnvironment()
             throws InterruptedException {
         // given
@@ -171,7 +171,7 @@ class GroovyCoreFactoryTest {
         }
     }
 
-    @Test
+    @UnitTest
     void factoryMethods_shouldReturnCorrectImplementationClasses() {
         // given
         GroovyCoreFactory factory = GroovyCoreFactory.getInstance();

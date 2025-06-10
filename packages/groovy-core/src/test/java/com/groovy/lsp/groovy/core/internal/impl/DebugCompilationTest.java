@@ -1,5 +1,6 @@
 package com.groovy.lsp.groovy.core.internal.impl;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -7,11 +8,10 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.io.StringReaderSource;
-import org.junit.jupiter.api.Test;
 
 class DebugCompilationTest {
 
-    @Test
+    @UnitTest
     void testParsingPhase() {
         String sourceCode =
                 """

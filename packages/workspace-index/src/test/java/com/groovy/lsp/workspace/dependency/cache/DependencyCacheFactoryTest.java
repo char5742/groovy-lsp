@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for DependencyCacheFactory.
@@ -21,7 +21,7 @@ class DependencyCacheFactoryTest {
         DependencyCacheFactory.reset();
     }
 
-    @Test
+    @UnitTest
     void testGetInstance_returnsSameInstance() {
         DependencyCache cache1 = DependencyCacheFactory.getInstance();
         DependencyCache cache2 = DependencyCacheFactory.getInstance();
@@ -30,14 +30,14 @@ class DependencyCacheFactoryTest {
         assertSame(cache1, cache2, "Should return the same singleton instance");
     }
 
-    @Test
+    @UnitTest
     void testGetInstance_createsLRUDependencyCache() {
         DependencyCache cache = DependencyCacheFactory.getInstance();
 
         assertInstanceOf(LRUDependencyCache.class, cache);
     }
 
-    @Test
+    @UnitTest
     void testReset_clearsInstance() {
         DependencyCache cache1 = DependencyCacheFactory.getInstance();
         assertNotNull(cache1);
@@ -49,7 +49,7 @@ class DependencyCacheFactoryTest {
         assertNotSame(cache1, cache2, "Should create new instance after reset");
     }
 
-    @Test
+    @UnitTest
     void testReset_invalidatesExistingCache() {
         DependencyCache cache = DependencyCacheFactory.getInstance();
 
@@ -67,7 +67,7 @@ class DependencyCacheFactoryTest {
         assertFalse(cache.getCachedDependencies(java.nio.file.Paths.get("/test")).isPresent());
     }
 
-    @Test
+    @UnitTest
     void testThreadSafety_multipleThreadsGetSameInstance() throws InterruptedException {
         final int threadCount = 10;
         DependencyCache[] caches = new DependencyCache[threadCount];

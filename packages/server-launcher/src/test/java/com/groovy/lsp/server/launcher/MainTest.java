@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -18,7 +19,6 @@ import java.util.concurrent.Future;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -45,7 +45,7 @@ class MainTest {
         System.setOut(originalOut);
     }
 
-    @Test
+    @UnitTest
     void testHelpOption() {
         // Test that --help throws HelpRequestedException
         assertThrows(
@@ -53,7 +53,7 @@ class MainTest {
                 () -> Main.parseArguments(new String[] {"--help"}));
     }
 
-    @Test
+    @UnitTest
     void testInvalidPort() {
         // Test that invalid port number throws exception
         assertThrows(
@@ -61,7 +61,7 @@ class MainTest {
                 () -> Main.parseArguments(new String[] {"--socket", "--port", "invalid"}));
     }
 
-    @Test
+    @UnitTest
     void testMissingPortValue() {
         // Test that missing port value throws exception
         assertThrows(
@@ -69,7 +69,7 @@ class MainTest {
                 () -> Main.parseArguments(new String[] {"--socket", "--port"}));
     }
 
-    @Test
+    @UnitTest
     void testMissingHostValue() {
         // Test that missing host value throws exception
         assertThrows(
@@ -77,7 +77,7 @@ class MainTest {
                 () -> Main.parseArguments(new String[] {"--socket", "--host"}));
     }
 
-    @Test
+    @UnitTest
     void testValidSocketMode() throws Exception {
         // Test valid socket mode arguments
         String[] args = {"--socket", "--host", "localhost", "--port", "8080"};
@@ -89,7 +89,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(8080);
     }
 
-    @Test
+    @UnitTest
     void testSocketModeDefaults() throws Exception {
         // Test socket mode with default host and port
         String[] args = {"--socket"};
@@ -101,7 +101,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(4389); // default
     }
 
-    @Test
+    @UnitTest
     void testWorkspaceValidation() throws Exception {
         // Test workspace directory validation
         Path validWorkspace = Objects.requireNonNull(tempDir).resolve("workspace");
@@ -114,7 +114,7 @@ class MainTest {
         assertThat(mode.workspaceRoot).isEqualTo(validWorkspace.toString());
     }
 
-    @Test
+    @UnitTest
     void testStdioModeDefault() throws Exception {
         // Test that stdio mode is the default
         String[] args = {};
@@ -125,7 +125,7 @@ class MainTest {
         assertThat(mode.workspaceRoot).isNull();
     }
 
-    @Test
+    @UnitTest
     void testPortBoundaryValues() throws Exception {
         // Test port at boundaries
         assertThrows(
@@ -138,7 +138,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(65535);
     }
 
-    @Test
+    @UnitTest
     void testMissingWorkspaceValue() {
         // Test that missing workspace value throws exception
         assertThrows(
@@ -147,7 +147,7 @@ class MainTest {
                 "Missing workspace value should throw exception");
     }
 
-    @Test
+    @UnitTest
     void testDryRunModeComplete() throws Exception {
         // Test dry-run mode with all options
         String workspace = Objects.requireNonNull(tempDir).toString();
@@ -158,7 +158,7 @@ class MainTest {
         assertDoesNotThrow(() -> Main.runServer(args));
     }
 
-    @Test
+    @UnitTest
     void testDryRunModeStdio() throws Exception {
         // Test dry-run mode with stdio
         String[] args = {"--dry-run"};
@@ -166,7 +166,7 @@ class MainTest {
         assertDoesNotThrow(() -> Main.runServer(args));
     }
 
-    @Test
+    @UnitTest
     void testShortFormArguments() throws Exception {
         // Test all short form arguments
         String workspace = Objects.requireNonNull(tempDir).toString();
@@ -180,7 +180,7 @@ class MainTest {
         assertThat(mode.workspaceRoot).isEqualTo(workspace);
     }
 
-    @Test
+    @UnitTest
     void testInvalidWorkspacePath() {
         // Test with workspace as file instead of directory
         String[] args = {"--workspace", "/dev/null"};
@@ -191,7 +191,7 @@ class MainTest {
                 "Should throw exception for non-directory workspace");
     }
 
-    @Test
+    @UnitTest
     void testMultiplePortArguments() throws Exception {
         // Test that last port wins
         String[] args = {"--socket", "--port", "1111", "--port", "2222"};
@@ -200,7 +200,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(2222);
     }
 
-    @Test
+    @UnitTest
     void testCombinedShortAndLongForm() throws Exception {
         // Test mixing short and long form arguments
         String[] args = {"-s", "--port", "3333", "-h", "example.com"};
@@ -212,7 +212,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(3333);
     }
 
-    @Test
+    @UnitTest
     void testEmptyArguments() throws Exception {
         // Test with empty arguments array
         String[] args = {};
@@ -224,7 +224,7 @@ class MainTest {
         assertThat(mode.dryRun).isFalse();
     }
 
-    @Test
+    @UnitTest
     void testNullArguments() throws Exception {
         // Test with null array (edge case)
         // Use reflection to test null handling
@@ -237,7 +237,7 @@ class MainTest {
                 .hasCauseInstanceOf(NullPointerException.class);
     }
 
-    @Test
+    @UnitTest
     void testPortZero() {
         // Test port = 0
         String[] args = {"--socket", "--port", "0"};
@@ -248,7 +248,7 @@ class MainTest {
                 "Port 0 should be invalid");
     }
 
-    @Test
+    @UnitTest
     void testPortMaxValue() throws Exception {
         // Test port = Integer.MAX_VALUE (out of valid range)
         String[] args = {"--socket", "--port", String.valueOf(Integer.MAX_VALUE)};
@@ -259,7 +259,7 @@ class MainTest {
                 "Port out of range should be invalid");
     }
 
-    @Test
+    @UnitTest
     void testHostAndPortWithoutSocketMode() throws Exception {
         // Test setting host and port without --socket
         String[] args = {"--host", "example.com", "--port", "5555"};
@@ -272,7 +272,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(5555);
     }
 
-    @Test
+    @UnitTest
     void testSocketModeWithOnlyHost() throws Exception {
         // Test socket mode with only host specified
         String[] args = {"--socket", "--host", "0.0.0.0"};
@@ -284,7 +284,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(4389); // default port
     }
 
-    @Test
+    @UnitTest
     void testSocketModeWithOnlyPort() throws Exception {
         // Test socket mode with only port specified
         String[] args = {"--socket", "--port", "6666"};
@@ -296,7 +296,7 @@ class MainTest {
         assertThat(mode.port).isEqualTo(6666);
     }
 
-    @Test
+    @UnitTest
     void testRelativeWorkspacePath() throws Exception {
         // Test with relative workspace path
         String[] args = {"--workspace", "."};
@@ -306,7 +306,7 @@ class MainTest {
         assertThat(mode.workspaceRoot).isEqualTo(".");
     }
 
-    @Test
+    @UnitTest
     void testSocketModeWithHostSetButPortZero() throws Exception {
         // Test socket mode where host is already set but port is 0 (should use default port)
         String[] args = {"--socket"};
@@ -324,7 +324,7 @@ class MainTest {
         assertThat(mode2.port).isEqualTo(4389); // default port
     }
 
-    @Test
+    @UnitTest
     void testMainMethodWithHelp() {
         // Test main method with --help argument by calling runServer instead
         try {
@@ -341,7 +341,7 @@ class MainTest {
         assertThat(output).contains("Usage:");
     }
 
-    @Test
+    @UnitTest
     void testMainMethodWithInvalidArguments() {
         // Test parseArguments with invalid port
         assertThrows(
@@ -350,7 +350,7 @@ class MainTest {
                 "Should throw exception for invalid port");
     }
 
-    @Test
+    @UnitTest
     void testPrintHelp() throws Exception {
         // Use reflection to test private printHelp method
         Method printHelpMethod = Main.class.getDeclaredMethod("printHelp");
@@ -376,7 +376,7 @@ class MainTest {
         assertThat(output).contains("Examples:");
     }
 
-    @Test
+    @UnitTest
     void testCreateExecutorService() throws Exception {
         // Use reflection to test private createExecutorService method
         Method createExecutorServiceMethod = Main.class.getDeclaredMethod("createExecutorService");
@@ -405,7 +405,7 @@ class MainTest {
         executorService.shutdown();
     }
 
-    @Test
+    @UnitTest
     void testLaunchModeEnum() {
         // Test LaunchType enum values
         Main.LaunchType[] types = Main.LaunchType.values();
@@ -413,14 +413,14 @@ class MainTest {
         assertThat(types).contains(Main.LaunchType.STDIO, Main.LaunchType.SOCKET);
     }
 
-    @Test
+    @UnitTest
     void testHelpRequestedException() {
         // Test HelpRequestedException
         Main.HelpRequestedException exception = new Main.HelpRequestedException();
         assertThat(exception.getMessage()).isEqualTo("Help requested");
     }
 
-    @Test
+    @UnitTest
     void testLaunchModeClass() {
         // Test LaunchMode default values
         Main.LaunchMode mode = new Main.LaunchMode();
@@ -431,7 +431,7 @@ class MainTest {
         assertThat(mode.workspaceRoot).isNull();
     }
 
-    @Test
+    @UnitTest
     void testArgumentValidation() throws Exception {
         // Test various argument validations
 

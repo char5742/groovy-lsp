@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.PerformanceTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +52,7 @@ class DefinitionHandlerPerformanceTest {
         handler = new DefinitionHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("Definition resolution should complete within 50ms for simple method call")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_SimpleMethodCall() {
@@ -104,7 +104,7 @@ class DefinitionHandlerPerformanceTest {
                 "Definition resolution took " + duration + "ms, should be less than 50ms");
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("Definition resolution should complete within 50ms for large class")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_LargeClass() {
@@ -173,7 +173,7 @@ class DefinitionHandlerPerformanceTest {
                         + "ms, should be less than 50ms");
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("Definition resolution should complete within 50ms for variable reference")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_VariableReference() {

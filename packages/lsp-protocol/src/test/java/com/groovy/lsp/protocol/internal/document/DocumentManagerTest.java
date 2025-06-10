@@ -2,9 +2,9 @@ package com.groovy.lsp.protocol.internal.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * DocumentManagerのテストクラス。
@@ -20,7 +20,7 @@ class DocumentManagerTest {
         testDocument = new TextDocumentItem("file:///test.groovy", "groovy", 1, "class Test {}");
     }
 
-    @Test
+    @UnitTest
     void openDocument_shouldStoreDocument() {
         // when
         documentManager.openDocument(testDocument);
@@ -32,7 +32,7 @@ class DocumentManagerTest {
                 .isEqualTo("class Test {}");
     }
 
-    @Test
+    @UnitTest
     void openDocument_shouldReplaceExistingDocument() {
         // given
         documentManager.openDocument(testDocument);
@@ -48,7 +48,7 @@ class DocumentManagerTest {
                 .isEqualTo("class NewTest {}");
     }
 
-    @Test
+    @UnitTest
     void updateDocument_shouldUpdateContentAndVersion() {
         // given
         documentManager.openDocument(testDocument);
@@ -64,7 +64,7 @@ class DocumentManagerTest {
         assertThat(updatedDoc.getVersion()).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void updateDocument_shouldHandleNonExistentDocument() {
         // when
         documentManager.updateDocument("file:///nonexistent.groovy", "content", 1);
@@ -74,7 +74,7 @@ class DocumentManagerTest {
         assertThat(documentManager.getDocumentContent("file:///nonexistent.groovy")).isNull();
     }
 
-    @Test
+    @UnitTest
     void closeDocument_shouldRemoveDocument() {
         // given
         documentManager.openDocument(testDocument);
@@ -89,7 +89,7 @@ class DocumentManagerTest {
         assertThat(documentManager.getDocumentContent("file:///test.groovy")).isNull();
     }
 
-    @Test
+    @UnitTest
     void closeDocument_shouldHandleNonExistentDocument() {
         // when/then - should not throw
         documentManager.closeDocument("file:///nonexistent.groovy");
@@ -98,7 +98,7 @@ class DocumentManagerTest {
         assertThat(documentManager.isDocumentOpen("file:///nonexistent.groovy")).isFalse();
     }
 
-    @Test
+    @UnitTest
     void getDocumentContent_shouldReturnNullForNonExistentDocument() {
         // when
         String content = documentManager.getDocumentContent("file:///nonexistent.groovy");
@@ -107,7 +107,7 @@ class DocumentManagerTest {
         assertThat(content).isNull();
     }
 
-    @Test
+    @UnitTest
     void getDocument_shouldReturnNullForNonExistentDocument() {
         // when
         TextDocumentItem document = documentManager.getDocument("file:///nonexistent.groovy");
@@ -116,7 +116,7 @@ class DocumentManagerTest {
         assertThat(document).isNull();
     }
 
-    @Test
+    @UnitTest
     void isDocumentOpen_shouldReturnFalseForNonExistentDocument() {
         // when
         boolean isOpen = documentManager.isDocumentOpen("file:///nonexistent.groovy");
@@ -125,7 +125,7 @@ class DocumentManagerTest {
         assertThat(isOpen).isFalse();
     }
 
-    @Test
+    @UnitTest
     void isDocumentOpen_shouldReturnTrueForOpenDocument() {
         // given
         documentManager.openDocument(testDocument);
@@ -137,7 +137,7 @@ class DocumentManagerTest {
         assertThat(isOpen).isTrue();
     }
 
-    @Test
+    @UnitTest
     void multipleDocuments_shouldBeHandledCorrectly() {
         // given
         TextDocumentItem doc1 =
@@ -165,7 +165,7 @@ class DocumentManagerTest {
         assertThat(documentManager.isDocumentOpen("file:///test2.groovy")).isTrue();
     }
 
-    @Test
+    @UnitTest
     void updateDocument_shouldPreserveLanguageIdAndUri() {
         // given
         documentManager.openDocument(testDocument);

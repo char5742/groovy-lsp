@@ -5,16 +5,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for SymbolInfo DTO.
  */
 class SymbolInfoTest {
 
-    @Test
+    @UnitTest
     void testSymbolInfoCreation() {
         Path location = Paths.get("/path/to/MyClass.groovy");
         SymbolInfo symbol = new SymbolInfo("MyClass", SymbolKind.CLASS, location, 10, 5);
@@ -26,7 +26,7 @@ class SymbolInfoTest {
         assertThat(symbol.column()).isEqualTo(5);
     }
 
-    @Test
+    @UnitTest
     void testSymbolKindValues() {
         assertThat(SymbolKind.values())
                 .containsExactlyInAnyOrder(
@@ -43,7 +43,7 @@ class SymbolInfoTest {
                         SymbolKind.CLOSURE);
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoEquality() {
         Path location = Paths.get("/path/to/MyClass.groovy");
         SymbolInfo symbol1 = new SymbolInfo("MyClass", SymbolKind.CLASS, location, 10, 5);
@@ -54,7 +54,7 @@ class SymbolInfoTest {
         assertThat(symbol1.hashCode()).isEqualTo(symbol2.hashCode());
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoToString() {
         Path location = Paths.get("/path/to/MyClass.groovy");
         SymbolInfo symbol = new SymbolInfo("MyMethod", SymbolKind.METHOD, location, 20, 10);
@@ -64,7 +64,7 @@ class SymbolInfoTest {
         assertThat(toString).contains("METHOD");
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoValidation_NullName() throws Exception {
         // Use reflection to bypass NullAway for null parameter testing
         Path location = Paths.get("/path/to/MyClass.groovy");
@@ -84,7 +84,7 @@ class SymbolInfoTest {
                 .hasMessage("Symbol name cannot be null or blank");
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoValidation_BlankName() {
         Path location = Paths.get("/path/to/MyClass.groovy");
         assertThatThrownBy(() -> new SymbolInfo("   ", SymbolKind.CLASS, location, 10, 5))
@@ -92,7 +92,7 @@ class SymbolInfoTest {
                 .hasMessage("Symbol name cannot be null or blank");
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoValidation_NullKind() throws Exception {
         // Use reflection to bypass NullAway for null parameter testing
         Path location = Paths.get("/path/to/MyClass.groovy");
@@ -112,7 +112,7 @@ class SymbolInfoTest {
                 .hasMessage("Symbol kind cannot be null");
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoValidation_NullLocation() throws Exception {
         // Use reflection to bypass NullAway for null parameter testing
         java.lang.reflect.Constructor<SymbolInfo> constructor =
@@ -131,7 +131,7 @@ class SymbolInfoTest {
                 .hasMessage("Symbol location cannot be null");
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoValidation_InvalidLine() {
         Path location = Paths.get("/path/to/MyClass.groovy");
         assertThatThrownBy(() -> new SymbolInfo("MyClass", SymbolKind.CLASS, location, 0, 5))
@@ -139,7 +139,7 @@ class SymbolInfoTest {
                 .hasMessage("Line number must be positive");
     }
 
-    @Test
+    @UnitTest
     void testSymbolInfoValidation_InvalidColumn() {
         Path location = Paths.get("/path/to/MyClass.groovy");
         assertThatThrownBy(() -> new SymbolInfo("MyClass", SymbolKind.CLASS, location, 10, -1))

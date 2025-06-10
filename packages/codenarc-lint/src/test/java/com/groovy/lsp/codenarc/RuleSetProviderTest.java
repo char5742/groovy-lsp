@@ -2,6 +2,7 @@ package com.groovy.lsp.codenarc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,7 +11,6 @@ import java.util.Objects;
 import org.codenarc.ruleset.RuleSet;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -27,7 +27,7 @@ class RuleSetProviderTest {
         ruleSetProvider = new RuleSetProvider();
     }
 
-    @Test
+    @UnitTest
     void getRuleSet_shouldReturnDefaultRuleSet() {
         // when
         RuleSet ruleSet = ruleSetProvider.getRuleSet();
@@ -36,7 +36,7 @@ class RuleSetProviderTest {
         assertThat(ruleSet).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void getRuleSet_shouldReturnCachedRuleSet() {
         // when
         RuleSet ruleSet1 = ruleSetProvider.getRuleSet();
@@ -46,7 +46,7 @@ class RuleSetProviderTest {
         assertThat(ruleSet1).isSameAs(ruleSet2);
     }
 
-    @Test
+    @UnitTest
     void reloadRuleSet_shouldClearCacheAndReturnNewRuleSet() {
         // given
         // Get original rule set to ensure cache is populated
@@ -60,7 +60,7 @@ class RuleSetProviderTest {
         // Note: They might be equal in content but different instances
     }
 
-    @Test
+    @UnitTest
     void addRuleSetPath_shouldAddCustomRuleSetPath() {
         // given
         String customPath = "custom-rules.xml";
@@ -73,7 +73,7 @@ class RuleSetProviderTest {
         assertThat(paths).contains(customPath);
     }
 
-    @Test
+    @UnitTest
     void resetToDefaults_shouldResetToDefaultRuleSetPaths() {
         // given
         ruleSetProvider.addRuleSetPath("custom-rules.xml");
@@ -94,7 +94,7 @@ class RuleSetProviderTest {
                         "rulesets/design.xml");
     }
 
-    @Test
+    @UnitTest
     void getRuleSetPaths_shouldIncludeDefaultRuleSetPaths() {
         // when
         List<String> paths = ruleSetProvider.getRuleSetPaths();
@@ -110,7 +110,7 @@ class RuleSetProviderTest {
                         "rulesets/design.xml");
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldDetectCustomRuleSetFile() throws IOException {
         // given - Create a custom ruleset file in temp directory
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -144,7 +144,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldDetectCustomPropertiesFile() throws IOException {
         // given - Create a custom properties file in temp directory
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -177,7 +177,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldDetectGradleProject() throws IOException {
         // given - Create a Gradle project structure
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -205,7 +205,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldDetectMavenProject() throws IOException {
         // given - Create a Maven project structure
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -230,7 +230,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void addRuleSetPath_shouldClearCache() {
         // given
         // Just ensure getRuleSet works before adding new path
@@ -244,7 +244,7 @@ class RuleSetProviderTest {
         assertThat(newRuleSet).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldHandleInvalidRuleSetPaths() {
         // given
         ruleSetProvider.resetToDefaults();
@@ -258,7 +258,7 @@ class RuleSetProviderTest {
         assertThat(ruleSet).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldLoadXmlFileFromFileSystem() throws IOException {
         // given - Create an XML ruleset file
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -284,7 +284,7 @@ class RuleSetProviderTest {
         assertThat(ruleSet).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldWarnAboutPropertiesFiles() {
         // given - Create a properties file
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -303,7 +303,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldDetectGitRepository() throws IOException {
         // given - Create a Git repository structure
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -331,7 +331,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldDetectKotlinGradleProject() throws IOException {
         // given - Create a Kotlin Gradle project structure
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -356,7 +356,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldFallbackToCurrentDirWhenNoProjectMarkers() throws IOException {
         // given - Create a directory with no project markers
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -379,7 +379,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void loadCustomProperties_shouldApplyPropertiesToRules() throws IOException {
         // given - Create a properties file with rule configurations
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -422,7 +422,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void loadCustomProperties_shouldHandleIOException() throws IOException {
         // given - Create a directory named codenarc.properties instead of a file
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -448,7 +448,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void convertValue_shouldConvertAllSupportedTypes() {
         // This test uses reflection to access the private convertValue method
         // Testing through public API by setting up properties that will be converted
@@ -490,7 +490,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldHandleNullCustomRuleSet() throws IOException {
         // given - No custom ruleset file in project root
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -514,7 +514,7 @@ class RuleSetProviderTest {
         }
     }
 
-    @Test
+    @UnitTest
     void loadCustomRuleSet_shouldHandleXmlParseException() throws IOException {
         // given - Create an invalid XML ruleset file
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassNode;
@@ -20,7 +21,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -51,7 +51,7 @@ class DefinitionHandlerTest {
         handler = new DefinitionHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_DocumentNotFound() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -74,7 +74,7 @@ class DefinitionHandlerTest {
         assertTrue(either.getLeft().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_ParseError() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -99,7 +99,7 @@ class DefinitionHandlerTest {
         assertTrue(either.getLeft().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_NoNodeAtPosition() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -125,7 +125,7 @@ class DefinitionHandlerTest {
         assertTrue(either.getLeft().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_EmptyFile() {
         // Arrange
         String uri = "file:///empty.groovy";
@@ -150,7 +150,7 @@ class DefinitionHandlerTest {
         assertTrue(either.getLeft().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_SyntaxError() {
         // Arrange
         String uri = "file:///syntax-error.groovy";
@@ -177,7 +177,7 @@ class DefinitionHandlerTest {
         assertTrue(either.getLeft().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_LargePositionNumbers() {
         // Arrange - Test with very large line/column numbers
         String uri = "file:///test.groovy";
@@ -203,7 +203,7 @@ class DefinitionHandlerTest {
         assertTrue(either.getLeft().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDefinition_MethodCall_LocalMethod() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -251,7 +251,7 @@ class DefinitionHandlerTest {
     }
 
     // TODO: Enable when circular dependency is resolved
-    // @Test
+    // @UnitTest
     // void testHandleDefinition_MethodCall_WorkspaceSearch() {
     //     // Arrange
     //     String uri = "file:///test.groovy";

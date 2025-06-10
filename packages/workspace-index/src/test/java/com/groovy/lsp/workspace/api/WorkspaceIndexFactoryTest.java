@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -18,7 +18,7 @@ class WorkspaceIndexFactoryTest {
 
     @TempDir @Nullable Path tempDir;
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldCreateServiceWithValidWorkspaceRoot() throws Exception {
         // given
         Path workspaceRoot =
@@ -35,7 +35,7 @@ class WorkspaceIndexFactoryTest {
         assertThat(service).isInstanceOf(WorkspaceIndexService.class);
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldThrowExceptionForNullWorkspaceRoot() throws Exception {
         // when/then
         // Use reflection to bypass NullAway compile-time check
@@ -48,7 +48,7 @@ class WorkspaceIndexFactoryTest {
                 .hasMessageContaining("Workspace root cannot be null");
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldThrowExceptionForNonExistentWorkspaceRoot() {
         // given
         Path nonExistentPath =
@@ -61,7 +61,7 @@ class WorkspaceIndexFactoryTest {
                 .hasMessageContaining("Workspace root does not exist");
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldHandleFileAsWorkspaceRoot() throws Exception {
         // given
         Path file =
@@ -76,7 +76,7 @@ class WorkspaceIndexFactoryTest {
         assertThat(service).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldCreateMultipleInstances() throws Exception {
         // given
         Path workspace1 =
@@ -100,7 +100,7 @@ class WorkspaceIndexFactoryTest {
         assertThat(service1).isNotSameAs(service2);
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldCreateMultipleInstancesForSameWorkspace()
             throws Exception {
         // given
@@ -121,7 +121,7 @@ class WorkspaceIndexFactoryTest {
         assertThat(service1).isNotSameAs(service2); // 新しいインスタンスが作成される
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldHandleBothAbsoluteAndRelativePaths() throws Exception {
         // given
         Path absolutePath =
@@ -137,7 +137,7 @@ class WorkspaceIndexFactoryTest {
         assertThat(service).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void createWorkspaceIndexService_shouldHandleSymbolicLinks() throws Exception {
         // given
         Path actualDir =

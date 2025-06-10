@@ -2,14 +2,14 @@ package com.groovy.lsp.formatting.options;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
+import com.groovy.lsp.test.annotations.UnitTest;
 
 /**
  * Unit tests for FormatOptions.
  */
 class FormatOptionsTest {
 
-    @Test
+    @UnitTest
     void testDefaultOptions() {
         FormatOptions options = FormatOptions.builder().build();
 
@@ -22,7 +22,7 @@ class FormatOptionsTest {
         assertThat(options.isPreserveLineBreaks()).isFalse();
     }
 
-    @Test
+    @UnitTest
     void testCustomOptions() {
         FormatOptions options =
                 FormatOptions.builder()
@@ -43,7 +43,7 @@ class FormatOptionsTest {
                 .isEqualTo(com.google.googlejavaformat.java.JavaFormatterOptions.Style.AOSP);
     }
 
-    @Test
+    @UnitTest
     void testBuilderCopy() {
         FormatOptions original =
                 FormatOptions.builder().indentSize(2).useTabs(true).compactClosures(true).build();
@@ -56,7 +56,7 @@ class FormatOptionsTest {
         assertThat(original.getIndentSize()).isEqualTo(2); // Original unchanged
     }
 
-    @Test
+    @UnitTest
     void testEqualsAndHashCode() {
         FormatOptions options1 =
                 FormatOptions.builder().indentSize(2).useTabs(true).compactClosures(true).build();
@@ -72,7 +72,7 @@ class FormatOptionsTest {
         assertThat(options1).isNotSameAs(options3);
     }
 
-    @Test
+    @UnitTest
     void testToString() {
         FormatOptions options = FormatOptions.builder().indentSize(2).useTabs(true).build();
 

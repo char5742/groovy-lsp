@@ -19,6 +19,9 @@ dependencies {
     testImplementation project(':workspace-index')
     testImplementation project(':formatting')
 
+    // Test annotations from shared module
+    testImplementation project(path: ':shared', configuration: 'testOutput')
+
     // 統合テスト用の追加ライブラリ
     testImplementation libs.lsp4j
     testImplementation libs.google.java.format // For FormatterException

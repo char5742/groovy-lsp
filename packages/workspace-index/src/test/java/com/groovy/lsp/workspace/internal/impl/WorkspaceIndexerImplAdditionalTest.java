@@ -7,6 +7,7 @@ import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
 import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import java.io.FileOutputStream;
@@ -27,7 +28,6 @@ import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
@@ -49,7 +49,7 @@ class WorkspaceIndexerImplAdditionalTest {
         eventBus = EventBusFactory.getInstance();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldIndexDependencies() throws Exception {
         // Given - Create a workspace with dependencies
         Path libDir =
@@ -93,7 +93,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleDependencyDirectories() throws Exception {
         // Given - Create a dependency directory structure
         Path depDir =
@@ -128,7 +128,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(totalFiles.get()).isGreaterThanOrEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleJarIndexingErrors() throws Exception {
         // Given - Create a corrupted JAR file
         Path badJar =
@@ -161,7 +161,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(event).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleKotlinScriptFiles() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -192,7 +192,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(Objects.requireNonNull(event).getSymbols()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void indexFile_shouldHandleParsingErrors() throws Exception {
         // Given - Create a file with invalid syntax
         Path errorFile =
@@ -239,7 +239,7 @@ class WorkspaceIndexerImplAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldIndexDependencyDirectories() throws Exception {
         // Given - Create a dependency directory with Groovy files
         Path depDir =
@@ -278,7 +278,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleJarDependencies() throws Exception {
         // Given - Create a proper JAR file
         Path jarFile =
@@ -312,7 +312,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void indexFileWithResult_shouldHandleParsingException() throws Exception {
         // Given - Create a file with content that will cause parsing to fail
         Path problemFile =
@@ -350,7 +350,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(Objects.requireNonNull(event).getSymbols()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void close_shouldHandleSymbolIndexCloseException() throws Exception {
         // Given - Initialize the indexer
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -362,7 +362,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThatCode(() -> indexer.close()).doesNotThrowAnyException();
     }
 
-    @Test
+    @UnitTest
     void indexWorkspaceFiles_shouldHandleFileWalkException() throws Exception {
         // Given - Create a directory that will be deleted during walk
         Path volatileDir =
@@ -417,7 +417,7 @@ class WorkspaceIndexerImplAdditionalTest {
         // Then - The test passes if no unhandled exception occurs
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleNonExistentFile() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -434,7 +434,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(future.isCompletedExceptionally()).isFalse();
     }
 
-    @Test
+    @UnitTest
     void indexFile_shouldHandleNullSymbols() throws Exception {
         // Given - Create files that will result in empty symbol lists
         Path emptyGroovyFile =
@@ -467,7 +467,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThat(eventCount.get()).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void indexDependency_shouldIndexDirectoryDependency() throws Exception {
         // Given - Create a workspace structure with a build.gradle that will trigger dependency
         // resolution
@@ -529,7 +529,7 @@ class WorkspaceIndexerImplAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void indexDependency_shouldIndexJarDependency() throws Exception {
         // Given - Create a workspace with a JAR dependency
         Path buildFile =
@@ -588,7 +588,7 @@ class WorkspaceIndexerImplAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void indexDependency_shouldHandleExceptionDuringIndexing() throws Exception {
         // Given - Create a workspace with an invalid path as dependency
         Path buildFile =
@@ -645,7 +645,7 @@ class WorkspaceIndexerImplAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void indexDependency_shouldHandleJarWithSymbols() throws Exception {
         // Given - Create a JAR with symbols that will be indexed
         Path jarFile =
@@ -730,7 +730,7 @@ class WorkspaceIndexerImplAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void indexDependency_shouldHandleExceptionDuringDependencyWalk() throws Exception {
         // Test exception handling in the indexDependency method
         Path depDir =
@@ -799,7 +799,7 @@ class WorkspaceIndexerImplAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void close_shouldHandleMultipleExceptions() throws Exception {
         // Test that close handles exceptions from symbol index
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -814,7 +814,7 @@ class WorkspaceIndexerImplAdditionalTest {
         assertThatCode(() -> indexer.close()).doesNotThrowAnyException();
     }
 
-    @Test
+    @UnitTest
     @org.junit.jupiter.api.Disabled(
             "GroovyFileParser no longer returns null, always returns a List")
     void indexFileWithResult_shouldReturnEmptyListOnNullFromParser() throws Exception {

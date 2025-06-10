@@ -11,13 +11,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.server.launcher.util.ExecutorShutdownHelper.ExecutorWithName;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 /**
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Timeout;
  */
 class ExecutorShutdownHelperTest {
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowAssertionError() throws Exception {
         // given
         java.lang.reflect.Constructor<ExecutorShutdownHelper> constructor =
@@ -45,7 +45,7 @@ class ExecutorShutdownHelperTest {
                 .hasMessage("Cannot instantiate utility class");
     }
 
-    @Test
+    @UnitTest
     void shutdownExecutor_shouldHandleNullExecutor() throws Exception {
         // Use reflection to call the method with null parameter
         Method method =
@@ -59,7 +59,7 @@ class ExecutorShutdownHelperTest {
         assertThat(true).isTrue(); // Dummy assertion to show test passed
     }
 
-    @Test
+    @UnitTest
     @Timeout(10)
     void shutdownExecutor_shouldShutdownSuccessfully() throws InterruptedException {
         // given
@@ -91,7 +91,7 @@ class ExecutorShutdownHelperTest {
         assertThat(executor.isTerminated()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void shutdownExecutor_shouldForceShutdownWhenTimeout() throws InterruptedException {
         // given
         ExecutorService mockExecutor = mock(ExecutorService.class);
@@ -106,7 +106,7 @@ class ExecutorShutdownHelperTest {
         verify(mockExecutor).shutdownNow();
     }
 
-    @Test
+    @UnitTest
     void shutdownExecutor_shouldHandleInterruptedException() throws InterruptedException {
         // given
         ExecutorService mockExecutor = mock(ExecutorService.class);
@@ -131,7 +131,7 @@ class ExecutorShutdownHelperTest {
         verify(mockExecutor).shutdownNow();
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldHandleNullArray() throws Exception {
         // Use reflection to call the method with null parameter
         Method method =
@@ -145,7 +145,7 @@ class ExecutorShutdownHelperTest {
         assertThat(true).isTrue(); // Dummy assertion to show test passed
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldHandleEmptyArray() {
         // when - should not throw
         ExecutorShutdownHelper.shutdownMultipleExecutors();
@@ -154,7 +154,7 @@ class ExecutorShutdownHelperTest {
         assertThat(true).isTrue(); // Dummy assertion to show test passed
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldShutdownAllExecutors() throws InterruptedException {
         // given
         ExecutorService executor1 = mock(ExecutorService.class);
@@ -175,7 +175,7 @@ class ExecutorShutdownHelperTest {
         verify(executor2).awaitTermination(anyLong(), any(TimeUnit.class));
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldHandleNullExecutorInArray() throws Exception {
         // given
         ExecutorService executor = mock(ExecutorService.class);
@@ -195,7 +195,7 @@ class ExecutorShutdownHelperTest {
         verify(executor).awaitTermination(anyLong(), any(TimeUnit.class));
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldHandleNullExecutorService() throws Exception {
         // given
         ExecutorService executor = mock(ExecutorService.class);
@@ -219,7 +219,7 @@ class ExecutorShutdownHelperTest {
         verify(executor).awaitTermination(anyLong(), any(TimeUnit.class));
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldForceShutdownOnTimeout() throws InterruptedException {
         // given
         ExecutorService executor1 = mock(ExecutorService.class);
@@ -241,7 +241,7 @@ class ExecutorShutdownHelperTest {
         verify(executor2).shutdownNow();
     }
 
-    @Test
+    @UnitTest
     void shutdownMultipleExecutors_shouldHandleInterruption() throws InterruptedException {
         // given
         ExecutorService executor1 = mock(ExecutorService.class);
@@ -273,7 +273,7 @@ class ExecutorShutdownHelperTest {
         verify(executor2, never()).awaitTermination(anyLong(), any(TimeUnit.class));
     }
 
-    @Test
+    @UnitTest
     void executorWithName_shouldStoreValues() {
         // given
         ExecutorService executor = mock(ExecutorService.class);
@@ -287,7 +287,7 @@ class ExecutorShutdownHelperTest {
         assertThat(execWithName.name).isEqualTo(name);
     }
 
-    @Test
+    @UnitTest
     void shutdownExecutor_shouldHandleSecondAwaitTerminationFailure() throws InterruptedException {
         // given
         ExecutorService mockExecutor = mock(ExecutorService.class);
@@ -303,7 +303,7 @@ class ExecutorShutdownHelperTest {
         verify(mockExecutor).shutdownNow();
     }
 
-    @Test
+    @UnitTest
     @Timeout(10)
     void shutdownExecutor_withDefaultTimeout_shouldShutdownSuccessfully()
             throws InterruptedException {
@@ -336,7 +336,7 @@ class ExecutorShutdownHelperTest {
         assertThat(executor.isTerminated()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void shutdownExecutor_shouldLogSuccessfulShutdown() throws InterruptedException {
         // given
         ExecutorService mockExecutor = mock(ExecutorService.class);

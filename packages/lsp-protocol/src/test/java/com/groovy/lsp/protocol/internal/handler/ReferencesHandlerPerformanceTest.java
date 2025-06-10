@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.PerformanceTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +24,6 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +51,7 @@ class ReferencesHandlerPerformanceTest {
         handler = new ReferencesHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("References search should complete within 50ms for variable")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_VariableReferences() {
@@ -100,7 +100,7 @@ class ReferencesHandlerPerformanceTest {
                 "Variable references search took " + duration + "ms, should be less than 50ms");
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("References search should complete within 50ms for method in large class")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_MethodReferences_LargeClass() {
@@ -157,7 +157,7 @@ class ReferencesHandlerPerformanceTest {
                         + "ms, should be less than 50ms");
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("References search should complete within 50ms for class references")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_ClassReferences() {
@@ -213,7 +213,7 @@ class ReferencesHandlerPerformanceTest {
                 "Class references search took " + duration + "ms, should be less than 50ms");
     }
 
-    @Test
+    @PerformanceTest
     @DisplayName("References search should complete within 50ms for property references")
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testPerformance_PropertyReferences() {

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class GroovyFileParserTest {
@@ -26,7 +26,7 @@ class GroovyFileParserTest {
         parser = new GroovyFileParser();
     }
 
-    @Test
+    @UnitTest
     void testParseSimpleClass() throws IOException {
         String groovyCode =
                 """
@@ -78,7 +78,7 @@ class GroovyFileParserTest {
         assertThat(methodSymbol.kind()).isEqualTo(SymbolKind.METHOD);
     }
 
-    @Test
+    @UnitTest
     void testParseInterface() throws IOException {
         String groovyCode =
                 """
@@ -102,7 +102,7 @@ class GroovyFileParserTest {
         assertThat(interfaceSymbol.kind()).isEqualTo(SymbolKind.INTERFACE);
     }
 
-    @Test
+    @UnitTest
     void testParseTrait() throws IOException {
         String groovyCode =
                 """
@@ -130,7 +130,7 @@ class GroovyFileParserTest {
         assertThat(traitSymbol.kind()).isEqualTo(SymbolKind.TRAIT);
     }
 
-    @Test
+    @UnitTest
     void testParseEnum() throws IOException {
         String groovyCode =
                 """
@@ -151,7 +151,7 @@ class GroovyFileParserTest {
         assertThat(enumSymbol.kind()).isEqualTo(SymbolKind.ENUM);
     }
 
-    @Test
+    @UnitTest
     void testParseClosures() throws IOException {
         String groovyCode =
                 """
@@ -177,7 +177,7 @@ class GroovyFileParserTest {
         assertThat(closureCount).isGreaterThanOrEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void testParseInvalidFile() throws IOException {
         String invalidCode =
                 """
@@ -193,7 +193,7 @@ class GroovyFileParserTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void testParseProperties() throws IOException {
         String groovyCode =
                 """
@@ -223,7 +223,7 @@ class GroovyFileParserTest {
         assertThat(propertyCount).isGreaterThanOrEqualTo(3);
     }
 
-    @Test
+    @UnitTest
     void testParseAnnotation() throws IOException {
         String groovyCode =
                 """
@@ -251,7 +251,7 @@ class GroovyFileParserTest {
         assertThat(annotationSymbol.kind()).isEqualTo(SymbolKind.ANNOTATION);
     }
 
-    @Test
+    @UnitTest
     void testParseNonExistentFile() throws IOException {
         Path nonExistentFile = Objects.requireNonNull(tempDir).resolve("NonExistent.groovy");
 
@@ -260,7 +260,7 @@ class GroovyFileParserTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void testParseLargeFile() throws IOException {
         // Create a file larger than MAX_FILE_SIZE (10MB)
         StringBuilder largeContent = new StringBuilder();

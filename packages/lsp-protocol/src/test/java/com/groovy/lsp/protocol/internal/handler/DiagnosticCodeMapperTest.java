@@ -3,8 +3,8 @@ package com.groovy.lsp.protocol.internal.handler;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.groovy.lsp.groovy.core.api.CompilationResult.CompilationError;
+import com.groovy.lsp.test.annotations.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 class DiagnosticCodeMapperTest {
 
@@ -15,7 +15,7 @@ class DiagnosticCodeMapperTest {
         mapper = new DiagnosticCodeMapper();
     }
 
-    @Test
+    @UnitTest
     void testMapSyntaxErrors() {
         // Unexpected token
         CompilationError error =
@@ -70,7 +70,7 @@ class DiagnosticCodeMapperTest {
         assertEquals(DiagnosticCodes.SYNTAX_UNEXPECTED_EOF, mapper.mapErrorToCode(error));
     }
 
-    @Test
+    @UnitTest
     void testMapSemanticErrors() {
         // Undefined variable
         CompilationError error =
@@ -123,7 +123,7 @@ class DiagnosticCodeMapperTest {
         assertEquals(DiagnosticCodes.SEMANTIC_UNREACHABLE_CODE, mapper.mapErrorToCode(error));
     }
 
-    @Test
+    @UnitTest
     void testMapTypeErrors() {
         // Type mismatch
         CompilationError error =
@@ -206,7 +206,7 @@ class DiagnosticCodeMapperTest {
         assertEquals(DiagnosticCodes.TYPE_UNDEFINED_METHOD, mapper.mapErrorToCode(error));
     }
 
-    @Test
+    @UnitTest
     void testMapWarnings() {
         // Unused variable
         CompilationError error =
@@ -259,7 +259,7 @@ class DiagnosticCodeMapperTest {
         assertEquals(DiagnosticCodes.WARNING_UNNECESSARY_CAST, mapper.mapErrorToCode(error));
     }
 
-    @Test
+    @UnitTest
     void testGeneralCodes() {
         // Unknown syntax error
         CompilationError error =
@@ -302,7 +302,7 @@ class DiagnosticCodeMapperTest {
         assertEquals(DiagnosticCodes.WARNING_GENERAL, mapper.mapErrorToCode(error));
     }
 
-    @Test
+    @UnitTest
     void testCaseInsensitiveMatching() {
         // Test that matching works regardless of case
         CompilationError error =

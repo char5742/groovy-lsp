@@ -13,13 +13,13 @@ import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -29,7 +29,7 @@ class ServerModuleTest {
 
     @TempDir @Nullable Path tempDir;
 
-    @Test
+    @UnitTest
     void serverModule_shouldProvideLanguageServer() {
         // given
         String workspaceRoot =
@@ -45,7 +45,7 @@ class ServerModuleTest {
         assertThat(server).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldProvideSingletonLanguageServer() {
         // given
         String workspaceRoot =
@@ -62,7 +62,7 @@ class ServerModuleTest {
         assertThat(server1).isSameAs(server2);
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldProvideLanguageServerInterface() {
         // given
         String workspaceRoot =
@@ -79,7 +79,7 @@ class ServerModuleTest {
         assertThat(server).isInstanceOf(GroovyLanguageServer.class);
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldProvideAllServices() {
         // given
         String workspaceRoot =
@@ -99,7 +99,7 @@ class ServerModuleTest {
         assertThat(injector.getInstance(ServiceRouter.class)).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldProvideSingletonServices() {
         // given
         String workspaceRoot =
@@ -125,7 +125,7 @@ class ServerModuleTest {
                 .isSameAs(injector.getInstance(LintEngine.class));
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldProvideExecutorServices() {
         // given
         String workspaceRoot =
@@ -152,7 +152,7 @@ class ServerModuleTest {
         scheduledExecutor.shutdown();
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldUseSystemPropertyForDefaultWorkspace() {
         // given
         String expectedWorkspace =
@@ -179,7 +179,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldUseDefaultWorkspaceWhenNoSystemProperty() {
         // given
         String originalProperty = System.getProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY);
@@ -197,7 +197,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldHandleNullWorkspaceRoot() {
         // given
         // Use reflection to test null handling since direct null passing causes NullAway warning
@@ -214,7 +214,7 @@ class ServerModuleTest {
         assertThat(module).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldHandleRelativeWorkspacePath() {
         // given
         ServerModule module = new ServerModule("./relative/path");
@@ -223,7 +223,7 @@ class ServerModuleTest {
         assertThat(module).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void serverConstants_shouldDefineDefaultValues() {
         // then
         assertThat(ServerConstants.DEFAULT_SOCKET_HOST).isEqualTo("localhost");
@@ -242,7 +242,7 @@ class ServerModuleTest {
         assertThat(ServerConstants.MAX_THREADS_ENV_KEY).isEqualTo("groovy.lsp.server.max.threads");
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldRespectMaxThreadsSystemProperty() {
         // given
         String originalProperty = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
@@ -274,7 +274,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldRespectSchedulerThreadsSystemProperty() {
         // given
         String originalProperty = System.getProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
@@ -307,7 +307,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldUseDefaultThreadsWhenNoSystemProperty() {
         // given
         String originalMaxThreads = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
@@ -353,7 +353,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldHandleInvalidThreadCountSystemProperty() {
         // given
         String originalProperty = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
@@ -388,7 +388,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldHandleInvalidSchedulerThreadsSystemProperty() {
         // given
         String originalProperty = System.getProperty(ServerConstants.SCHEDULER_THREADS_ENV_KEY);
@@ -424,7 +424,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void namedThreadFactory_shouldCreateDaemonThreadsWithCorrectNames() {
         // given
         String workspaceRoot =
@@ -468,7 +468,7 @@ class ServerModuleTest {
         serverExecutor.shutdown();
     }
 
-    @Test
+    @UnitTest
     void namedThreadFactory_shouldCreateSchedulerThreadsWithCorrectNames() {
         // given
         String workspaceRoot =
@@ -513,7 +513,7 @@ class ServerModuleTest {
         scheduledExecutor.shutdown();
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldCreateExecutorWithCorrectConfiguration() {
         // given
         String workspaceRoot =
@@ -542,7 +542,7 @@ class ServerModuleTest {
         serverExecutor.shutdown();
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldHandleEmptyStringSystemProperties() {
         // given
         String originalMaxThreads = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);
@@ -592,7 +592,7 @@ class ServerModuleTest {
         }
     }
 
-    @Test
+    @UnitTest
     void serverModule_shouldHandleZeroAndNegativeThreadCounts() {
         // given
         String originalProperty = System.getProperty(ServerConstants.MAX_THREADS_ENV_KEY);

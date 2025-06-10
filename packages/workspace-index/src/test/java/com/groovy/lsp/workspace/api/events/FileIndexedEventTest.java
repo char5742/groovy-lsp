@@ -4,16 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 class FileIndexedEventTest {
 
-    @Test
+    @UnitTest
     void successConstructor_shouldInitializeSuccessfully() {
         // Given
         Path filePath = Paths.get("/workspace/Test.groovy");
@@ -33,7 +33,7 @@ class FileIndexedEventTest {
         assertThat(event.getAggregateId()).isEqualTo(filePath.toString());
     }
 
-    @Test
+    @UnitTest
     void failureConstructor_shouldInitializeWithError() {
         // Given
         Path filePath = Paths.get("/workspace/Error.groovy");
@@ -50,7 +50,7 @@ class FileIndexedEventTest {
         assertThat(event.getAggregateId()).isEqualTo(filePath.toString());
     }
 
-    @Test
+    @UnitTest
     void successConstructor_shouldMakeDefensiveCopyOfSymbols() {
         // Given
         Path filePath = Paths.get("/workspace/Test.groovy");
@@ -66,7 +66,7 @@ class FileIndexedEventTest {
         assertThat(event.getSymbols()).hasSize(1); // Event should still have the symbol
     }
 
-    @Test
+    @UnitTest
     void toString_shouldReturnFormattedStringForSuccess() {
         // Given
         Path filePath = Paths.get("/workspace/Success.groovy");
@@ -84,7 +84,7 @@ class FileIndexedEventTest {
         assertThat(result).isEqualTo("FileIndexedEvent{file=/workspace/Success.groovy, symbols=3}");
     }
 
-    @Test
+    @UnitTest
     void toString_shouldReturnFormattedStringForFailure() {
         // Given
         Path filePath = Paths.get("/workspace/Failed.groovy");
@@ -100,7 +100,7 @@ class FileIndexedEventTest {
                                 + " 10}");
     }
 
-    @Test
+    @UnitTest
     void toString_shouldHandleEmptyErrorMessage() {
         // Given
         Path filePath = Paths.get("/workspace/Failed.groovy");
@@ -114,7 +114,7 @@ class FileIndexedEventTest {
                 .isEqualTo("FileIndexedEvent{file=/workspace/Failed.groovy, error=Unknown error}");
     }
 
-    @Test
+    @UnitTest
     void successConstructor_shouldHandleEmptySymbolList() {
         // Given
         Path filePath = Paths.get("/workspace/Empty.groovy");
@@ -130,7 +130,7 @@ class FileIndexedEventTest {
                 .isEqualTo("FileIndexedEvent{file=/workspace/Empty.groovy, symbols=0}");
     }
 
-    @Test
+    @UnitTest
     void shouldHandleWindowsPaths() {
         // Given
         Path windowsPath = Paths.get("C:\\Users\\workspace\\Test.groovy");
@@ -141,7 +141,7 @@ class FileIndexedEventTest {
         assertThat(event.getAggregateId()).isEqualTo(windowsPath.toString());
     }
 
-    @Test
+    @UnitTest
     void shouldHandleRelativePaths() {
         // Given
         Path relativePath = Paths.get("../src/Test.groovy");
@@ -152,7 +152,7 @@ class FileIndexedEventTest {
         assertThat(event.getAggregateId()).isEqualTo(relativePath.toString());
     }
 
-    @Test
+    @UnitTest
     void failureConstructor_shouldHandleNullErrorMessage() throws Exception {
         // Given
         Path filePath = Paths.get("/workspace/Null.groovy");

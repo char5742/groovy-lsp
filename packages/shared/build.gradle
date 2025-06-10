@@ -29,3 +29,17 @@ jar {
         )
     }
 }
+
+// Export test classes for other modules
+configurations {
+    testOutput.extendsFrom testCompileClasspath
+}
+
+task testJar(type: Jar) {
+    archiveClassifier = 'tests'
+    from sourceSets.test.output
+}
+
+artifacts {
+    testOutput testJar
+}

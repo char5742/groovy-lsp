@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.Set;
 import org.codenarc.rule.Rule;
@@ -11,7 +12,6 @@ import org.codenarc.rule.Violation;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,7 +34,7 @@ class QuickFixMapperTest {
         lenient().when(mockViolation.getRule()).thenReturn(mockRule);
     }
 
-    @Test
+    @UnitTest
     void getSupportedRules_shouldReturnDefaultRegisteredRules() {
         // when
         Set<String> supportedRules = quickFixMapper.getSupportedRules();
@@ -64,7 +64,7 @@ class QuickFixMapperTest {
                         "BooleanMethodReturnsNull");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForUnusedImportRule() {
         // given
         when(mockRule.getName()).thenReturn("UnusedImport");
@@ -81,7 +81,7 @@ class QuickFixMapperTest {
         assertThat(action.getEdit()).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForDuplicateImportRule() {
         // given
         when(mockRule.getName()).thenReturn("DuplicateImport");
@@ -98,7 +98,7 @@ class QuickFixMapperTest {
         assertThat(action.getKind()).isEqualTo(CodeActionKind.QuickFix);
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnEmptyListForUnsupportedRule() {
         // given
         when(mockRule.getName()).thenReturn("UnsupportedRule");
@@ -110,7 +110,7 @@ class QuickFixMapperTest {
         assertThat(actions).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnEmptyListWhenExceptionOccurs() {
         // given
         when(mockRule.getName()).thenReturn("UnusedImport");
@@ -125,7 +125,7 @@ class QuickFixMapperTest {
         assertThat(actions).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void registerProvider_shouldRegisterCustomProvider() {
         // given
         String customRule = "CustomRule";
@@ -146,7 +146,7 @@ class QuickFixMapperTest {
         assertThat(actions.get(0).getTitle()).isEqualTo("Custom fix");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForImportRelatedRules() {
         // Test ImportFromSamePackage
         when(mockRule.getName()).thenReturn("ImportFromSamePackage");
@@ -162,7 +162,7 @@ class QuickFixMapperTest {
         assertThat(actions.get(0).getTitle()).isEqualTo("Remove unnecessary Groovy import");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForBasicRules() {
         // Test EmptyCatchBlock
         when(mockRule.getName()).thenReturn("EmptyCatchBlock");
@@ -196,7 +196,7 @@ class QuickFixMapperTest {
         assertThat(actions.get(0).getTitle()).isEqualTo("Remove empty while statement");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForNamingRules() {
         // Test FieldName
         when(mockRule.getName()).thenReturn("FieldName");
@@ -224,7 +224,7 @@ class QuickFixMapperTest {
         assertThat(actions.get(0).getTitle()).isEqualTo("Fix variable name to follow conventions");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForGroovyismRules() {
         // Test ExplicitArrayListInstantiation
         when(mockRule.getName()).thenReturn("ExplicitArrayListInstantiation");
@@ -252,7 +252,7 @@ class QuickFixMapperTest {
         assertThat(actions.get(0).getTitle()).isEqualTo("Convert GString to String");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldReturnQuickFixForDesignRules() {
         // Test SimpleDateFormatMissingLocale
         when(mockRule.getName()).thenReturn("SimpleDateFormatMissingLocale");
@@ -268,7 +268,7 @@ class QuickFixMapperTest {
         assertThat(actions.get(0).getTitle()).isEqualTo("Return false instead of null");
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldUseProvidedFilePath() {
         // given
         String filePath = "file:///project/src/Test.groovy";

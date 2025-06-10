@@ -5,18 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class MavenDependencyResolverTest {
 
     @TempDir Path tempDir = Path.of("");
 
-    @Test
+    @UnitTest
     void canHandle_withPomXml_returnsTrue() throws IOException {
         // Create a pom.xml file
         Path pomFile = tempDir.resolve("pom.xml");
@@ -27,21 +27,21 @@ class MavenDependencyResolverTest {
         assertTrue(resolver.canHandle(tempDir));
     }
 
-    @Test
+    @UnitTest
     void canHandle_withoutPomXml_returnsFalse() {
         MavenDependencyResolver resolver = new MavenDependencyResolver(tempDir);
 
         assertFalse(resolver.canHandle(tempDir));
     }
 
-    @Test
+    @UnitTest
     void getBuildSystem_returnsMaven() {
         MavenDependencyResolver resolver = new MavenDependencyResolver(tempDir);
 
         assertEquals(DependencyResolver.BuildSystem.MAVEN, resolver.getBuildSystem());
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_returnsStandardMavenDirectories() throws IOException {
         // Create standard Maven directory structure
         Files.createDirectories(tempDir.resolve("src/main/java"));
@@ -60,7 +60,7 @@ class MavenDependencyResolverTest {
                         tempDir.resolve("src/test/java"));
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withNoPom_returnsEmptyList() {
         MavenDependencyResolver resolver = new MavenDependencyResolver(tempDir);
 
@@ -69,7 +69,7 @@ class MavenDependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withSimplePom_resolvesJunitDependency() throws IOException {
         // Create a pom.xml with JUnit dependency
         Path pomFile = tempDir.resolve("pom.xml");
@@ -91,7 +91,7 @@ class MavenDependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withTestScopeDependency_excludesTestDependencies() throws IOException {
         // Create a pom.xml with test scope dependency
         Path pomFile = tempDir.resolve("pom.xml");

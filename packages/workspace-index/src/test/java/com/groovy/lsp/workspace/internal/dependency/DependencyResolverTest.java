@@ -3,6 +3,7 @@ package com.groovy.lsp.workspace.internal.dependency;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class DependencyResolverTest {
@@ -25,7 +25,7 @@ class DependencyResolverTest {
                         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldDetectGradleWithBuildGradle() throws IOException {
         // Given
         Files.createFile(
@@ -40,7 +40,7 @@ class DependencyResolverTest {
         assertThat(resolver.getBuildSystem()).isEqualTo(DependencyResolver.BuildSystem.GRADLE);
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldDetectGradleWithBuildGradleKts() throws IOException {
         // Given
         Files.createFile(
@@ -54,7 +54,7 @@ class DependencyResolverTest {
         assertThat(detected).isEqualTo(DependencyResolver.BuildSystem.GRADLE);
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldDetectGradleWithSettingsGradle() throws IOException {
         // Given
         Files.createFile(
@@ -68,7 +68,7 @@ class DependencyResolverTest {
         assertThat(detected).isEqualTo(DependencyResolver.BuildSystem.GRADLE);
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldDetectGradleWithSettingsGradleKts() throws IOException {
         // Given
         Files.createFile(
@@ -82,7 +82,7 @@ class DependencyResolverTest {
         assertThat(detected).isEqualTo(DependencyResolver.BuildSystem.GRADLE);
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldDetectMaven() throws IOException {
         // Given
         Files.createFile(
@@ -96,7 +96,7 @@ class DependencyResolverTest {
         assertThat(detected).isEqualTo(DependencyResolver.BuildSystem.MAVEN);
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldReturnNoneWhenNoBuildSystem() {
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -105,7 +105,7 @@ class DependencyResolverTest {
         assertThat(detected).isEqualTo(DependencyResolver.BuildSystem.NONE);
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldPreferGradleOverMaven() throws IOException {
         // Given - both Gradle and Maven files exist
         Files.createFile(
@@ -122,7 +122,7 @@ class DependencyResolverTest {
         assertThat(detected).isEqualTo(DependencyResolver.BuildSystem.GRADLE);
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListForNoBuildSystem() {
         // Given
         resolver.detectBuildSystem();
@@ -134,7 +134,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleGradleProjectsGracefully() throws IOException {
         // Given
         Files.createFile(
@@ -147,7 +147,7 @@ class DependencyResolverTest {
         assertThatCode(() -> resolver.resolveDependencies()).doesNotThrowAnyException();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListForMaven() throws IOException {
         // Given
         Files.createFile(
@@ -162,7 +162,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty(); // Maven is not implemented yet
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldReturnGradleSourceDirs() throws IOException {
         // Given
         Files.createDirectories(
@@ -198,7 +198,7 @@ class DependencyResolverTest {
                                 .resolve("src/test/java"));
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldReturnOnlyExistingGradleDirs() throws IOException {
         // Given
         Files.createDirectories(
@@ -219,7 +219,7 @@ class DependencyResolverTest {
                                 .resolve("src/main/groovy"));
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldReturnMavenSourceDirs() throws IOException {
         // Given
         Files.createDirectories(
@@ -245,7 +245,7 @@ class DependencyResolverTest {
                                 .resolve("src/test/java"));
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldReturnDefaultDirs() throws IOException {
         // Given
         Files.createDirectories(
@@ -268,7 +268,7 @@ class DependencyResolverTest {
                                 .resolve("groovy"));
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldSkipNonDirectories() throws IOException {
         // Given
         Files.createFile(
@@ -289,7 +289,7 @@ class DependencyResolverTest {
                                 .resolve("groovy"));
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldReturnEmptyListWhenNoSourceDirs() {
         // Given
         resolver.detectBuildSystem();
@@ -301,7 +301,7 @@ class DependencyResolverTest {
         assertThat(sourceDirs).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleInvalidGradleProject() throws IOException {
         // Given - Create a file that is not a gradle build file but in test mode
         Files.createFile(
@@ -316,7 +316,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleGradleProjectWithOnlySettingsGradle() throws IOException {
         // Given - Only settings.gradle file exists
         Files.createFile(
@@ -331,7 +331,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleGradleProjectWithOnlySettingsGradleKts()
             throws IOException {
         // Given - Only settings.gradle.kts file exists
@@ -347,7 +347,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleGradleProjectWithBuildGradleKts() throws IOException {
         // Given - Only build.gradle.kts file exists
         Files.createFile(
@@ -362,7 +362,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListInTestEnvironment() throws IOException {
         // Given - Set test mode system property
         System.setProperty("test.mode", "true");
@@ -382,7 +382,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListInBuildEnvTest() throws IOException {
         // Given - Set build.env to test
         System.setProperty("build.env", "test");
@@ -402,7 +402,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListInGradleTestTask() throws IOException {
         // Given - Set gradle task name to test
         System.setProperty("gradle.task.name", "test");
@@ -422,7 +422,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListWhenRunningTests() throws IOException {
         // Given - Set multiple test indicators at once
         System.setProperty("gradle.task.name", "check");
@@ -442,7 +442,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListWhenTestClasspath() throws IOException {
         // Given - Set java.class.path containing "test-classes"
         String originalClassPath = System.getProperty("java.class.path", "");
@@ -463,7 +463,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListWithJunitPlatform() throws IOException {
         // Given - Set junit.platform.launcher.interceptors.enabled
         System.setProperty("junit.platform.launcher.interceptors.enabled", "true");
@@ -483,7 +483,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListWithEnvironmentVariable() throws IOException {
         // Given - gradle.task.name starts with "test"
         System.setProperty("gradle.task.name", "testClasses");
@@ -503,7 +503,7 @@ class DependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListWithGradleWrapper() throws IOException {
         // Given - Create Gradle wrapper files
         Files.createFile(
@@ -521,7 +521,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleMultipleBuildFiles() throws IOException {
         // Given - Multiple Gradle build files exist for valid project check
         Files.createFile(
@@ -545,7 +545,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleProjectWithoutWrapper() throws IOException {
         // Given - Gradle project without wrapper
         Files.createFile(
@@ -567,7 +567,7 @@ class DependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleNonTestEnvironment() throws IOException {
         // Given - Ensure no test environment indicators
         System.clearProperty("test.mode");

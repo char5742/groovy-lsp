@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.groovy.lsp.groovy.core.api.CompilationResult.CompilationError;
+import com.groovy.lsp.test.annotations.UnitTest;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 class ErrorRangeCalculatorTest {
 
@@ -17,7 +17,7 @@ class ErrorRangeCalculatorTest {
         calculator = new ErrorRangeCalculator();
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_UnexpectedToken() {
         // Given
         String sourceCode = "def hello( { return 'Hello' }";
@@ -40,7 +40,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(12, range.getEnd().getCharacter()); // Single character token '{'
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_IdentifierError() {
         // Given
         String sourceCode = "def myVariable = unknownFunction()";
@@ -62,7 +62,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(32, range.getEnd().getCharacter()); // "unknownFunction"
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_OperatorError() {
         // Given
         String sourceCode = "def x = 5 ++ 3";
@@ -84,7 +84,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(12, range.getEnd().getCharacter()); // "++"
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_EndOfLine() {
         // Given
         String sourceCode = "def x = ";
@@ -106,7 +106,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(8, range.getEnd().getCharacter()); // End of line
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_MultilineError() {
         // Given
         String sourceCode = "def hello() {\n    return\n}";
@@ -128,7 +128,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(10, range.getEnd().getCharacter()); // "return"
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_InvalidLineNumber() {
         // Given
         String sourceCode = "def hello() { }";
@@ -150,7 +150,7 @@ class ErrorRangeCalculatorTest {
         assertTrue(range.getEnd().getCharacter() > 0); // Should have some range
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_TypeReference() {
         // Given
         String sourceCode = "String x = new ArrayList()";
@@ -172,7 +172,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(24, range.getEnd().getCharacter()); // "ArrayList"
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_NegativeLineNumber() {
         // Given
         String sourceCode = "def hello() { }";
@@ -194,7 +194,7 @@ class ErrorRangeCalculatorTest {
         assertTrue(range.getEnd().getCharacter() > 0);
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_StartColumnExceedsLineLength() {
         // Given
         String sourceCode = "def x = 5";
@@ -216,7 +216,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(9, range.getEnd().getCharacter()); // End of line
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_WhitespaceHandling() {
         // Given
         String sourceCode = "def x =     hello"; // Multiple spaces before 'hello'
@@ -239,7 +239,7 @@ class ErrorRangeCalculatorTest {
                 17, range.getEnd().getCharacter()); // Should skip whitespace and highlight 'hello'
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_SingleCharacterToken() {
         // Given
         String sourceCode = "def x = 5 + a";
@@ -261,7 +261,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(13, range.getEnd().getCharacter()); // Single character 'a'
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_NoMatchingPattern() {
         // Given
         String sourceCode = "def hello() { return 42 }";
@@ -283,7 +283,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(9, range.getEnd().getCharacter()); // Should highlight 'hello'
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_MultiCharacterOperator() {
         // Given
         String sourceCode = "def x = 5 == 3";
@@ -305,7 +305,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(12, range.getEnd().getCharacter()); // Both characters of '=='
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_SingleCharacterBracket() {
         // Given
         String sourceCode = "def x = {";
@@ -323,7 +323,7 @@ class ErrorRangeCalculatorTest {
         assertEquals(9, range.getEnd().getCharacter()); // Single character '{'
     }
 
-    @Test
+    @UnitTest
     void testCalculateRange_EmptyLine() {
         // Given
         String sourceCode = "\n\ndef x = 5";

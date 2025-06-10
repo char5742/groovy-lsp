@@ -10,6 +10,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.util.LocationUtils;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ASTNode;
@@ -42,7 +43,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -70,7 +70,7 @@ class CoverageImproveTest {
         referencesHandler = new ReferencesHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test VariableDeclarationVisitor - DeclarationExpression")
     void testVariableDeclarationVisitor_DeclarationExpression() throws Exception {
         // Arrange
@@ -130,7 +130,7 @@ class CoverageImproveTest {
         assertNotNull(locations);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test VariableDeclarationVisitor - Field")
     void testVariableDeclarationVisitor_Field() throws Exception {
         // Arrange
@@ -179,7 +179,7 @@ class CoverageImproveTest {
         assertNotNull(locations);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test ReferenceVisitor - Variable references")
     void testReferenceVisitor_VariableReferences() throws Exception {
         // Arrange
@@ -232,7 +232,7 @@ class CoverageImproveTest {
         // Should find references
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test MethodReferenceVisitor - Method calls")
     void testMethodReferenceVisitor_MethodCalls() throws Exception {
         // Arrange
@@ -285,7 +285,7 @@ class CoverageImproveTest {
         // Should find method calls
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test ClassReferenceVisitor - Class usage")
     void testClassReferenceVisitor_ClassUsage() throws Exception {
         // Arrange
@@ -334,7 +334,7 @@ class CoverageImproveTest {
         // Should find class usage
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test PropertyReferenceVisitor - Property access")
     void testPropertyReferenceVisitor_PropertyAccess() throws Exception {
         // Arrange
@@ -388,7 +388,7 @@ class CoverageImproveTest {
         // Should find property access
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Test LocationUtils coverage")
     void testLocationUtils() {
         // Test with valid node

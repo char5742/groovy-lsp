@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -36,7 +36,7 @@ class WorkspaceIndexerTest {
         indexer.shutdown();
     }
 
-    @Test
+    @UnitTest
     void testInitialize() throws Exception {
         // Create some test files
         Path srcDir = tempDir.resolve("src/main/groovy");
@@ -54,7 +54,7 @@ class WorkspaceIndexerTest {
         assertTrue(Files.exists(tempDir.resolve(".groovy-lsp/index")));
     }
 
-    @Test
+    @UnitTest
     void testUpdateFile() throws Exception {
         // Initialize first
         indexer.initialize().get();
@@ -72,7 +72,7 @@ class WorkspaceIndexerTest {
         // TODO: Add verification once symbol extraction is implemented
     }
 
-    @Test
+    @UnitTest
     void testSearchSymbols() throws Exception {
         // Initialize first
         indexer.initialize().get();

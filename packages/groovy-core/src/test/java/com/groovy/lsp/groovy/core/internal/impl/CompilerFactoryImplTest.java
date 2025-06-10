@@ -3,13 +3,13 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.Map;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
 class CompilerFactoryImplTest {
 
@@ -24,7 +24,7 @@ class CompilerFactoryImplTest {
     @DisplayName("Default configuration")
     class DefaultConfiguration {
 
-        @Test
+        @UnitTest
         @DisplayName("Should create configuration with UTF-8 encoding")
         void shouldHaveUtf8Encoding() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -32,7 +32,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getSourceEncoding()).isEqualTo("UTF-8");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should enable verbose error reporting")
         void shouldEnableVerboseErrors() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -40,7 +40,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getVerbose()).isTrue();
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should enable Parrot parser")
         void shouldEnableParrotParser() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -49,7 +49,7 @@ class CompilerFactoryImplTest {
             assertThat(optimizations).containsEntry("parrot", true);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should enable invokedynamic")
         void shouldEnableInvokedynamic() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -58,7 +58,7 @@ class CompilerFactoryImplTest {
             assertThat(optimizations).containsEntry("indy", true);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should preserve groovydoc")
         void shouldPreserveGroovydoc() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -67,7 +67,7 @@ class CompilerFactoryImplTest {
             assertThat(optimizations).containsEntry("groovydoc", true);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should disable int optimization for debugging")
         void shouldDisableIntOptimization() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -76,7 +76,7 @@ class CompilerFactoryImplTest {
             assertThat(optimizations).containsEntry("int", false);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should have import customizers")
         void shouldHaveImportCustomizers() {
             CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -89,7 +89,7 @@ class CompilerFactoryImplTest {
     @DisplayName("Configuration with classpath")
     class ConfigurationWithClasspath {
 
-        @Test
+        @UnitTest
         @DisplayName("Should create configuration with provided classpath")
         void shouldSetClasspath() {
             List<String> classpath = List.of("/path/to/lib1.jar", "/path/to/lib2.jar");
@@ -99,7 +99,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getClasspath()).containsAll(classpath);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should inherit default configuration settings")
         void shouldInheritDefaultSettings() {
             List<String> classpath = List.of("/path/to/lib.jar");
@@ -111,7 +111,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getOptimizationOptions()).containsEntry("parrot", true);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should throw exception for null classpath")
         @SuppressWarnings("NullAway") // Intentionally testing null handling
         void shouldThrowForNullClasspath() {
@@ -126,7 +126,7 @@ class CompilerFactoryImplTest {
     @DisplayName("Script configuration")
     class ScriptConfiguration {
 
-        @Test
+        @UnitTest
         @DisplayName("Should set script base class")
         void shouldSetScriptBaseClass() {
             CompilerConfiguration config = factory.createScriptConfiguration();
@@ -134,7 +134,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getScriptBaseClass()).isEqualTo("groovy.lang.Script");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should enable script extensions")
         void shouldEnableScriptExtensions() {
             CompilerConfiguration config = factory.createScriptConfiguration();
@@ -142,7 +142,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getScriptExtensions()).contains("groovy", "gvy", "gy", "gsh");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should inherit default configuration settings")
         void shouldInheritDefaultSettings() {
             CompilerConfiguration config = factory.createScriptConfiguration();
@@ -156,7 +156,7 @@ class CompilerFactoryImplTest {
     @DisplayName("Type checking configuration")
     class TypeCheckingConfiguration {
 
-        @Test
+        @UnitTest
         @DisplayName("Should enable static type checking when requested")
         void shouldEnableStaticTypeChecking() {
             CompilerConfiguration config = factory.createTypeCheckingConfiguration(true);
@@ -169,7 +169,7 @@ class CompilerFactoryImplTest {
                                             .contains("ASTTransformationCustomizer"));
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should not add type checking when disabled")
         void shouldNotAddTypeCheckingWhenDisabled() {
             CompilerConfiguration config = factory.createTypeCheckingConfiguration(false);
@@ -188,7 +188,7 @@ class CompilerFactoryImplTest {
             assertThat(astTransformCount).isEqualTo(0);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should inherit default configuration settings")
         void shouldInheritDefaultSettings() {
             CompilerConfiguration config = factory.createTypeCheckingConfiguration(true);
@@ -202,7 +202,7 @@ class CompilerFactoryImplTest {
     @DisplayName("Static factory methods")
     class StaticFactoryMethods {
 
-        @Test
+        @UnitTest
         @DisplayName("Should provide static method for default configuration")
         void shouldProvideStaticDefaultConfiguration() {
             CompilerConfiguration config = CompilerFactoryImpl.createDefaultConfigurationStatic();
@@ -212,7 +212,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getOptimizationOptions()).containsEntry("parrot", true);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should provide static method for classpath configuration")
         void shouldProvideStaticClasspathConfiguration() {
             List<String> classpath = List.of("/path/to/lib.jar");
@@ -223,7 +223,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getClasspath()).containsAll(classpath);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should provide static method for script configuration")
         void shouldProvideStaticScriptConfiguration() {
             CompilerConfiguration config = CompilerFactoryImpl.createScriptConfigurationStatic();
@@ -232,7 +232,7 @@ class CompilerFactoryImplTest {
             assertThat(config.getScriptBaseClass()).isEqualTo("groovy.lang.Script");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should provide static method for type checking configuration")
         void shouldProvideStaticTypeCheckingConfiguration() {
             CompilerConfiguration config =

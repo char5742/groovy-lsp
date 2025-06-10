@@ -13,6 +13,7 @@ import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +66,6 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -104,7 +104,7 @@ class GroovyTextDocumentServiceTest {
         service.setDocumentManager(documentManager);
     }
 
-    @Test
+    @UnitTest
     void connect_shouldSetClient() throws Exception {
         // when
         service.connect(mockClient);
@@ -125,7 +125,7 @@ class GroovyTextDocumentServiceTest {
         verify(mockClient).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void didOpen_shouldWorkWithoutClient() {
         // given
         TextDocumentItem textDocument =
@@ -136,7 +136,7 @@ class GroovyTextDocumentServiceTest {
         service.didOpen(params);
     }
 
-    @Test
+    @UnitTest
     void didOpen_shouldPublishDiagnostics() throws Exception {
         // given
         service.connect(mockClient);
@@ -166,7 +166,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(diagnostics.getDiagnostics()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void didChange_shouldHandleDocumentChanges() {
         // given
         VersionedTextDocumentIdentifier textDocument =
@@ -180,7 +180,7 @@ class GroovyTextDocumentServiceTest {
         service.didChange(params);
     }
 
-    @Test
+    @UnitTest
     void didClose_shouldHandleDocumentClose() {
         // given
         service.connect(mockClient);
@@ -203,7 +203,7 @@ class GroovyTextDocumentServiceTest {
         verify(mockClient).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void didSave_shouldHandleDocumentSave() {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -214,7 +214,7 @@ class GroovyTextDocumentServiceTest {
         service.didSave(params);
     }
 
-    @Test
+    @UnitTest
     void completion_shouldReturnEmptyCompletionList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -230,7 +230,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result.getRight().getItems()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveCompletionItem_shouldReturnSameItem() throws Exception {
         // given
         CompletionItem item = new CompletionItem("test");
@@ -243,7 +243,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isSameAs(item);
     }
 
-    @Test
+    @UnitTest
     void hover_shouldReturnNull() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -257,7 +257,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isNull();
     }
 
-    @Test
+    @UnitTest
     void signatureHelp_shouldReturnEmptySignatureHelp() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -272,7 +272,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result.getSignatures()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void definition_shouldReturnEmptyLocationList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -288,7 +288,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result.getLeft()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void references_shouldReturnEmptyLocationList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -303,7 +303,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void documentHighlight_shouldReturnEmptyHighlightList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -317,7 +317,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void documentSymbol_shouldReturnEmptySymbolList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -331,7 +331,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void codeAction_shouldReturnEmptyCodeActionList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -346,7 +346,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void codeLens_shouldReturnEmptyCodeLensList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -359,7 +359,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveCodeLens_shouldReturnSameCodeLens() throws Exception {
         // given
         Range range = new Range(new Position(1, 0), new Position(1, 10));
@@ -373,7 +373,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isSameAs(codeLens);
     }
 
-    @Test
+    @UnitTest
     void formatting_shouldReturnEmptyEditList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -387,7 +387,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void rangeFormatting_shouldReturnEmptyEditList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -405,7 +405,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void onTypeFormatting_shouldReturnEmptyEditList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -425,7 +425,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void rename_shouldReturnEmptyWorkspaceEdit() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -441,7 +441,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result.getChanges()).isNullOrEmpty();
     }
 
-    @Test
+    @UnitTest
     void foldingRange_shouldReturnEmptyFoldingRangeList() throws Exception {
         // given
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
@@ -454,7 +454,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void shutdown_shouldCleanupResources() {
         // given - service with initialized diagnostics handler
         service.connect(mockClient);
@@ -466,7 +466,7 @@ class GroovyTextDocumentServiceTest {
         // In a real test, we would verify that the diagnostics handler's shutdown was called
     }
 
-    @Test
+    @UnitTest
     void isDiagnosticsReady_shouldCheckAllDependencies() {
         // given - service without client
         service.setServiceRouter(serviceRouter);
@@ -482,7 +482,7 @@ class GroovyTextDocumentServiceTest {
         verify(mockClient, never()).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void didChange_shouldTriggerDebouncedDiagnostics() throws Exception {
         // given
         service.connect(mockClient);
@@ -508,7 +508,7 @@ class GroovyTextDocumentServiceTest {
         verify(mockClient).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void didSave_shouldTriggerImmediateDiagnostics() throws Exception {
         // given
         service.connect(mockClient);
@@ -531,7 +531,7 @@ class GroovyTextDocumentServiceTest {
         verify(mockClient).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void hover_shouldHandleNullServiceRouter() throws Exception {
         // given
         service = new GroovyTextDocumentService();
@@ -549,7 +549,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isNull();
     }
 
-    @Test
+    @UnitTest
     void hover_shouldHandleNullDocumentManager() throws Exception {
         // given
         service = new GroovyTextDocumentService();
@@ -567,7 +567,7 @@ class GroovyTextDocumentServiceTest {
         assertThat(result).isNull();
     }
 
-    @Test
+    @UnitTest
     void didOpen_shouldHandleNullDocumentManager() {
         // given
         service = new GroovyTextDocumentService();
@@ -582,7 +582,7 @@ class GroovyTextDocumentServiceTest {
         service.didOpen(params);
     }
 
-    @Test
+    @UnitTest
     void didChange_shouldHandleEmptyContentChanges() {
         // given
         VersionedTextDocumentIdentifier textDocument =
@@ -594,7 +594,7 @@ class GroovyTextDocumentServiceTest {
         service.didChange(params);
     }
 
-    @Test
+    @UnitTest
     void didClose_shouldHandleNullDocumentManager() {
         // given
         service = new GroovyTextDocumentService();
@@ -609,7 +609,7 @@ class GroovyTextDocumentServiceTest {
         service.didClose(params);
     }
 
-    @Test
+    @UnitTest
     void didOpen_shouldHandleDiagnosticsError() throws Exception {
         // given
         service.connect(mockClient);

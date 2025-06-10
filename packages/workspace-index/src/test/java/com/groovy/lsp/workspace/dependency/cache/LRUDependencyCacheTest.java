@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for LRUDependencyCache.
@@ -27,7 +27,7 @@ class LRUDependencyCacheTest {
         cache = new LRUDependencyCache();
     }
 
-    @Test
+    @UnitTest
     void testGetOrCreateClassLoader_sameDependencies_returnsSameInstance() {
         Set<Path> deps = Set.of(Paths.get("lib1.jar"), Paths.get("lib2.jar"));
 
@@ -41,7 +41,7 @@ class LRUDependencyCacheTest {
         assertEquals(1, stats.getHitCount());
     }
 
-    @Test
+    @UnitTest
     void testGetOrCreateClassLoader_differentDependencies_returnsDifferentInstances() {
         Set<Path> deps1 = Set.of(Paths.get("lib1.jar"));
         Set<Path> deps2 = Set.of(Paths.get("lib2.jar"));
@@ -56,7 +56,7 @@ class LRUDependencyCacheTest {
         assertEquals(0, stats.getHitCount());
     }
 
-    @Test
+    @UnitTest
     void testGetOrCreateClassLoaderWithKey_sameKey_returnsSameInstance() {
         String key = "maven:com.example:lib:1.0.0";
         Set<Path> deps = Set.of(Paths.get("lib.jar"));
@@ -67,7 +67,7 @@ class LRUDependencyCacheTest {
         assertSame(loader1, loader2, "Should return the same ClassLoader instance");
     }
 
-    @Test
+    @UnitTest
     void testCacheDependencies_canRetrieveCachedDependencies() {
         Path projectPath = Paths.get("/project");
         List<Path> dependencies = List.of(Paths.get("dep1.jar"), Paths.get("dep2.jar"));
@@ -79,7 +79,7 @@ class LRUDependencyCacheTest {
         assertEquals(dependencies, cached.get());
     }
 
-    @Test
+    @UnitTest
     void testGetCachedDependencies_notCached_returnsEmpty() {
         Path projectPath = Paths.get("/project");
 
@@ -87,7 +87,7 @@ class LRUDependencyCacheTest {
         assertFalse(cached.isPresent(), "Should return empty for uncached project");
     }
 
-    @Test
+    @UnitTest
     void testInvalidateProject_removesCachedDependencies() {
         Path projectPath = Paths.get("/project");
         List<Path> dependencies = List.of(Paths.get("dep.jar"));
@@ -99,7 +99,7 @@ class LRUDependencyCacheTest {
         assertFalse(cached.isPresent(), "Should remove cached dependencies");
     }
 
-    @Test
+    @UnitTest
     void testInvalidateAll_clearsAllCaches() {
         Path project1 = Paths.get("/project1");
         Path project2 = Paths.get("/project2");
@@ -119,7 +119,7 @@ class LRUDependencyCacheTest {
         assertEquals(0, stats.getDependencyCacheSize());
     }
 
-    @Test
+    @UnitTest
     void testEvictionWhenCacheSizeExceeded() {
         // Create more than MAX_CACHE_SIZE (100) entries
         for (int i = 0; i < 105; i++) {
@@ -133,7 +133,7 @@ class LRUDependencyCacheTest {
         assertTrue(stats.getEvictionCount() > 0, "Should have evicted some entries");
     }
 
-    @Test
+    @UnitTest
     void testStatistics_tracksCacheMetrics() {
         Set<Path> deps1 = Set.of(Paths.get("lib1.jar"));
         Set<Path> deps2 = Set.of(Paths.get("lib2.jar"));
@@ -155,7 +155,7 @@ class LRUDependencyCacheTest {
         assertEquals(1, stats.getDependencyCacheSize(), "Should have 1 cached dependency");
     }
 
-    @Test
+    @UnitTest
     void testMemoryPressureHandling() {
         // Create some ClassLoaders
         for (int i = 0; i < 10; i++) {

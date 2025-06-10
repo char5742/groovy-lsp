@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
@@ -16,7 +17,6 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,7 +38,7 @@ class GroovyLanguageServerTest {
         server = new GroovyLanguageServer(mockTextDocumentService, mockWorkspaceService);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldInitializeServerWithCorrectCapabilities() throws Exception {
         // given
         InitializeParams params = new InitializeParams();
@@ -80,7 +80,7 @@ class GroovyLanguageServerTest {
         assertThat(capabilities.getFoldingRangeProvider().getLeft()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void shutdown_shouldShutdownNormally() throws Exception {
         // when
         Object result = server.shutdown().get();
@@ -89,7 +89,7 @@ class GroovyLanguageServerTest {
         assertThat(result).isNull();
     }
 
-    @Test
+    @UnitTest
     void exit_shouldExitWithCodeZero() {
         // given - shutdown called first
         var shutdownResult = server.shutdown();
@@ -100,14 +100,14 @@ class GroovyLanguageServerTest {
         // In real implementation, this would exit with code 0
     }
 
-    @Test
+    @UnitTest
     void exit_shouldExitWithCodeOneWithoutShutdown() {
         // when/then - would call System.exit(1)
         // Can't test System.exit directly, but we verify the method exists
         // In real implementation, this would exit with code 1
     }
 
-    @Test
+    @UnitTest
     void getTextDocumentService_shouldReturnTextDocumentService() {
         // when
         var service = server.getTextDocumentService();
@@ -116,7 +116,7 @@ class GroovyLanguageServerTest {
         assertThat(service).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void getWorkspaceService_shouldReturnWorkspaceService() {
         // when
         var service = server.getWorkspaceService();
@@ -125,7 +125,7 @@ class GroovyLanguageServerTest {
         assertThat(service).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void connect_shouldConnectToClient() {
         // when
         server.connect(mockClient);
@@ -134,7 +134,7 @@ class GroovyLanguageServerTest {
         assertThat(server.getClient()).isSameAs(mockClient);
     }
 
-    @Test
+    @UnitTest
     void connect_shouldPropagateClientToServices() {
         // given
         GroovyTextDocumentService textDocumentService = mock(GroovyTextDocumentService.class);
@@ -151,7 +151,7 @@ class GroovyLanguageServerTest {
         assertThat(testServer.getClient()).isSameAs(mockClient);
     }
 
-    @Test
+    @UnitTest
     void getClient_shouldReturnNullBeforeConnection() {
         // when
         var client = server.getClient();
@@ -160,7 +160,7 @@ class GroovyLanguageServerTest {
         assertThat(client).isNull();
     }
 
-    @Test
+    @UnitTest
     void getClient_shouldReturnClientAfterConnection() {
         // given
         server.connect(mockClient);
@@ -172,7 +172,7 @@ class GroovyLanguageServerTest {
         assertThat(client).isSameAs(mockClient);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldInitializeWithDifferentClientCapabilities() throws Exception {
         // given
         InitializeParams params = new InitializeParams();
@@ -194,7 +194,7 @@ class GroovyLanguageServerTest {
         assertThat(result.getCapabilities()).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldInitializeWithWorkspaceFolders() throws Exception {
         // given
         InitializeParams params = new InitializeParams();
@@ -209,7 +209,7 @@ class GroovyLanguageServerTest {
         assertThat(result.getCapabilities()).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldReturnSameCapabilitiesWhenCalledMultipleTimes() throws Exception {
         // given
         InitializeParams params = new InitializeParams();

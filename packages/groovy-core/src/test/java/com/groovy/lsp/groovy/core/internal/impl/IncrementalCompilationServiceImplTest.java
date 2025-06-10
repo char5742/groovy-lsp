@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.fail;
 import com.groovy.lsp.groovy.core.api.CompilationResult;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService.CompilationPhase;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService.DependencyType;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +29,6 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("CompilationUnit creation")
     class CompilationUnitCreation {
 
-        @Test
+        @UnitTest
         @DisplayName("Should create CompilationUnit with given configuration")
         void shouldCreateCompilationUnit() {
             CompilationUnit unit = service.createCompilationUnit(config);
@@ -63,7 +63,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Phase-based compilation")
     class PhaseBasedCompilation {
 
-        @Test
+        @UnitTest
         @DisplayName("Should compile simple Groovy class to CONVERSION phase")
         void shouldCompileToConversionPhase() {
             String sourceCode =
@@ -87,7 +87,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(result.getClasses().get(0).getName()).isEqualTo("TestClass");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should compile to SEMANTIC_ANALYSIS phase")
         void shouldCompileToSemanticAnalysisPhase() {
             String sourceCode =
@@ -113,7 +113,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(result.getImports().get(0).getClassName()).isEqualTo("java.util.List");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle compilation errors gracefully")
         void shouldHandleCompilationErrors() {
             String invalidCode =
@@ -138,7 +138,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Caching functionality")
     class CachingFunctionality {
 
-        @Test
+        @UnitTest
         @DisplayName("Should return cached result for identical source")
         void shouldReturnCachedResult() {
             String sourceCode = "class CachedClass { }";
@@ -158,7 +158,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(second).isSameAs(first);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should not use cache for different source")
         void shouldNotUseCacheForDifferentSource() {
             CompilationUnit unit = service.createCompilationUnit(config);
@@ -186,7 +186,7 @@ class IncrementalCompilationServiceImplTest {
                     .isEqualTo("SecondClass");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should clear specific cache entry")
         void shouldClearSpecificCache() {
             String sourceCode = "class TestClass { }";
@@ -207,7 +207,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(second).isNotSameAs(first);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should clear all caches")
         void shouldClearAllCaches() {
             CompilationUnit unit = service.createCompilationUnit(config);
@@ -230,7 +230,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Dependency analysis")
     class DependencyAnalysis {
 
-        @Test
+        @UnitTest
         @DisplayName("Should detect import dependencies")
         void shouldDetectImportDependencies() {
             String sourceCode =
@@ -264,7 +264,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(deps).containsEntry("java.util.Map", DependencyType.FIELD_TYPE);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should detect inheritance dependencies")
         void shouldDetectInheritanceDependencies() {
             String sourceCode =
@@ -286,7 +286,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(deps).containsEntry("java.io.Serializable", DependencyType.IMPLEMENTS);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should detect field type dependencies")
         void shouldDetectFieldTypeDependencies() {
             String sourceCode =
@@ -314,7 +314,7 @@ class IncrementalCompilationServiceImplTest {
                     .containsEntry("java.time.LocalDate", DependencyType.FIELD_TYPE);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should detect method dependencies")
         void shouldDetectMethodDependencies() {
             String sourceCode =
@@ -347,7 +347,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Affected modules detection")
     class AffectedModulesDetection {
 
-        @Test
+        @UnitTest
         @DisplayName("Should detect directly affected modules")
         void shouldDetectDirectlyAffectedModules() {
             // Create separate compilation units for each module to simulate LSP scenario
@@ -383,7 +383,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(affected).contains("B.groovy");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle circular dependencies")
         void shouldHandleCircularDependencies() {
             // Create separate compilation units for circular dependency scenario
@@ -410,7 +410,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Incremental module updates")
     class IncrementalModuleUpdates {
 
-        @Test
+        @UnitTest
         @DisplayName("Should update existing module")
         void shouldUpdateExistingModule() {
             CompilationUnit unit = service.createCompilationUnit(config);
@@ -439,7 +439,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Concurrent compilation")
     class ConcurrentCompilation {
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle concurrent compilation requests safely")
         void shouldHandleConcurrentCompilation() throws InterruptedException {
             int threadCount = 10;
@@ -526,7 +526,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should maintain cache consistency under concurrent access")
         void shouldMaintainCacheConsistency() throws InterruptedException {
             int threadCount = 20;
@@ -584,7 +584,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Cache TTL and eviction")
     class CacheTTLAndEviction {
 
-        @Test
+        @UnitTest
         @DisplayName("Should expire cache entries after TTL")
         void shouldExpireCacheAfterTTL() throws InterruptedException {
             // Create service with 100ms TTL
@@ -617,7 +617,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(third).isNotSameAs(first);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should evict oldest entries when cache is full")
         void shouldEvictOldestEntries() {
             // Create service with max cache size of 3
@@ -654,7 +654,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Large scale simulation")
     class LargeScaleSimulation {
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle large dependency graphs efficiently")
         void shouldScaleWithLargeDependencyGraphs() {
             int moduleCount = 100;
@@ -703,7 +703,7 @@ class IncrementalCompilationServiceImplTest {
                     .isLessThan(maxDetectionTime); // 100ms for local, 1000ms for CI
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle complex dependency graphs")
         void shouldHandleComplexDependencyGraphs() {
             // Create a more complex graph with multiple dependencies
@@ -774,7 +774,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Memory management")
     class MemoryManagement {
 
-        @Test
+        @UnitTest
         @DisplayName("Should not leak memory when cache entries are evicted")
         @SuppressWarnings("ThreadPriorityCheck") // Intentional use of Thread.yield() for testing
         void shouldNotLeakMemory() {
@@ -817,7 +817,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(collected).isGreaterThan(0);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should clear references when cache is cleared")
         @SuppressWarnings("ThreadPriorityCheck") // Intentional use of Thread.yield() for testing
         void shouldClearReferencesOnCacheClear() {
@@ -855,7 +855,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Error propagation with CompilationResult")
     class ErrorPropagation {
 
-        @Test
+        @UnitTest
         @DisplayName("Should return detailed error information")
         void shouldReturnDetailedErrors() {
             String invalidCode =
@@ -882,7 +882,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(error.getSourceName()).isEqualTo("ErrorTest.groovy");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle warnings")
         void shouldHandleWarnings() {
             String codeWithWarnings =
@@ -909,7 +909,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(result.getModuleNode()).isNotNull();
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should cache successful CompilationResult")
         void shouldCacheCompilationResult() {
             String sourceCode = "class CacheResultTest { }";
@@ -934,7 +934,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(second.getModuleNode()).isSameAs(first.getModuleNode());
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle compilation error without error collector messages")
         void shouldHandleCompilationErrorWithoutMessages() {
             // This test simulates a scenario where compilation fails but errorCollector has no
@@ -962,7 +962,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle unexpected exception during compilation")
         void shouldHandleUnexpectedException() throws Exception {
             // Test with null source code to trigger unexpected exception
@@ -998,7 +998,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(error.getMessage()).containsAnyOf("null", "Compilation failed");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should return partial result when AST exists but has errors")
         void shouldReturnPartialResult() {
             // Create code that parses but has semantic errors
@@ -1025,7 +1025,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(result).isNotNull();
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle errors and warnings together")
         void shouldHandleErrorsAndWarnings() {
             // Code that might generate both errors and warnings
@@ -1059,7 +1059,7 @@ class IncrementalCompilationServiceImplTest {
     @DisplayName("Additional edge cases")
     class AdditionalEdgeCases {
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle when compileToPhase cache check has expired entry")
         void shouldHandleExpiredCacheInCompileToPhase() throws InterruptedException {
             // Create service with very short TTL
@@ -1085,7 +1085,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(second).isNotSameAs(first);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle getDependencies with null AST elements")
         void shouldHandleNullASTElements() {
             // Create a minimal module node with potential null elements
@@ -1096,7 +1096,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(deps).isNotNull();
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle phase comparison edge cases")
         void shouldHandlePhaseComparison() {
             String sourceCode = "class PhaseTest { }";
@@ -1118,7 +1118,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(conversion).isSameAs(semantic);
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should update dependency graph correctly")
         void shouldUpdateDependencyGraph() {
             String sourceWithDeps =
@@ -1157,7 +1157,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(affected).contains("DependentTest.groovy");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should compile to all compilation phases")
         void shouldCompileToAllPhases() {
             String sourceCode =
@@ -1213,7 +1213,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should compile to all phases with CompilationResult")
         void shouldCompileToAllPhasesWithResult() {
             String sourceCode =
@@ -1264,7 +1264,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle null source code with proper error in compileToPhaseWithResult")
         void shouldHandleNullSourceCodeInCompileToPhaseWithResult() throws Exception {
             CompilationUnit unit = service.createCompilationUnit(config);
@@ -1298,7 +1298,7 @@ class IncrementalCompilationServiceImplTest {
                     .contains("Source code cannot be null");
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle compilation error with no error collector messages")
         void shouldHandleCompilationErrorWithNoErrorMessages() {
             // Create a scenario where compilation fails during the compile phase
@@ -1327,7 +1327,7 @@ class IncrementalCompilationServiceImplTest {
             assertThat(hasValidError).isTrue();
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should return partial result when compilation produces AST with errors")
         void shouldReturnPartialResultWithASTAndErrors() {
             // Create code that will parse successfully but have errors during later phases
@@ -1374,7 +1374,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle warnings in compilation result")
         void shouldProcessWarningsInCompilationResult() {
             // Create code that generates warnings
@@ -1416,7 +1416,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle phase comparison with null phases")
         void shouldHandleNullPhasesInComparison() {
             // This tests the defensive null check in isPhaseGreaterOrEqual (lines 527-529)
@@ -1447,7 +1447,7 @@ class IncrementalCompilationServiceImplTest {
             }
         }
 
-        @Test
+        @UnitTest
         @DisplayName("Should handle null module node in updateDependencyGraph")
         void shouldHandleNullModuleInDependencyUpdate() {
             // This tests the null check in updateDependencyGraph (lines 474-477)

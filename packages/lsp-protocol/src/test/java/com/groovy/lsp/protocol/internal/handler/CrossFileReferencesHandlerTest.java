@@ -10,6 +10,7 @@ import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -29,7 +30,6 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for cross-file references functionality in ReferencesHandler
@@ -55,7 +55,7 @@ public class CrossFileReferencesHandlerTest {
         referencesHandler = new ReferencesHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find method references across multiple files via WorkspaceIndexService")
     void testCrossFileMethodReferences() throws Exception {
         // Arrange
@@ -115,7 +115,7 @@ public class CrossFileReferencesHandlerTest {
         assertThat(location2.getRange().getStart().getCharacter()).isEqualTo(29);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find class references across multiple files via WorkspaceIndexService")
     void testCrossFileClassReferences() throws Exception {
         // Arrange
@@ -158,7 +158,7 @@ public class CrossFileReferencesHandlerTest {
         assertThat(locations.get(1).getUri()).endsWith("Controller.groovy");
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find property references across files via WorkspaceIndexService")
     void testCrossFilePropertyReferences() throws Exception {
         // Arrange
@@ -203,7 +203,7 @@ public class CrossFileReferencesHandlerTest {
         assertThat(location.getRange().getStart().getCharacter()).isEqualTo(9);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should filter references by symbol kind")
     void testCrossFileFilterBySymbolKind() throws Exception {
         // Arrange
@@ -259,7 +259,7 @@ public class CrossFileReferencesHandlerTest {
         assertThat(locations.get(0).getUri()).endsWith("File1.groovy");
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle workspace index service errors gracefully")
     void testCrossFileIndexServiceError() throws Exception {
         // Arrange

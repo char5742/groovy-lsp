@@ -2,6 +2,7 @@ package com.groovy.lsp.codenarc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -9,7 +10,6 @@ import java.util.Objects;
 import org.codenarc.ruleset.RuleSet;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -32,7 +32,7 @@ class RuleSetProviderAdditionalTest {
         ruleSetProvider = new RuleSetProvider();
     }
 
-    @Test
+    @UnitTest
     void getRuleSet_shouldReturnDefaultRuleSetWhenNoCustomConfig() {
         // when
         RuleSet ruleSet = ruleSetProvider.getRuleSet();
@@ -42,7 +42,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(ruleSet.getRules()).isNotEmpty();
     }
 
-    @Test
+    @UnitTest
     void getRuleSet_shouldCacheRuleSet() {
         // when
         RuleSet firstCall = ruleSetProvider.getRuleSet();
@@ -52,7 +52,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(firstCall).isSameAs(secondCall);
     }
 
-    @Test
+    @UnitTest
     void reloadRuleSet_shouldClearCacheAndReturnNewRuleSet() {
         // given
         RuleSet firstRuleSet = ruleSetProvider.getRuleSet();
@@ -68,7 +68,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(reloadedRuleSet).isNotSameAs(firstRuleSet);
     }
 
-    @Test
+    @UnitTest
     void addRuleSetPath_shouldAddPathAndClearCache() {
         // given
         RuleSet initialRuleSet = ruleSetProvider.getRuleSet();
@@ -86,7 +86,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(newRuleSet).isNotSameAs(initialRuleSet);
     }
 
-    @Test
+    @UnitTest
     void resetToDefaults_shouldClearCustomPathsAndResetToDefaults() {
         // given
         ruleSetProvider.addRuleSetPath("custom/path.xml");
@@ -100,7 +100,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(paths).contains("rulesets/basic.xml");
     }
 
-    @Test
+    @UnitTest
     void getRuleSetPaths_shouldReturnCopyOfPaths() {
         // given
         List<String> paths1 = ruleSetProvider.getRuleSetPaths();
@@ -113,7 +113,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(paths2).doesNotContain("should-not-affect-original");
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldHandleCustomRuleSetFile() throws Exception {
         // given
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -139,7 +139,7 @@ class RuleSetProviderAdditionalTest {
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
     }
 
-    @Test
+    @UnitTest
     void loadRuleSet_shouldHandleCustomPropertiesFile() throws Exception {
         // given
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -163,7 +163,7 @@ class RuleSetProviderAdditionalTest {
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldFindGradleProject() throws Exception {
         // given
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -181,7 +181,7 @@ class RuleSetProviderAdditionalTest {
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
     }
 
-    @Test
+    @UnitTest
     void findProjectRoot_shouldFindMavenProject() throws Exception {
         // given
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -199,7 +199,7 @@ class RuleSetProviderAdditionalTest {
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
     }
 
-    @Test
+    @UnitTest
     void loadRuleSetFromPath_shouldHandlePropertiesFile() {
         // given
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
@@ -213,7 +213,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(ruleSet).isNotNull(); // Properties files are warned about but don't fail
     }
 
-    @Test
+    @UnitTest
     void loadRuleSetFromPath_shouldHandleNonExistentFile() {
         // given
         String nonExistentPath = "/does/not/exist.xml";
@@ -226,7 +226,7 @@ class RuleSetProviderAdditionalTest {
         assertThat(ruleSet).isNotNull(); // Should still return a rule set (default ones)
     }
 
-    @Test
+    @UnitTest
     void convertValue_shouldHandleAllPrimitiveTypes() {
         // Use reflection to test private method
         try {
@@ -253,7 +253,7 @@ class RuleSetProviderAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void findSetter_shouldFindValidSetterMethod() {
         // Use reflection to test private method
         try {
@@ -282,7 +282,7 @@ class RuleSetProviderAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void loadCustomProperties_shouldHandleInvalidPropertyValues() throws Exception {
         // given
         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");

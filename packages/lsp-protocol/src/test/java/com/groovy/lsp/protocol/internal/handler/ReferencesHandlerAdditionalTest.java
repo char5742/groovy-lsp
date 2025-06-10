@@ -10,6 +10,7 @@ import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -26,7 +27,6 @@ import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,7 +61,7 @@ class ReferencesHandlerAdditionalTest {
         return params;
     }
 
-    @Test
+    @UnitTest
     void testReferences_interfaceFromWorkspace() {
         String sourceCode =
                 """
@@ -108,7 +108,7 @@ class ReferencesHandlerAdditionalTest {
         assertThat(locations.get(0).getUri()).isEqualTo(otherFile.toUri().toString());
     }
 
-    @Test
+    @UnitTest
     void testReferences_nullLocationFromSymbol() {
         String sourceCode = "class MyClass { void myMethod() {} }";
 
@@ -143,7 +143,7 @@ class ReferencesHandlerAdditionalTest {
         assertThat(locations).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void testReferences_fullyQualifiedClassName() {
         String sourceCode = "import com.example.MyClass";
 
@@ -177,7 +177,7 @@ class ReferencesHandlerAdditionalTest {
         assertThat(locations.get(0).getUri()).isEqualTo(otherFile.toUri().toString());
     }
 
-    @Test
+    @UnitTest
     void testReferences_propertyExpressionVisitor() {
         String sourceCode =
                 """
@@ -209,7 +209,7 @@ class ReferencesHandlerAdditionalTest {
         future.join();
     }
 
-    @Test
+    @UnitTest
     void testReferences_constructorCallExpression() {
         String sourceCode =
                 """
@@ -240,7 +240,7 @@ class ReferencesHandlerAdditionalTest {
         future.join();
     }
 
-    @Test
+    @UnitTest
     void testReferences_methodWithIncludeDeclaration() {
         String sourceCode =
                 """
@@ -277,7 +277,7 @@ class ReferencesHandlerAdditionalTest {
         // locationsが空でもテストは成功とする
     }
 
-    @Test
+    @UnitTest
     void testReferences_workspaceSearchException() {
         String sourceCode = "class MyClass { void myMethod() {} }";
 

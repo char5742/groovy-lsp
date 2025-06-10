@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -19,7 +20,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Additional test cases for SymbolExtractorVisitor to improve branch coverage.
@@ -34,7 +34,7 @@ class SymbolExtractorVisitorAdditionalTest {
         testPath = Paths.get("test.groovy");
     }
 
-    @Test
+    @UnitTest
     void processClassNode_shouldHandleDuplicateClasses() {
         // Given - Create visitor and process a class
         visitor = new SymbolExtractorVisitor(testPath);
@@ -51,7 +51,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void visitField_shouldHandleNullCurrentClassName() {
         // Given - Create visitor with no current class name
         visitor = new SymbolExtractorVisitor(testPath);
@@ -68,7 +68,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).name()).isEqualTo("testField");
     }
 
-    @Test
+    @UnitTest
     void visitProperty_shouldHandleNullCurrentClassName() {
         // Given - Create visitor with no current class name
         visitor = new SymbolExtractorVisitor(testPath);
@@ -87,7 +87,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).name()).isEqualTo("testProperty");
     }
 
-    @Test
+    @UnitTest
     void visitClosureExpression_shouldHandleNullCurrentClassName() {
         // Given - Create visitor with no current class name
         visitor = new SymbolExtractorVisitor(testPath);
@@ -105,7 +105,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).name()).isEqualTo("<closure>");
     }
 
-    @Test
+    @UnitTest
     void getSourceUnit_shouldReturnNull() {
         // Given
         visitor = new SymbolExtractorVisitor(testPath);
@@ -122,7 +122,7 @@ class SymbolExtractorVisitorAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void isTrait_shouldDetectTraitByGroovyLangTraitInterface() {
         // Given - Create a class that implements groovy.lang.Trait
         visitor = new SymbolExtractorVisitor(testPath);
@@ -139,7 +139,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).kind()).isEqualTo(SymbolKind.TRAIT);
     }
 
-    @Test
+    @UnitTest
     void isTrait_shouldDetectTraitByHelperClassInAllClassNames() {
         // Given - Create visitor with allClassNames containing helper
         Set<String> allClassNames = new HashSet<>();
@@ -158,7 +158,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).kind()).isEqualTo(SymbolKind.TRAIT);
     }
 
-    @Test
+    @UnitTest
     void isTrait_shouldDetectTraitByHelperClassInVisitedClasses() {
         // Given - Create visitor and add helper to visited classes
         visitor = new SymbolExtractorVisitor(testPath);
@@ -188,7 +188,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(traitSymbol.kind()).isEqualTo(SymbolKind.TRAIT);
     }
 
-    @Test
+    @UnitTest
     void isTrait_shouldDetectTraitByHelperClassInModule() {
         // Given - Create a module with helper class
         visitor = new SymbolExtractorVisitor(testPath);
@@ -211,7 +211,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).kind()).isEqualTo(SymbolKind.TRAIT);
     }
 
-    @Test
+    @UnitTest
     void visitClass_shouldProcessNestedClass() {
         // Given
         visitor = new SymbolExtractorVisitor(testPath);
@@ -228,7 +228,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).name()).isEqualTo("com.test.OuterClass$InnerClass");
     }
 
-    @Test
+    @UnitTest
     void visitVariableExpression_shouldDoNothing() {
         // Given
         visitor = new SymbolExtractorVisitor(testPath);
@@ -242,7 +242,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void processClassNode_withNegativeLineNumbers_shouldUseMinimumOne() {
         // Given
         visitor = new SymbolExtractorVisitor(testPath);
@@ -261,7 +261,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbol.column()).isEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void constructor_withSinglePathArgument_shouldUseEmptyClassNamesSet() {
         // Given/When
         visitor = new SymbolExtractorVisitor(testPath);
@@ -280,7 +280,7 @@ class SymbolExtractorVisitorAdditionalTest {
         assertThat(symbols.get(0).kind()).isEqualTo(SymbolKind.INTERFACE);
     }
 
-    @Test
+    @UnitTest
     void isTrait_shouldReturnFalseForNullModule() {
         // Given - Interface node without module
         visitor = new SymbolExtractorVisitor(testPath);

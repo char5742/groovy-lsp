@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassNode;
@@ -22,7 +23,6 @@ import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,7 +55,7 @@ class ReferencesHandlerTest {
         handler = new ReferencesHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_DocumentNotFound() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -75,7 +75,7 @@ class ReferencesHandlerTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_ParseError() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -97,7 +97,7 @@ class ReferencesHandlerTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_NoNodeAtPosition() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -120,7 +120,7 @@ class ReferencesHandlerTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_VariableReferences() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -157,7 +157,7 @@ class ReferencesHandlerTest {
         // we can't easily simulate the full AST traversal
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_MethodReferences_IncludeDeclaration() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -198,7 +198,7 @@ class ReferencesHandlerTest {
         assertNotNull(locations);
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_MethodCallReferences() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -235,7 +235,7 @@ class ReferencesHandlerTest {
         assertNotNull(locations);
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_ClassReferences() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -267,7 +267,7 @@ class ReferencesHandlerTest {
         assertNotNull(locations);
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_FieldReferences() {
         // Arrange
         String uri = "file:///test.groovy";
@@ -302,7 +302,7 @@ class ReferencesHandlerTest {
         assertNotNull(locations);
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_EmptyFile() {
         // Arrange
         String uri = "file:///empty.groovy";
@@ -324,7 +324,7 @@ class ReferencesHandlerTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_SyntaxError() {
         // Arrange
         String uri = "file:///syntax-error.groovy";
@@ -348,7 +348,7 @@ class ReferencesHandlerTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_LargePositionNumbers() {
         // Arrange - Test with very large line/column numbers
         String uri = "file:///test.groovy";
@@ -370,7 +370,7 @@ class ReferencesHandlerTest {
         assertTrue(locations.isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleReferences_NullContent() {
         // Arrange
         String uri = "file:///null-content.groovy";

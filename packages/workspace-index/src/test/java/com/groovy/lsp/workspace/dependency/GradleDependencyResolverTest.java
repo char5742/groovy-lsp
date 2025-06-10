@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import com.groovy.lsp.workspace.dependency.DependencyResolver.BuildSystem;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class GradleDependencyResolverTest {
@@ -24,7 +24,7 @@ class GradleDependencyResolverTest {
         System.setProperty("test.mode", "true");
     }
 
-    @Test
+    @UnitTest
     void canHandle_withBuildGradle_returnsTrue() throws IOException {
         Path buildFile = tempDir.resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
@@ -34,7 +34,7 @@ class GradleDependencyResolverTest {
         assertTrue(resolver.canHandle(tempDir));
     }
 
-    @Test
+    @UnitTest
     void canHandle_withBuildGradleKts_returnsTrue() throws IOException {
         Path buildFile = tempDir.resolve("build.gradle.kts");
         Files.writeString(buildFile, "plugins { java }");
@@ -44,7 +44,7 @@ class GradleDependencyResolverTest {
         assertTrue(resolver.canHandle(tempDir));
     }
 
-    @Test
+    @UnitTest
     void canHandle_withSettingsGradle_returnsTrue() throws IOException {
         Path settingsFile = tempDir.resolve("settings.gradle");
         Files.writeString(settingsFile, "rootProject.name = 'test'");
@@ -54,21 +54,21 @@ class GradleDependencyResolverTest {
         assertTrue(resolver.canHandle(tempDir));
     }
 
-    @Test
+    @UnitTest
     void canHandle_withoutGradleFiles_returnsFalse() {
         GradleDependencyResolver resolver = new GradleDependencyResolver(tempDir);
 
         assertFalse(resolver.canHandle(tempDir));
     }
 
-    @Test
+    @UnitTest
     void getBuildSystem_returnsGradle() {
         GradleDependencyResolver resolver = new GradleDependencyResolver(tempDir);
 
         assertEquals(DependencyResolver.BuildSystem.GRADLE, resolver.getBuildSystem());
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_returnsStandardGradleDirectories() throws IOException {
         // Create standard Gradle directory structure
         Files.createDirectories(tempDir.resolve("src/main/java"));
@@ -87,7 +87,7 @@ class GradleDependencyResolverTest {
                         tempDir.resolve("src/test/java"));
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_inTestEnvironment_returnsEmptyList() throws IOException {
         // Create a build.gradle file
         Path buildFile = tempDir.resolve("build.gradle");
@@ -101,7 +101,7 @@ class GradleDependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withInvalidProject_returnsEmptyList() {
         // No build files
         GradleDependencyResolver resolver = new GradleDependencyResolver(tempDir);
@@ -111,7 +111,7 @@ class GradleDependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldAcceptCustomTimeout() throws IOException {
         Path buildFile = tempDir.resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");

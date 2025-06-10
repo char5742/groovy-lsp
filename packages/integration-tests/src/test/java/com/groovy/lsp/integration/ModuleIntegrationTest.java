@@ -10,6 +10,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.GroovyCoreFactory;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.test.annotations.IntegrationTest;
 import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +22,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -72,7 +72,7 @@ class ModuleIntegrationTest {
         }
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("Groovy Core と Lint Engine の統合")
     void testGroovyCoreAndLintIntegration() throws Exception {
         // Groovyファイルを作成
@@ -116,7 +116,7 @@ class ModuleIntegrationTest {
         // Violations will be used once rules are configured
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("Formatter と Groovy Core の統合")
     void testFormatterAndGroovyCoreIntegration() throws Exception {
         // フォーマット前のコード
@@ -154,7 +154,7 @@ class ModuleIntegrationTest {
                 .contains("class BadlyFormatted {");
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("Workspace Indexer と複数モジュールの統合")
     void testWorkspaceIndexerIntegration() throws Exception {
         // 複数のGroovyファイルを作成
@@ -220,7 +220,7 @@ class ModuleIntegrationTest {
         // Symbols will be verified once symbol extraction is implemented
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("エンドツーエンド: コード変更からLint、フォーマット、インデックス更新まで")
     void testEndToEndWorkflow() throws Exception {
         // 初期コード

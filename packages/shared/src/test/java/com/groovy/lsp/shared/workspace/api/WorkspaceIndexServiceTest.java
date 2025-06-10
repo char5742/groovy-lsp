@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 class WorkspaceIndexServiceTest {
 
@@ -34,7 +34,7 @@ class WorkspaceIndexServiceTest {
         testSymbol = new SymbolInfo("TestClass", SymbolKind.CLASS, testPath, 10, 5);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should initialize workspace index")
     void testInitialize() throws ExecutionException, InterruptedException {
         // Act
@@ -47,7 +47,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(1, workspaceIndexService.getInitializeCallCount());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should update file in index")
     void testUpdateFile() throws ExecutionException, InterruptedException {
         // Act
@@ -60,7 +60,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(1, workspaceIndexService.getUpdateFileCallCount());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should search symbols by query")
     void testSearchSymbols() throws ExecutionException, InterruptedException {
         // Arrange
@@ -77,7 +77,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(1, workspaceIndexService.getSearchSymbolsCallCount());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle empty search results")
     void testSearchSymbolsEmpty() throws ExecutionException, InterruptedException {
         // Arrange
@@ -92,7 +92,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(0, symbols.count());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should shutdown service")
     void testShutdown() {
         // Act
@@ -103,7 +103,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(1, workspaceIndexService.getShutdownCallCount());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle multiple symbol search results")
     void testSearchMultipleSymbols() throws ExecutionException, InterruptedException {
         // Arrange
@@ -125,7 +125,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(3, symbols.count());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle concurrent operations")
     void testConcurrentOperations() throws ExecutionException, InterruptedException {
         // Arrange
@@ -143,7 +143,7 @@ class WorkspaceIndexServiceTest {
         assertEquals(2, workspaceIndexService.getUpdateFileCallCount());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test interface contract")
     void testInterfaceContract() {
         // This test verifies that the interface has all required methods
@@ -178,7 +178,7 @@ class WorkspaceIndexServiceTest {
         service.shutdown(); // Should not throw
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle failed futures")
     void testFailedFutures() {
         // Arrange
@@ -192,7 +192,7 @@ class WorkspaceIndexServiceTest {
         assertTrue(result.isCompletedExceptionally());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle case-insensitive search")
     void testCaseInsensitiveSearch() throws ExecutionException, InterruptedException {
         // Arrange

@@ -15,6 +15,7 @@ import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 import com.groovy.lsp.protocol.test.AbstractProtocolTest;
 import com.groovy.lsp.protocol.test.LSPTestHarness;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -33,7 +34,6 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.junit.jupiter.api.Test;
 
 /**
  * Protocol-level tests for the Groovy Language Server.
@@ -48,7 +48,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         return LSPTestHarness.builder().server(server).build();
     }
 
-    @Test
+    @UnitTest
     void testInitialize() throws Exception {
         // Server is already initialized in setUp()
         InitializeResult result = server.initialize(createDefaultInitializeParams()).get();
@@ -60,7 +60,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         assertThat(capabilities.getTextDocumentSync()).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void testDidOpenTextDocument() {
         // Open a Groovy document
         openGroovyDocument(
@@ -82,7 +82,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         assertThat(client.getDiagnostics()).isNotEmpty();
     }
 
-    @Test
+    @UnitTest
     void testCompletion() throws Exception {
         // Open a document
         openGroovyDocument(
@@ -112,7 +112,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         assertThat(list.isIncomplete()).isFalse();
     }
 
-    @Test
+    @UnitTest
     void testHover() throws Exception {
         // Open a document
         openGroovyDocument(
@@ -137,7 +137,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         // Real implementation would return hover information
     }
 
-    @Test
+    @UnitTest
     void testDocumentSymbols() throws Exception {
         // Open a document with various symbols
         openGroovyDocument(
@@ -168,7 +168,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         assertThat(symbols).isEmpty(); // Mock returns empty list
     }
 
-    @Test
+    @UnitTest
     void testGoToDefinition() throws Exception {
         // Open a document
         openGroovyDocument(
@@ -193,7 +193,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
         assertThat(locations.getLeft()).isEmpty(); // Mock returns empty list
     }
 
-    @Test
+    @UnitTest
     void testFormatting() throws Exception {
         // Open an unformatted document
         openGroovyDocument(

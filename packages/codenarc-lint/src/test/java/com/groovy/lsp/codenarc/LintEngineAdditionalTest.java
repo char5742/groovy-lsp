@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Collections;
 import java.util.List;
 import org.codenarc.results.Results;
@@ -15,7 +16,6 @@ import org.codenarc.rule.Violation;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,7 +36,7 @@ class LintEngineAdditionalTest {
         lintEngine = new LintEngine(ruleSetProvider, quickFixMapper);
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldHandleNullPath() {
         // Use reflection to bypass NullAway for null parameter testing
         try {
@@ -56,7 +56,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldHandleEmptyDirectory() {
         // given
         String directory = "/empty/dir";
@@ -74,7 +74,7 @@ class LintEngineAdditionalTest {
                         });
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldHandleNullIncludes() {
         // Use reflection to bypass NullAway for null parameter testing
         try {
@@ -102,7 +102,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void fileAnalysisResult_shouldGetters() {
         // given
         String filePath = "test.groovy";
@@ -117,7 +117,7 @@ class LintEngineAdditionalTest {
         assertThat(result.getDiagnostics()).isEqualTo(diagnostics);
     }
 
-    @Test
+    @UnitTest
     void mapPriorityToSeverity_shouldMapAllPriorities() {
         // Use reflection to test private method mapPriorityToSeverity
         try {
@@ -141,7 +141,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void convertViolationsToDiagnostics_shouldHandleEmptyViolations() {
         // Use reflection to test private method
         try {
@@ -163,7 +163,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void convertResultsToDiagnostics_shouldHandleNullResults() {
         // Use reflection to test private method
         try {
@@ -184,7 +184,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void convertResultsToFileAnalysisResults_shouldHandleNullResults() {
         // Use reflection to test private method
         try {
@@ -205,7 +205,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void convertResultsToDiagnostics_shouldHandleResultsWithNullChildren() {
         // Use reflection to test private method
         try {
@@ -229,7 +229,7 @@ class LintEngineAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void getQuickFixesForViolation_shouldHandleNullFilePath() {
         // given
         Violation violation = mock(Violation.class);
