@@ -1,14 +1,20 @@
-# octocov configuration for Groovy LSP project
+# .octocov.yml — Groovy LSP
+
+# --------------------------------------------------
+# 基本設定
+# --------------------------------------------------
+repository: ${GITHUB_REPOSITORY}   # 明示するとローカル実行でも安心
+timeout:   2m                      # 大きめに確保（既定 30s）
+
+# --------------------------------------------------
+# Code Coverage
+# --------------------------------------------------
 coverage:
-  # 統合カバレッジレポートのパスを指定
+  # Jacoco ルートレポート
   paths:
     - build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
 
-  # カバレッジバッジの保存先
-  badge:
-    path: docs/coverage.svg
-
-  # カバレッジ計算から除外するパターン
+  # 除外パターン
   exclude:
     - "**/test/**"
     - "**/tests/**"
@@ -22,32 +28,16 @@ coverage:
     - "**/Module*"
     - "**/Constants*"
 
-# テスト実行時間の表示
-testExecutionTime:
-  if: true
+  # バッジ
+  badge:
+    path: docs/coverage.svg
 
-# デフォルトブランチとの差分比較
-diff:
-  datastores:
-    - artifact://${GITHUB_REPOSITORY}
+  # 最低許容値（例：80% 未満なら CI 落とす）
+  acceptable: 80%
 
-# プルリクエストへのコメント
-comment:
-  if: is_pull_request
-  hideFooterLink: false
-  deletePrevious: true  # 以前のコメントを削除して新しいコメントを投稿
-
-# デフォルトブランチのレポート保存
-report:
-  if: is_default_branch
-  datastores:
-    - artifact://${GITHUB_REPOSITORY}
-
-# ジョブサマリーへの出力
-summary:
-  if: true
-
-# コードとテストの比率
+# --------------------------------------------------
+# Code ⇄ Test Ratio
+# --------------------------------------------------
 codeToTestRatio:
   code:
     - "packages/**/src/main/**/*.java"
@@ -60,24 +50,44 @@ codeToTestRatio:
     - "packages/**/src/test/**/*.groovy"
     - "packages/integration-tests/**/*.java"
     - "packages/integration-tests/**/*.groovy"
+  badge:
+    path: docs/ratio.svg
+  # acceptable: 1:1.2          # 必要なら解放
 
-# カスタムメトリクス（オプション）
-# customMetrics:
-#   - name: "Module Count"
-#     value: 10
+# --------------------------------------------------
+# Test Execution Time
+# --------------------------------------------------
+testExecutionTime: {}             # GA 上では自動計測される
 
-# タイムアウト設定（大規模プロジェクト用）
-timeout: 60s
+# --------------------------------------------------
+# Pull Request Comment
+# --------------------------------------------------
+comment:
+  if: is_pull_request
+  deletePrevious: true
+  hideFooterLink: false
+  # message: "👀 テスト通りました！"  # 追記メッセージ例
 
-# 中央レポート機能
-central:
-  enable: false  # 複数リポジトリの統合レポートが必要な場合に有効化
+# --------------------------------------------------
+# 過去レポート保存 & 差分比較
+# --------------------------------------------------
+report:
+  if: is_default_branch
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
 
-# プッシュ時の動作
+diff:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+
+# --------------------------------------------------
+# Job Summary 出力
+# --------------------------------------------------
+summary: {}
+
+# --------------------------------------------------
+# バッジ自動 push（デフォルトブランチのみ）
+# --------------------------------------------------
 push:
   if: is_default_branch
-
-# カバレッジ閾値（オプション）
-# coverage:
-#   acceptable: 60%
-#   healthy: 80%
+  # message: "Update badges by octocov [skip ci]"
