@@ -249,11 +249,19 @@ task jacocoRootReport(type: JacocoReport) {
 
     sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.from = files(subprojects.sourceSets.main.output)
-    executionData.from = files(subprojects.jacocoTestReport.executionData).filter { it.exists() }
+
+    // 各サブプロジェクトのtest.execファイルを収集
+    executionData.from = files(subprojects.collect { subproject ->
+        file("${subproject.buildDir}/jacoco/test.exec")
+    }).filter { it.exists() }
 
     reports {
         html.required.set(true)
         xml.required.set(true)
         csv.required.set(false)
     }
+
+    // レポート出力先を明示的に設定
+    reports.xml.outputLocation.set(file("${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"))
+    reports.html.outputLocation.set(file("${buildDir}/reports/jacoco/jacocoRootReport/html"))
 }

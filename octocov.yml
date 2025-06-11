@@ -1,0 +1,25 @@
+coverage:
+  # カバレッジレポートのパス
+  paths:
+    - build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
+  # カバレッジしきい値
+  acceptable: 60%
+  # しきい値を下回った場合にエラーにするか
+  if_not_found: warning
+
+comment:
+  enable: true
+  # PRコメントを更新
+  delete_previous: true
+  # カバレッジが低下した場合のみコメント
+  if:
+    coverage:
+      decrease: true
+
+diff:
+  datastores:
+    - artifact://octocov
+
+report:
+  datastores:
+    - artifact://octocov
