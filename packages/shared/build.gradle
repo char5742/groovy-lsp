@@ -19,6 +19,8 @@ dependencies {
 
     // Test dependencies
     testImplementation libs.bundles.lsp4j
+    testImplementation libs.archunit
+    testImplementation libs.jmolecules.integrations.archunit
 }
 
 jar {

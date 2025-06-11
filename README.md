@@ -189,6 +189,14 @@ server-launcher
 
 詳細は[docs/TEST_PYRAMID.md](docs/TEST_PYRAMID.md)を参照してください。
 
+### アーキテクチャテスト
+
+ArchUnitを使用してアーキテクチャルールを自動的に検証しています：
+- `@Test`アノテーションの直接使用を禁止（カスタムアノテーションを使用）
+- テストメソッドの命名規則とアノテーション使用の強制
+
+詳細は[docs/ARCHITECTURE_TESTS.md](docs/ARCHITECTURE_TESTS.md)を参照してください。
+
 ```bash
 # 単体テストのみ実行（デフォルト）
 ./gradlew test
