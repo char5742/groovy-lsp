@@ -1,8 +1,15 @@
 package com.groovy.lsp.protocol.internal.handler;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.groovy.core.api.CompilationResult;
 import com.groovy.lsp.groovy.core.api.CompilationResult.CompilationError;
@@ -236,14 +243,19 @@ class DiagnosticsHandlerTest {
                 .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
 
         // When - call multiple times rapidly
-        diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
+        var future1 = diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
         Thread.sleep(100);
-        diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
+        var future2 = diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
         Thread.sleep(100);
-        diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
+        var future3 = diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
 
         // Wait for debounce delay
         Thread.sleep(300);
+
+        // Ensure futures are not null
+        assertNotNull(future1);
+        assertNotNull(future2);
+        assertNotNull(future3);
 
         // Then - should only publish once due to debouncing
         verify(languageClient, times(1)).publishDiagnostics(any());
@@ -319,7 +331,8 @@ class DiagnosticsHandlerTest {
                 .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
 
         // Schedule a debounced task
-        diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
+        var future = diagnosticsHandler.handleDiagnosticsDebounced(uri, languageClient);
+        assertNotNull(future);
 
         // When - clear diagnostics before the task executes
         diagnosticsHandler.clearDiagnostics(uri, languageClient);
@@ -339,8 +352,10 @@ class DiagnosticsHandlerTest {
         String uri2 = "file:///test2.groovy";
 
         // Schedule multiple tasks
-        diagnosticsHandler.handleDiagnosticsDebounced(uri1, languageClient);
-        diagnosticsHandler.handleDiagnosticsDebounced(uri2, languageClient);
+        var future1 = diagnosticsHandler.handleDiagnosticsDebounced(uri1, languageClient);
+        var future2 = diagnosticsHandler.handleDiagnosticsDebounced(uri2, languageClient);
+        assertNotNull(future1);
+        assertNotNull(future2);
 
         // When
         diagnosticsHandler.shutdown();

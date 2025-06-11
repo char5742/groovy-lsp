@@ -7,24 +7,30 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class DependencyResolverTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
     private DependencyResolver resolver;
 
     @BeforeEach
     void setUp() {
-        resolver = new DependencyResolver(tempDir);
+        resolver =
+                new DependencyResolver(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
     }
 
     @Test
     void detectBuildSystem_shouldDetectGradleWithBuildGradle() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
 
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -37,7 +43,9 @@ class DependencyResolverTest {
     @Test
     void detectBuildSystem_shouldDetectGradleWithBuildGradleKts() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("build.gradle.kts"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle.kts"));
 
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -49,7 +57,9 @@ class DependencyResolverTest {
     @Test
     void detectBuildSystem_shouldDetectGradleWithSettingsGradle() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("settings.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle"));
 
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -61,7 +71,9 @@ class DependencyResolverTest {
     @Test
     void detectBuildSystem_shouldDetectGradleWithSettingsGradleKts() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("settings.gradle.kts"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle.kts"));
 
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -73,7 +85,9 @@ class DependencyResolverTest {
     @Test
     void detectBuildSystem_shouldDetectMaven() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("pom.xml"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml"));
 
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -94,8 +108,12 @@ class DependencyResolverTest {
     @Test
     void detectBuildSystem_shouldPreferGradleOverMaven() throws IOException {
         // Given - both Gradle and Maven files exist
-        Files.createFile(tempDir.resolve("build.gradle"));
-        Files.createFile(tempDir.resolve("pom.xml"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml"));
 
         // When
         DependencyResolver.BuildSystem detected = resolver.detectBuildSystem();
@@ -119,7 +137,9 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldHandleGradleProjectsGracefully() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
         resolver.detectBuildSystem();
 
         // When
@@ -130,7 +150,9 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldReturnEmptyListForMaven() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("pom.xml"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml"));
         resolver.detectBuildSystem();
 
         // When
@@ -143,11 +165,21 @@ class DependencyResolverTest {
     @Test
     void getSourceDirectories_shouldReturnGradleSourceDirs() throws IOException {
         // Given
-        Files.createDirectories(tempDir.resolve("src/main/groovy"));
-        Files.createDirectories(tempDir.resolve("src/main/java"));
-        Files.createDirectories(tempDir.resolve("src/test/groovy"));
-        Files.createDirectories(tempDir.resolve("src/test/java"));
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/main/groovy"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/main/java"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/test/groovy"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/test/java"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
         resolver.detectBuildSystem();
 
         // When
@@ -156,32 +188,25 @@ class DependencyResolverTest {
         // Then
         assertThat(sourceDirs)
                 .containsExactly(
-                        tempDir.resolve("src/main/groovy"),
-                        tempDir.resolve("src/main/java"),
-                        tempDir.resolve("src/test/groovy"),
-                        tempDir.resolve("src/test/java"));
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/main/groovy"),
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/main/java"),
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/test/groovy"),
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/test/java"));
     }
 
     @Test
     void getSourceDirectories_shouldReturnOnlyExistingGradleDirs() throws IOException {
         // Given
-        Files.createDirectories(tempDir.resolve("src/main/groovy"));
-        Files.createFile(tempDir.resolve("build.gradle"));
-        resolver.detectBuildSystem();
-
-        // When
-        List<Path> sourceDirs = resolver.getSourceDirectories();
-
-        // Then
-        assertThat(sourceDirs).containsExactly(tempDir.resolve("src/main/groovy"));
-    }
-
-    @Test
-    void getSourceDirectories_shouldReturnMavenSourceDirs() throws IOException {
-        // Given
-        Files.createDirectories(tempDir.resolve("src/main/groovy"));
-        Files.createDirectories(tempDir.resolve("src/test/java"));
-        Files.createFile(tempDir.resolve("pom.xml"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/main/groovy"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
         resolver.detectBuildSystem();
 
         // When
@@ -190,35 +215,78 @@ class DependencyResolverTest {
         // Then
         assertThat(sourceDirs)
                 .containsExactly(
-                        tempDir.resolve("src/main/groovy"), tempDir.resolve("src/test/java"));
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/main/groovy"));
+    }
+
+    @Test
+    void getSourceDirectories_shouldReturnMavenSourceDirs() throws IOException {
+        // Given
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/main/groovy"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/test/java"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml"));
+        resolver.detectBuildSystem();
+
+        // When
+        List<Path> sourceDirs = resolver.getSourceDirectories();
+
+        // Then
+        assertThat(sourceDirs)
+                .containsExactly(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/main/groovy"),
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src/test/java"));
     }
 
     @Test
     void getSourceDirectories_shouldReturnDefaultDirs() throws IOException {
         // Given
-        Files.createDirectories(tempDir.resolve("src"));
-        Files.createDirectories(tempDir.resolve("groovy"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src"));
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("groovy"));
         resolver.detectBuildSystem(); // Should detect NONE
 
         // When
         List<Path> sourceDirs = resolver.getSourceDirectories();
 
         // Then
-        assertThat(sourceDirs).containsExactly(tempDir.resolve("src"), tempDir.resolve("groovy"));
+        assertThat(sourceDirs)
+                .containsExactly(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("src"),
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("groovy"));
     }
 
     @Test
     void getSourceDirectories_shouldSkipNonDirectories() throws IOException {
         // Given
-        Files.createFile(tempDir.resolve("src")); // File, not directory
-        Files.createDirectories(tempDir.resolve("groovy"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src")); // File, not directory
+        Files.createDirectories(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("groovy"));
         resolver.detectBuildSystem();
 
         // When
         List<Path> sourceDirs = resolver.getSourceDirectories();
 
         // Then
-        assertThat(sourceDirs).containsExactly(tempDir.resolve("groovy"));
+        assertThat(sourceDirs)
+                .containsExactly(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("groovy"));
     }
 
     @Test
@@ -236,7 +304,9 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldHandleInvalidGradleProject() throws IOException {
         // Given - Create a file that is not a gradle build file but in test mode
-        Files.createFile(tempDir.resolve("notGradle.txt"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("notGradle.txt"));
         resolver.detectBuildSystem(); // Will detect NONE
 
         // When - Try to resolve dependencies for non-gradle project
@@ -249,7 +319,9 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldHandleGradleProjectWithOnlySettingsGradle() throws IOException {
         // Given - Only settings.gradle file exists
-        Files.createFile(tempDir.resolve("settings.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle"));
         resolver.detectBuildSystem();
 
         // When
@@ -263,7 +335,9 @@ class DependencyResolverTest {
     void resolveDependencies_shouldHandleGradleProjectWithOnlySettingsGradleKts()
             throws IOException {
         // Given - Only settings.gradle.kts file exists
-        Files.createFile(tempDir.resolve("settings.gradle.kts"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle.kts"));
         resolver.detectBuildSystem();
 
         // When
@@ -276,7 +350,9 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldHandleGradleProjectWithBuildGradleKts() throws IOException {
         // Given - Only build.gradle.kts file exists
-        Files.createFile(tempDir.resolve("build.gradle.kts"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle.kts"));
         resolver.detectBuildSystem();
 
         // When
@@ -291,7 +367,9 @@ class DependencyResolverTest {
         // Given - Set test mode system property
         System.setProperty("test.mode", "true");
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -309,7 +387,9 @@ class DependencyResolverTest {
         // Given - Set build.env to test
         System.setProperty("build.env", "test");
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -327,7 +407,9 @@ class DependencyResolverTest {
         // Given - Set gradle task name to test
         System.setProperty("gradle.task.name", "test");
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -345,7 +427,9 @@ class DependencyResolverTest {
         // Given - Set multiple test indicators at once
         System.setProperty("gradle.task.name", "check");
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -364,7 +448,9 @@ class DependencyResolverTest {
         String originalClassPath = System.getProperty("java.class.path", "");
         System.setProperty("java.class.path", "/path/to/test-classes:" + originalClassPath);
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -382,7 +468,9 @@ class DependencyResolverTest {
         // Given - Set junit.platform.launcher.interceptors.enabled
         System.setProperty("junit.platform.launcher.interceptors.enabled", "true");
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -400,7 +488,9 @@ class DependencyResolverTest {
         // Given - gradle.task.name starts with "test"
         System.setProperty("gradle.task.name", "testClasses");
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When
@@ -416,8 +506,12 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldReturnEmptyListWithGradleWrapper() throws IOException {
         // Given - Create Gradle wrapper files
-        Files.createFile(tempDir.resolve("gradlew"));
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("gradlew"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
         resolver.detectBuildSystem();
 
         // When
@@ -430,10 +524,18 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldHandleMultipleBuildFiles() throws IOException {
         // Given - Multiple Gradle build files exist for valid project check
-        Files.createFile(tempDir.resolve("build.gradle"));
-        Files.createFile(tempDir.resolve("build.gradle.kts"));
-        Files.createFile(tempDir.resolve("settings.gradle"));
-        Files.createFile(tempDir.resolve("settings.gradle.kts"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle.kts"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle.kts"));
         resolver.detectBuildSystem();
 
         // When
@@ -446,9 +548,16 @@ class DependencyResolverTest {
     @Test
     void resolveDependencies_shouldHandleProjectWithoutWrapper() throws IOException {
         // Given - Gradle project without wrapper
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
         // Ensure gradlew does not exist
-        assertThat(Files.exists(tempDir.resolve("gradlew"))).isFalse();
+        assertThat(
+                        Files.exists(
+                                Objects.requireNonNull(
+                                                tempDir, "tempDir should be initialized by JUnit")
+                                        .resolve("gradlew")))
+                .isFalse();
         resolver.detectBuildSystem();
 
         // When
@@ -471,7 +580,9 @@ class DependencyResolverTest {
         }
 
         try {
-            Files.createFile(tempDir.resolve("build.gradle"));
+            Files.createFile(
+                    Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                            .resolve("build.gradle"));
             resolver.detectBuildSystem();
 
             // When

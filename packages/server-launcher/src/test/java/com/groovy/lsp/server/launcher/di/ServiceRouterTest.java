@@ -11,6 +11,7 @@ import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import java.lang.reflect.Constructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -63,11 +64,22 @@ class ServiceRouterTest {
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullAstService() {
+    void constructor_shouldThrowExceptionForNullAstService() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         null,
                                         compilerConfigurationService,
                                         incrementalCompilationService,
@@ -75,16 +87,29 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("ASTService must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("ASTService must not be null");
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullCompilerConfigurationService() {
+    void constructor_shouldThrowExceptionForNullCompilerConfigurationService() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         astService,
                                         null,
                                         incrementalCompilationService,
@@ -92,16 +117,29 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("CompilerConfigurationService must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("CompilerConfigurationService must not be null");
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullIncrementalCompilationService() {
+    void constructor_shouldThrowExceptionForNullIncrementalCompilationService() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         astService,
                                         compilerConfigurationService,
                                         null,
@@ -109,16 +147,29 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("IncrementalCompilationService must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("IncrementalCompilationService must not be null");
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullTypeInferenceService() {
+    void constructor_shouldThrowExceptionForNullTypeInferenceService() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         astService,
                                         compilerConfigurationService,
                                         incrementalCompilationService,
@@ -126,16 +177,29 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         lintEngine))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("TypeInferenceService must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("TypeInferenceService must not be null");
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullWorkspaceIndexService() {
+    void constructor_shouldThrowExceptionForNullWorkspaceIndexService() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         astService,
                                         compilerConfigurationService,
                                         incrementalCompilationService,
@@ -143,16 +207,29 @@ class ServiceRouterTest {
                                         null,
                                         formattingService,
                                         lintEngine))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("WorkspaceIndexService must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("WorkspaceIndexService must not be null");
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullFormattingService() {
+    void constructor_shouldThrowExceptionForNullFormattingService() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         astService,
                                         compilerConfigurationService,
                                         incrementalCompilationService,
@@ -160,16 +237,29 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         null,
                                         lintEngine))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("FormattingService must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("FormattingService must not be null");
     }
 
     @Test
-    void constructor_shouldThrowExceptionForNullLintEngine() {
+    void constructor_shouldThrowExceptionForNullLintEngine() throws Exception {
+        // Use reflection to bypass NullAway compile-time checks
+        Constructor<ServiceRouter> constructor =
+                ServiceRouter.class.getConstructor(
+                        ASTService.class,
+                        CompilerConfigurationService.class,
+                        IncrementalCompilationService.class,
+                        TypeInferenceService.class,
+                        WorkspaceIndexService.class,
+                        FormattingService.class,
+                        LintEngine.class);
+
         // when/then
         assertThatThrownBy(
                         () ->
-                                new ServiceRouter(
+                                constructor.newInstance(
                                         astService,
                                         compilerConfigurationService,
                                         incrementalCompilationService,
@@ -177,8 +267,10 @@ class ServiceRouterTest {
                                         workspaceIndexService,
                                         formattingService,
                                         null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("LintEngine must not be null");
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(NullPointerException.class)
+                .getCause()
+                .hasMessageContaining("LintEngine must not be null");
     }
 
     @Test
@@ -398,41 +490,34 @@ class ServiceRouterTest {
 
                 // Test the appropriate getter method
                 switch (fieldName) {
-                    case "astService":
-                        assertThatThrownBy(() -> router.getAstService())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
-                    case "compilerConfigurationService":
-                        assertThatThrownBy(() -> router.getCompilerConfigurationService())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
-                    case "incrementalCompilationService":
-                        assertThatThrownBy(() -> router.getIncrementalCompilationService())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
-                    case "typeInferenceService":
-                        assertThatThrownBy(() -> router.getTypeInferenceService())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
-                    case "workspaceIndexService":
-                        assertThatThrownBy(() -> router.getWorkspaceIndexService())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
-                    case "formattingService":
-                        assertThatThrownBy(() -> router.getFormattingService())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
-                    case "lintEngine":
-                        assertThatThrownBy(() -> router.getLintEngine())
-                                .isInstanceOf(IllegalStateException.class)
-                                .hasMessage(serviceName + " is not available");
-                        break;
+                    case "astService" ->
+                            assertThatThrownBy(() -> router.getAstService())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
+                    case "compilerConfigurationService" ->
+                            assertThatThrownBy(() -> router.getCompilerConfigurationService())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
+                    case "incrementalCompilationService" ->
+                            assertThatThrownBy(() -> router.getIncrementalCompilationService())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
+                    case "typeInferenceService" ->
+                            assertThatThrownBy(() -> router.getTypeInferenceService())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
+                    case "workspaceIndexService" ->
+                            assertThatThrownBy(() -> router.getWorkspaceIndexService())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
+                    case "formattingService" ->
+                            assertThatThrownBy(() -> router.getFormattingService())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
+                    case "lintEngine" ->
+                            assertThatThrownBy(() -> router.getLintEngine())
+                                    .isInstanceOf(IllegalStateException.class)
+                                    .hasMessage(serviceName + " is not available");
                 }
 
                 // Restore original value
@@ -440,7 +525,6 @@ class ServiceRouterTest {
 
             } catch (Exception e) {
                 // If reflection fails, we can't test this specific branch
-                continue;
             }
         }
     }
@@ -492,7 +576,6 @@ class ServiceRouterTest {
 
             } catch (Exception e) {
                 // If reflection fails for this field, skip it
-                continue;
             }
         }
     }

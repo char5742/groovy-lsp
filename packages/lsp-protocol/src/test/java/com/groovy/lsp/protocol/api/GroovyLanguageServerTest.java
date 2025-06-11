@@ -92,7 +92,8 @@ class GroovyLanguageServerTest {
     @Test
     void exit_shouldExitWithCodeZero() {
         // given - shutdown called first
-        server.shutdown();
+        var shutdownResult = server.shutdown();
+        assertThat(shutdownResult).isNotNull();
 
         // when/then - would call System.exit(0)
         // Can't test System.exit directly, but we verify the method exists

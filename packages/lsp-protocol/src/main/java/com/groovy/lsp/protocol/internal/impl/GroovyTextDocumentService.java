@@ -112,19 +112,22 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         if (isDiagnosticsReady()) {
             logger.debug("Triggering diagnostics for opened document");
             // Safe to use because isDiagnosticsReady() ensures non-null
-            assert diagnosticsHandler != null && client != null;
-            diagnosticsHandler
-                    .handleDiagnosticsImmediate(params.getTextDocument().getUri(), client)
-                    .exceptionally(
-                            ex -> {
-                                logger.error(
-                                        "Failed to handle diagnostics for opened document: {} -"
-                                                + " Error: {}",
-                                        params.getTextDocument().getUri(),
-                                        ex.getMessage(),
-                                        ex);
-                                return null;
-                            });
+            DiagnosticsHandler handler = diagnosticsHandler;
+            LanguageClient languageClient = client;
+            if (handler != null && languageClient != null) {
+                handler.handleDiagnosticsImmediate(
+                                params.getTextDocument().getUri(), languageClient)
+                        .exceptionally(
+                                ex -> {
+                                    logger.error(
+                                            "Failed to handle diagnostics for opened document: {} -"
+                                                    + " Error: {}",
+                                            params.getTextDocument().getUri(),
+                                            ex.getMessage(),
+                                            ex);
+                                    return null;
+                                });
+            }
         }
     }
 
@@ -145,19 +148,22 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
             if (isDiagnosticsReady()) {
                 logger.debug("Triggering debounced diagnostics for changed document");
                 // Safe to use because isDiagnosticsReady() ensures non-null
-                assert diagnosticsHandler != null && client != null;
-                diagnosticsHandler
-                        .handleDiagnosticsDebounced(params.getTextDocument().getUri(), client)
-                        .exceptionally(
-                                ex -> {
-                                    logger.error(
-                                            "Failed to handle diagnostics for changed document: {}"
-                                                    + " - Error: {}",
-                                            params.getTextDocument().getUri(),
-                                            ex.getMessage(),
-                                            ex);
-                                    return null;
-                                });
+                DiagnosticsHandler handler = diagnosticsHandler;
+                LanguageClient languageClient = client;
+                if (handler != null && languageClient != null) {
+                    handler.handleDiagnosticsDebounced(
+                                    params.getTextDocument().getUri(), languageClient)
+                            .exceptionally(
+                                    ex -> {
+                                        logger.error(
+                                                "Failed to handle diagnostics for changed document:"
+                                                        + " {} - Error: {}",
+                                                params.getTextDocument().getUri(),
+                                                ex.getMessage(),
+                                                ex);
+                                        return null;
+                                    });
+                }
             }
         }
     }
@@ -169,8 +175,11 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         // Clear diagnostics for the closed document
         if (isDiagnosticsReady()) {
             // Safe to use because isDiagnosticsReady() ensures non-null
-            assert diagnosticsHandler != null && client != null;
-            diagnosticsHandler.clearDiagnostics(params.getTextDocument().getUri(), client);
+            DiagnosticsHandler handler = diagnosticsHandler;
+            LanguageClient languageClient = client;
+            if (handler != null && languageClient != null) {
+                handler.clearDiagnostics(params.getTextDocument().getUri(), languageClient);
+            }
         }
 
         // Remove document from manager
@@ -187,19 +196,22 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
         if (isDiagnosticsReady()) {
             logger.debug("Triggering diagnostics for saved document");
             // Safe to use because isDiagnosticsReady() ensures non-null
-            assert diagnosticsHandler != null && client != null;
-            diagnosticsHandler
-                    .handleDiagnosticsImmediate(params.getTextDocument().getUri(), client)
-                    .exceptionally(
-                            ex -> {
-                                logger.error(
-                                        "Failed to handle diagnostics for saved document: {} -"
-                                                + " Error: {}",
-                                        params.getTextDocument().getUri(),
-                                        ex.getMessage(),
-                                        ex);
-                                return null;
-                            });
+            DiagnosticsHandler handler = diagnosticsHandler;
+            LanguageClient languageClient = client;
+            if (handler != null && languageClient != null) {
+                handler.handleDiagnosticsImmediate(
+                                params.getTextDocument().getUri(), languageClient)
+                        .exceptionally(
+                                ex -> {
+                                    logger.error(
+                                            "Failed to handle diagnostics for saved document: {} -"
+                                                    + " Error: {}",
+                                            params.getTextDocument().getUri(),
+                                            ex.getMessage(),
+                                            ex);
+                                    return null;
+                                });
+            }
         }
     }
 

@@ -42,7 +42,7 @@ pre-push:
         echo "Checking compilation..."
         # コンパイルのみ実行（テストをスキップ）
         # --continue オプションで全モジュールのエラーを収集
-        if ! ./gradlew clean compileJava compileTestJava compileGroovy compileTestGroovy --parallel --continue; then
+        if ! ./gradlew --no-build-cache clean compileJava compileTestJava compileGroovy compileTestGroovy --parallel --continue; then
           echo ""
           echo "❌ Compilation failed! Error Prone or NullAway warnings detected."
           echo "Please fix all warnings before pushing."
@@ -60,8 +60,8 @@ pre-push:
     test-changed:
       run: |
         echo "Running tests for changed modules..."
-        # 変更されたファイルからモジュールを特定
-        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
+        # 変更されたファイルからモジュールを特定（settings.gradleは除外）
+        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/[^/]+/" | cut -d'/' -f2 | grep -v "settings.gradle" | sort -u)
 
         if [ -z "$changed_modules" ]; then
           echo "No module changes detected, skipping tests"
@@ -80,8 +80,8 @@ pre-push:
     coverage-check:
       run: |
         echo "Checking code coverage..."
-        # 変更されたモジュールのカバレッジチェック
-        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/" | cut -d'/' -f2 | sort -u)
+        # 変更されたモジュールのカバレッジチェック（settings.gradleは除外）
+        changed_modules=$(git diff origin/$(git symbolic-ref --short HEAD)...HEAD --name-only | grep -E "^packages/[^/]+/" | cut -d'/' -f2 | grep -v "settings.gradle" | sort -u)
 
         if [ -z "$changed_modules" ]; then
           echo "No module changes detected, skipping coverage check"

@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,18 +17,22 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class DependencyResolverAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
     private DependencyResolver resolver;
 
     @BeforeEach
     void setUp() {
-        resolver = new DependencyResolver(tempDir);
+        resolver =
+                new DependencyResolver(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
     }
 
     @Test
     void resolveDependencies_shouldDelegateToNewResolver() throws IOException {
         // Create a valid gradle project
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
         resolver.detectBuildSystem();
 
         // Call resolveDependencies which should delegate to the new resolver
@@ -44,7 +50,9 @@ class DependencyResolverAdditionalTest {
         assertThat(firstSystem).isEqualTo(DependencyResolver.BuildSystem.NONE);
 
         // Create a Gradle build file
-        Files.createFile(tempDir.resolve("build.gradle"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"));
 
         // Second detection - should be GRADLE
         DependencyResolver.BuildSystem secondSystem = resolver.detectBuildSystem();
@@ -54,7 +62,9 @@ class DependencyResolverAdditionalTest {
     @Test
     void getBuildSystem_shouldCallDetectBuildSystem() throws IOException {
         // Create a Maven pom.xml
-        Files.createFile(tempDir.resolve("pom.xml"));
+        Files.createFile(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml"));
 
         // getBuildSystem should detect MAVEN
         DependencyResolver.BuildSystem system = resolver.getBuildSystem();

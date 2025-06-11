@@ -3,10 +3,41 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
-import org.codehaus.groovy.ast.stmt.*;
+import java.util.Objects;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.NotExpression;
+import org.codehaus.groovy.ast.expr.PostfixExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
+import org.codehaus.groovy.ast.expr.SpreadExpression;
+import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +63,11 @@ class TypeInferenceServiceImplAdditionalTest {
                 def list = new ArrayList()
                 def map = new HashMap<String, Integer>()
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
         // Find the constructor call expressions
         ConstructorCallExpression constructorCall =
-                findFirstNode(moduleNode, ConstructorCallExpression.class);
+                findFirstNodeNotNull(moduleNode, ConstructorCallExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(constructorCall, moduleNode);
@@ -53,9 +84,9 @@ class TypeInferenceServiceImplAdditionalTest {
                 def obj = "test"
                 String str = (String) obj
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        CastExpression castExpr = findFirstNode(moduleNode, CastExpression.class);
+        CastExpression castExpr = findFirstNodeNotNull(moduleNode, CastExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(castExpr, moduleNode);
@@ -73,9 +104,9 @@ class TypeInferenceServiceImplAdditionalTest {
                     println name
                 }
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        ClosureExpression closureExpr = findFirstNode(moduleNode, ClosureExpression.class);
+        ClosureExpression closureExpr = findFirstNodeNotNull(moduleNode, ClosureExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(closureExpr, moduleNode);
@@ -87,20 +118,21 @@ class TypeInferenceServiceImplAdditionalTest {
     @Test
     void inferExpressionType_shouldHandleArrayExpression() {
         // given
-        String sourceCode =
-                """
-                String[] arr = ["a", "b", "c"] as String[]
-                """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
-
-        ArrayExpression arrayExpr = findFirstNode(moduleNode, ArrayExpression.class);
+        // Create an ArrayExpression programmatically since they're not created from source code
+        ArrayExpression arrayExpr =
+                new ArrayExpression(
+                        ClassHelper.STRING_TYPE,
+                        java.util.Arrays.asList(
+                                new ConstantExpression("a"),
+                                new ConstantExpression("b"),
+                                new ConstantExpression("c")));
 
         // when
-        ClassNode type = typeInferenceService.inferExpressionType(arrayExpr, moduleNode);
+        ClassNode type = typeInferenceService.inferExpressionType(arrayExpr, null);
 
         // then
-        // ArrayExpression is not handled, so it returns OBJECT_TYPE
-        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+        // ArrayExpression returns its existing type (String[])
+        assertThat(type).isEqualTo(ClassHelper.STRING_TYPE.makeArray());
     }
 
     @Test
@@ -110,9 +142,9 @@ class TypeInferenceServiceImplAdditionalTest {
                 """
                 def range = 1..10
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        RangeExpression rangeExpr = findFirstNode(moduleNode, RangeExpression.class);
+        RangeExpression rangeExpr = findFirstNodeNotNull(moduleNode, RangeExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(rangeExpr, moduleNode);
@@ -129,9 +161,9 @@ class TypeInferenceServiceImplAdditionalTest {
                 def name = "World"
                 def greeting = "Hello, ${name}!"
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        GStringExpression gstringExpr = findFirstNode(moduleNode, GStringExpression.class);
+        GStringExpression gstringExpr = findFirstNodeNotNull(moduleNode, GStringExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(gstringExpr, moduleNode);
@@ -147,9 +179,9 @@ class TypeInferenceServiceImplAdditionalTest {
                 """
                 def result = true ? "yes" : "no"
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        TernaryExpression ternaryExpr = findFirstNode(moduleNode, TernaryExpression.class);
+        TernaryExpression ternaryExpr = findFirstNodeNotNull(moduleNode, TernaryExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(ternaryExpr, moduleNode);
@@ -167,10 +199,10 @@ class TypeInferenceServiceImplAdditionalTest {
                 def value = null
                 def result = value ?: "default"
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
         ElvisOperatorExpression elvisExpr =
-                findFirstNode(moduleNode, ElvisOperatorExpression.class);
+                findFirstNodeNotNull(moduleNode, ElvisOperatorExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(elvisExpr, moduleNode);
@@ -183,17 +215,11 @@ class TypeInferenceServiceImplAdditionalTest {
     @Test
     void inferExpressionType_shouldHandleSpreadExpression() {
         // given
-        String sourceCode =
-                """
-                def list = [1, 2, 3]
-                def spread = [*list, 4, 5]
-                """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
-
-        SpreadExpression spreadExpr = findFirstNode(moduleNode, SpreadExpression.class);
+        // Create a SpreadExpression programmatically
+        SpreadExpression spreadExpr = new SpreadExpression(new VariableExpression("list"));
 
         // when
-        ClassNode type = typeInferenceService.inferExpressionType(spreadExpr, moduleNode);
+        ClassNode type = typeInferenceService.inferExpressionType(spreadExpr, null);
 
         // then
         // SpreadExpression is not handled, so it returns OBJECT_TYPE
@@ -209,9 +235,10 @@ class TypeInferenceServiceImplAdditionalTest {
                 def negated = -num
                 def notBool = !true
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        UnaryMinusExpression unaryExpr = findFirstNode(moduleNode, UnaryMinusExpression.class);
+        UnaryMinusExpression unaryExpr =
+                findFirstNodeNotNull(moduleNode, UnaryMinusExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(unaryExpr, moduleNode);
@@ -229,9 +256,9 @@ class TypeInferenceServiceImplAdditionalTest {
                 def i = 0
                 def result = i++
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        PostfixExpression postfixExpr = findFirstNode(moduleNode, PostfixExpression.class);
+        PostfixExpression postfixExpr = findFirstNodeNotNull(moduleNode, PostfixExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(postfixExpr, moduleNode);
@@ -244,26 +271,25 @@ class TypeInferenceServiceImplAdditionalTest {
     @Test
     void inferExpressionType_shouldHandleFieldExpression() {
         // given
-        String sourceCode =
-                """
-                class TestClass {
-                    String myField = "test"
+        // Create a FieldExpression programmatically since they're not created from source code
+        ClassNode testClass = new ClassNode("TestClass", 1, ClassHelper.OBJECT_TYPE);
+        FieldNode fieldNode =
+                new FieldNode(
+                        "myField",
+                        1,
+                        ClassHelper.STRING_TYPE,
+                        testClass,
+                        new ConstantExpression("test"));
+        testClass.addField(fieldNode);
 
-                    def method() {
-                        this.myField
-                    }
-                }
-                """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
-
-        FieldExpression fieldExpr = findFirstNode(moduleNode, FieldExpression.class);
+        FieldExpression fieldExpr = new FieldExpression(fieldNode);
 
         // when
-        ClassNode type = typeInferenceService.inferExpressionType(fieldExpr, moduleNode);
+        ClassNode type = typeInferenceService.inferExpressionType(fieldExpr, null);
 
         // then
-        // FieldExpression is not handled, so it returns OBJECT_TYPE
-        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+        // FieldExpression returns its field's type
+        assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
     @Test
@@ -273,10 +299,10 @@ class TypeInferenceServiceImplAdditionalTest {
                 """
                 def bits = ~0xFF
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
         BitwiseNegationExpression bitwiseExpr =
-                findFirstNode(moduleNode, BitwiseNegationExpression.class);
+                findFirstNodeNotNull(moduleNode, BitwiseNegationExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(bitwiseExpr, moduleNode);
@@ -293,9 +319,9 @@ class TypeInferenceServiceImplAdditionalTest {
                 def bool = true
                 def result = !bool
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
-        NotExpression notExpr = findFirstNode(moduleNode, NotExpression.class);
+        NotExpression notExpr = findFirstNodeNotNull(moduleNode, NotExpression.class);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(notExpr, moduleNode);
@@ -315,7 +341,6 @@ class TypeInferenceServiceImplAdditionalTest {
                     }
                 }
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
 
         // Mock finding a statement node instead of expression
         ASTService mockAstService =
@@ -374,25 +399,30 @@ class TypeInferenceServiceImplAdditionalTest {
                 def b = 10
                 def result = (a << 2) | (b & 0xFF)
                 """;
-        ModuleNode moduleNode = astService.parseSource(sourceCode, "test.groovy");
+        ModuleNode moduleNode = parseSourceNotNull(sourceCode, "test.groovy");
 
         // Find the binary expression with bitwise OR
         BinaryExpression complexExpr = null;
-        for (ClassNode cn : moduleNode.getClasses()) {
-            for (Statement stmt : cn.getModule().getStatementBlock().getStatements()) {
-                if (stmt instanceof ExpressionStatement) {
-                    Expression expr = ((ExpressionStatement) stmt).getExpression();
-                    if (expr instanceof BinaryExpression) {
-                        BinaryExpression binExpr = (BinaryExpression) expr;
-                        if (binExpr.getOperation().getType()
-                                == org.codehaus.groovy.syntax.Types.BITWISE_OR) {
-                            complexExpr = binExpr;
-                            break;
+        // For script code, check the module's statement block directly
+        if (moduleNode.getStatementBlock() != null) {
+            for (Statement stmt : moduleNode.getStatementBlock().getStatements()) {
+                if (stmt instanceof ExpressionStatement expressionStatement) {
+                    Expression expr = expressionStatement.getExpression();
+                    if (expr instanceof BinaryExpression binExpr) {
+                        // The assignment expression contains the bitwise OR on the right side
+                        Expression rightExpr = binExpr.getRightExpression();
+                        if (rightExpr instanceof BinaryExpression rightBinExpr) {
+                            if (rightBinExpr.getOperation().getType()
+                                    == org.codehaus.groovy.syntax.Types.BITWISE_OR) {
+                                complexExpr = rightBinExpr;
+                                break;
+                            }
                         }
                     }
                 }
             }
         }
+        Objects.requireNonNull(complexExpr, "Could not find bitwise OR expression");
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(complexExpr, moduleNode);
@@ -404,9 +434,24 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
+    // Helper method to parse source and ensure it's not null
+    private ModuleNode parseSourceNotNull(String sourceCode, String sourceName) {
+        @Nullable ModuleNode moduleNode = astService.parseSource(sourceCode, sourceName);
+        return Objects.requireNonNull(moduleNode, "Failed to parse source code");
+    }
+
+    // Helper method to find first node of specific type and ensure it's not null
+    @SuppressWarnings("unchecked")
+    private <T extends ASTNode> T findFirstNodeNotNull(ModuleNode moduleNode, Class<T> nodeType) {
+        T node = findFirstNode(moduleNode, nodeType);
+        return Objects.requireNonNull(
+                node, "Could not find node of type " + nodeType.getSimpleName());
+    }
+
     // Helper method to find first node of specific type
     @SuppressWarnings("unchecked")
-    private <T extends ASTNode> T findFirstNode(ModuleNode moduleNode, Class<T> nodeType) {
+    private <T extends ASTNode> @Nullable T findFirstNode(
+            ModuleNode moduleNode, Class<T> nodeType) {
         for (ClassNode cn : moduleNode.getClasses()) {
             T node = findInNode(cn, nodeType);
             if (node != null) {
@@ -428,17 +473,16 @@ class TypeInferenceServiceImplAdditionalTest {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends ASTNode> T findInNode(ASTNode node, Class<T> nodeType) {
+    private <T extends ASTNode> @Nullable T findInNode(ASTNode node, Class<T> nodeType) {
         if (nodeType.isInstance(node)) {
             return (T) node;
         }
 
-        if (node instanceof Expression) {
-            return findInExpression((Expression) node, nodeType);
-        } else if (node instanceof Statement) {
-            return findInStatement((Statement) node, nodeType);
-        } else if (node instanceof ClassNode) {
-            ClassNode cn = (ClassNode) node;
+        if (node instanceof Expression expression) {
+            return findInExpression(expression, nodeType);
+        } else if (node instanceof Statement statement) {
+            return findInStatement(statement, nodeType);
+        } else if (node instanceof ClassNode cn) {
             for (MethodNode method : cn.getMethods()) {
                 if (method.getCode() != null) {
                     T result = findInStatement(method.getCode(), nodeType);
@@ -457,42 +501,104 @@ class TypeInferenceServiceImplAdditionalTest {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends ASTNode> T findInExpression(Expression expr, Class<T> nodeType) {
+    private <T extends ASTNode> @Nullable T findInExpression(Expression expr, Class<T> nodeType) {
         if (nodeType.isInstance(expr)) {
             return (T) expr;
         }
 
-        if (expr instanceof BinaryExpression) {
-            BinaryExpression binExpr = (BinaryExpression) expr;
+        if (expr instanceof BinaryExpression binExpr) {
             T result = findInExpression(binExpr.getLeftExpression(), nodeType);
             if (result != null) return result;
             return findInExpression(binExpr.getRightExpression(), nodeType);
-        } else if (expr instanceof MethodCallExpression) {
-            MethodCallExpression call = (MethodCallExpression) expr;
+        } else if (expr instanceof MethodCallExpression call) {
             T result = findInExpression(call.getObjectExpression(), nodeType);
             if (result != null) return result;
-            if (call.getArguments() instanceof ArgumentListExpression) {
-                ArgumentListExpression args = (ArgumentListExpression) call.getArguments();
+            if (call.getArguments() instanceof ArgumentListExpression args) {
                 for (Expression arg : args.getExpressions()) {
                     result = findInExpression(arg, nodeType);
                     if (result != null) return result;
                 }
             }
+        } else if (expr instanceof CastExpression castExpr) {
+            return findInExpression(castExpr.getExpression(), nodeType);
+        } else if (expr instanceof PropertyExpression propExpr) {
+            T result = findInExpression(propExpr.getObjectExpression(), nodeType);
+            if (result != null) return result;
+            return findInExpression(propExpr.getProperty(), nodeType);
+        } else if (expr instanceof ListExpression listExpr) {
+            for (Expression e : listExpr.getExpressions()) {
+                T result = findInExpression(e, nodeType);
+                if (result != null) return result;
+            }
+        } else if (expr instanceof ArrayExpression arrayExpr) {
+            for (Expression e : arrayExpr.getExpressions()) {
+                T result = findInExpression(e, nodeType);
+                if (result != null) return result;
+            }
+        } else if (expr instanceof TernaryExpression ternaryExpr) {
+            T result = findInExpression(ternaryExpr.getBooleanExpression(), nodeType);
+            if (result != null) return result;
+            result = findInExpression(ternaryExpr.getTrueExpression(), nodeType);
+            if (result != null) return result;
+            return findInExpression(ternaryExpr.getFalseExpression(), nodeType);
+        } else if (expr instanceof ElvisOperatorExpression elvisExpr) {
+            T result = findInExpression(elvisExpr.getTrueExpression(), nodeType);
+            if (result != null) return result;
+            return findInExpression(elvisExpr.getFalseExpression(), nodeType);
+        } else if (expr instanceof SpreadExpression spreadExpr) {
+            return findInExpression(spreadExpr.getExpression(), nodeType);
+        } else if (expr instanceof UnaryMinusExpression unaryExpr) {
+            return findInExpression(unaryExpr.getExpression(), nodeType);
+        } else if (expr instanceof NotExpression notExpr) {
+            return findInExpression(notExpr.getExpression(), nodeType);
+        } else if (expr instanceof BitwiseNegationExpression bitwiseExpr) {
+            return findInExpression(bitwiseExpr.getExpression(), nodeType);
+        } else if (expr instanceof PostfixExpression postfixExpr) {
+            return findInExpression(postfixExpr.getExpression(), nodeType);
+        } else if (expr instanceof ClosureExpression closureExpr) {
+            if (closureExpr.getCode() != null) {
+                return findInStatement(closureExpr.getCode(), nodeType);
+            }
+        } else if (expr instanceof ConstructorCallExpression constructorExpr) {
+            if (constructorExpr.getArguments() instanceof ArgumentListExpression args) {
+                for (Expression arg : args.getExpressions()) {
+                    T result = findInExpression(arg, nodeType);
+                    if (result != null) return result;
+                }
+            }
+        } else if (expr instanceof GStringExpression gstringExpr) {
+            for (Expression e : gstringExpr.getValues()) {
+                T result = findInExpression(e, nodeType);
+                if (result != null) return result;
+            }
+        } else if (expr instanceof RangeExpression rangeExpr) {
+            T result = findInExpression(rangeExpr.getFrom(), nodeType);
+            if (result != null) return result;
+            return findInExpression(rangeExpr.getTo(), nodeType);
+        } else if (expr instanceof FieldExpression) {
+            // FieldExpression might have an owner expression
+            return null;
+        } else if (expr instanceof VariableExpression) {
+            // Variable expressions don't have child expressions
+            return null;
+        } else if (expr instanceof ConstantExpression) {
+            // Constant expressions don't have child expressions
+            return null;
         }
 
         return null;
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends ASTNode> T findInStatement(Statement stmt, Class<T> nodeType) {
+    private <T extends ASTNode> @Nullable T findInStatement(Statement stmt, Class<T> nodeType) {
         if (nodeType.isInstance(stmt)) {
             return (T) stmt;
         }
 
-        if (stmt instanceof ExpressionStatement) {
-            return findInExpression(((ExpressionStatement) stmt).getExpression(), nodeType);
-        } else if (stmt instanceof BlockStatement) {
-            for (Statement s : ((BlockStatement) stmt).getStatements()) {
+        if (stmt instanceof ExpressionStatement exprStmt) {
+            return findInExpression(exprStmt.getExpression(), nodeType);
+        } else if (stmt instanceof BlockStatement blockStmt) {
+            for (Statement s : blockStmt.getStatements()) {
                 T result = findInStatement(s, nodeType);
                 if (result != null) return result;
             }

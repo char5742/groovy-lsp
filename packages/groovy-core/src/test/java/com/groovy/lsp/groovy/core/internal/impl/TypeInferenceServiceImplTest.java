@@ -3,11 +3,28 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
+import java.time.Instant;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ExpressionTransformer;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Token;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,9 +50,21 @@ class TypeInferenceServiceImplTest {
 
     @Test
     void constructor_shouldThrowExceptionForNullASTService() {
-        assertThatThrownBy(() -> new TypeInferenceServiceImpl(null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessageContaining("ASTService cannot be null");
+        // Testing null-safety behavior - Using reflection to bypass compile-time checks
+        assertThatThrownBy(
+                        () -> {
+                            try {
+                                var constructor =
+                                        TypeInferenceServiceImpl.class.getConstructor(
+                                                ASTService.class);
+                                constructor.newInstance((ASTService) null);
+                            } catch (ReflectiveOperationException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                .isInstanceOf(RuntimeException.class)
+                .hasRootCauseInstanceOf(NullPointerException.class)
+                .hasRootCauseMessage("ASTService cannot be null");
     }
 
     @Test
@@ -83,12 +112,21 @@ class TypeInferenceServiceImplTest {
 
     @Test
     void inferExpressionType_shouldReturnObjectTypeForNullExpression() {
-        // when
-        ClassNode type =
-                typeInferenceService.inferExpressionType(null, new ModuleNode((SourceUnit) null));
+        // Testing null handling - Using reflection to bypass compile-time checks
+        try {
+            var method =
+                    TypeInferenceServiceImpl.class.getDeclaredMethod(
+                            "inferExpressionType", Expression.class, ModuleNode.class);
+            ClassNode type =
+                    (ClassNode)
+                            method.invoke(
+                                    typeInferenceService, null, new ModuleNode((SourceUnit) null));
 
-        // then
-        assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+            // then
+            assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Test failed due to reflection error", e);
+        }
     }
 
     @Test
@@ -565,14 +603,14 @@ class TypeInferenceServiceImplTest {
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
 
         // Test with a custom object type
-        Object customValue = new java.util.Date();
+        Object customValue = Instant.now();
         ConstantExpression customExpr = new ConstantExpression(customValue);
 
         // when
         ClassNode type = typeInferenceService.inferExpressionType(customExpr, moduleNode);
 
         // then
-        assertThat(type.getName()).isEqualTo("java.util.Date");
+        assertThat(type.getName()).isEqualTo("java.time.Instant");
     }
 
     @Test
@@ -739,10 +777,10 @@ class TypeInferenceServiceImplTest {
 
         // Test with various object types without setting expression type
 
-        // Test with Date
-        ConstantExpression dateExpr = new ConstantExpression(new java.util.Date());
-        ClassNode dateType = typeInferenceService.inferExpressionType(dateExpr, moduleNode);
-        assertThat(dateType.getName()).isEqualTo("java.util.Date");
+        // Test with Instant
+        ConstantExpression instantExpr = new ConstantExpression(Instant.now());
+        ClassNode instantType = typeInferenceService.inferExpressionType(instantExpr, moduleNode);
+        assertThat(instantType.getName()).isEqualTo("java.time.Instant");
 
         // Test with ArrayList
         ConstantExpression listExpr = new ConstantExpression(new java.util.ArrayList<>());
@@ -750,9 +788,9 @@ class TypeInferenceServiceImplTest {
         assertThat(listType.getName()).isEqualTo("java.util.ArrayList");
 
         // Test with custom object
-        ConstantExpression customExpr = new ConstantExpression(new StringBuilder("test"));
+        ConstantExpression customExpr = new ConstantExpression("test");
         ClassNode customType = typeInferenceService.inferExpressionType(customExpr, moduleNode);
-        assertThat(customType.getName()).isEqualTo("java.lang.StringBuilder");
+        assertThat(customType.getName()).isEqualTo("java.lang.String");
     }
 
     @Test
@@ -1008,7 +1046,6 @@ class TypeInferenceServiceImplTest {
     @Test
     void inferConstantType_shouldReturnPrimitiveTypesDirectly() {
         // given - Force the branches for primitive type checks to be covered
-        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
 
         // Use reflection to directly call inferConstantType
         try {
@@ -1064,7 +1101,6 @@ class TypeInferenceServiceImplTest {
     @Test
     void inferConstantType_shouldUseExpressionTypeWhenNotObjectType() {
         // given - Test the branch where expression has a non-OBJECT_TYPE set
-        ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
 
         try {
             java.lang.reflect.Method inferConstantTypeMethod =

@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
@@ -66,19 +65,19 @@ public class MavenDependencyResolver implements DependencyResolver {
         Path pomPath = workspaceRoot.resolve("pom.xml");
         if (!Files.exists(pomPath)) {
             logger.warn("No pom.xml found at: {}", workspaceRoot);
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
 
         if (repositorySystem == null || session == null || repositories == null) {
             logger.error("Maven resolver not properly initialized");
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
 
         try {
             // Parse pom.xml
             Model model = parsePomFile(pomPath);
             if (model == null) {
-                return Collections.emptyList();
+                return new ArrayList<>();
             }
 
             // Resolve dependencies
@@ -132,7 +131,7 @@ public class MavenDependencyResolver implements DependencyResolver {
 
         } catch (Exception e) {
             logger.error("Failed to resolve Maven dependencies", e);
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
     }
 

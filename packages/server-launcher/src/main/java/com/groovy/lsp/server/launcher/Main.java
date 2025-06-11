@@ -1,6 +1,7 @@
 package com.groovy.lsp.server.launcher;
 
-import static com.groovy.lsp.server.launcher.di.ServerConstants.*;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.DEFAULT_SOCKET_HOST;
+import static com.groovy.lsp.server.launcher.di.ServerConstants.DEFAULT_SOCKET_PORT;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import org.codenarc.ruleset.RuleSet;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,7 +20,7 @@ class RuleSetProviderTest {
 
     private RuleSetProvider ruleSetProvider;
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -47,7 +49,8 @@ class RuleSetProviderTest {
     @Test
     void reloadRuleSet_shouldClearCacheAndReturnNewRuleSet() {
         // given
-        RuleSet originalRuleSet = ruleSetProvider.getRuleSet();
+        // Get original rule set to ensure cache is populated
+        assertThat(ruleSetProvider.getRuleSet()).isNotNull();
 
         // when
         RuleSet reloadedRuleSet = ruleSetProvider.reloadRuleSet();
@@ -110,6 +113,7 @@ class RuleSetProviderTest {
     @Test
     void loadRuleSet_shouldDetectCustomRuleSetFile() throws IOException {
         // given - Create a custom ruleset file in temp directory
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path customRuleSetFile = tempDir.resolve("codenarc-ruleset.xml");
         String ruleSetContent =
                 """
@@ -143,6 +147,7 @@ class RuleSetProviderTest {
     @Test
     void loadRuleSet_shouldDetectCustomPropertiesFile() throws IOException {
         // given - Create a custom properties file in temp directory
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path propertiesFile = tempDir.resolve("codenarc.properties");
         String propertiesContent =
                 """
@@ -175,6 +180,7 @@ class RuleSetProviderTest {
     @Test
     void findProjectRoot_shouldDetectGradleProject() throws IOException {
         // given - Create a Gradle project structure
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path projectRoot = tempDir.resolve("project");
         Files.createDirectories(projectRoot);
         Path buildGradle = projectRoot.resolve("build.gradle");
@@ -202,6 +208,7 @@ class RuleSetProviderTest {
     @Test
     void findProjectRoot_shouldDetectMavenProject() throws IOException {
         // given - Create a Maven project structure
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path projectRoot = tempDir.resolve("maven-project");
         Files.createDirectories(projectRoot);
         Path pomXml = projectRoot.resolve("pom.xml");
@@ -226,7 +233,8 @@ class RuleSetProviderTest {
     @Test
     void addRuleSetPath_shouldClearCache() {
         // given
-        RuleSet originalRuleSet = ruleSetProvider.getRuleSet();
+        // Just ensure getRuleSet works before adding new path
+        assertThat(ruleSetProvider.getRuleSet()).isNotNull();
 
         // when
         ruleSetProvider.addRuleSetPath("new-rules.xml");
@@ -253,6 +261,7 @@ class RuleSetProviderTest {
     @Test
     void loadRuleSet_shouldLoadXmlFileFromFileSystem() throws IOException {
         // given - Create an XML ruleset file
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path xmlRuleSetFile = tempDir.resolve("custom-rules.xml");
         String ruleSetContent =
                 """
@@ -278,6 +287,7 @@ class RuleSetProviderTest {
     @Test
     void loadRuleSet_shouldWarnAboutPropertiesFiles() {
         // given - Create a properties file
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path propsFile = tempDir.resolve("rules.properties");
         try {
             Files.writeString(propsFile, "# Properties ruleset");
@@ -296,6 +306,7 @@ class RuleSetProviderTest {
     @Test
     void findProjectRoot_shouldDetectGitRepository() throws IOException {
         // given - Create a Git repository structure
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path projectRoot = tempDir.resolve("git-project");
         Files.createDirectories(projectRoot);
         Path gitDir = projectRoot.resolve(".git");
@@ -323,6 +334,7 @@ class RuleSetProviderTest {
     @Test
     void findProjectRoot_shouldDetectKotlinGradleProject() throws IOException {
         // given - Create a Kotlin Gradle project structure
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path projectRoot = tempDir.resolve("kotlin-project");
         Files.createDirectories(projectRoot);
         Path buildGradleKts = projectRoot.resolve("build.gradle.kts");
@@ -347,6 +359,7 @@ class RuleSetProviderTest {
     @Test
     void findProjectRoot_shouldFallbackToCurrentDirWhenNoProjectMarkers() throws IOException {
         // given - Create a directory with no project markers
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path isolatedDir = tempDir.resolve("isolated");
         Files.createDirectories(isolatedDir);
 
@@ -369,6 +382,7 @@ class RuleSetProviderTest {
     @Test
     void loadCustomProperties_shouldApplyPropertiesToRules() throws IOException {
         // given - Create a properties file with rule configurations
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path propertiesFile = tempDir.resolve("codenarc.properties");
         String propertiesContent =
                 """
@@ -411,6 +425,7 @@ class RuleSetProviderTest {
     @Test
     void loadCustomProperties_shouldHandleIOException() throws IOException {
         // given - Create a directory named codenarc.properties instead of a file
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path propertiesDir = tempDir.resolve("codenarc.properties");
         Files.createDirectories(propertiesDir);
 
@@ -439,6 +454,7 @@ class RuleSetProviderTest {
         // Testing through public API by setting up properties that will be converted
 
         // given - Properties file with various types
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path propertiesFile = tempDir.resolve("codenarc.properties");
         try {
             String propertiesContent =
@@ -477,6 +493,7 @@ class RuleSetProviderTest {
     @Test
     void loadRuleSet_shouldHandleNullCustomRuleSet() throws IOException {
         // given - No custom ruleset file in project root
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path projectRoot = tempDir.resolve("no-custom-rules");
         Files.createDirectories(projectRoot);
         Path buildFile = projectRoot.resolve("build.gradle");
@@ -500,6 +517,7 @@ class RuleSetProviderTest {
     @Test
     void loadCustomRuleSet_shouldHandleXmlParseException() throws IOException {
         // given - Create an invalid XML ruleset file
+        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit");
         Path customRuleSetFile = tempDir.resolve("codenarc-ruleset.xml");
         String invalidXml = "<invalid xml content>not closed properly";
         Files.writeString(customRuleSetFile, invalidXml);

@@ -7,7 +7,9 @@ import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,14 +20,16 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class SymbolIndexAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     private SymbolIndex symbolIndex;
     private Path indexPath;
 
     @BeforeEach
     void setUp() {
-        indexPath = tempDir.resolve("test-index");
+        indexPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("test-index");
         symbolIndex = new SymbolIndex(indexPath);
         symbolIndex.initialize();
     }
@@ -132,7 +136,10 @@ class SymbolIndexAdditionalTest {
     void checkInitialized_shouldThrowForAllOperationsWhenNotInitialized() throws Exception {
         // given
         symbolIndex.close();
-        SymbolIndex uninitializedIndex = new SymbolIndex(tempDir.resolve("uninit"));
+        SymbolIndex uninitializedIndex =
+                new SymbolIndex(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("uninit"));
 
         // when/then - all operations should throw
         assertThatThrownBy(() -> uninitializedIndex.addFile(Path.of("test.groovy")))
@@ -241,7 +248,10 @@ class SymbolIndexAdditionalTest {
         symbolIndex.close();
 
         // Create new index that we can manipulate
-        SymbolIndex testIndex = new SymbolIndex(tempDir.resolve("test-partial"));
+        SymbolIndex testIndex =
+                new SymbolIndex(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("test-partial"));
 
         // Test case 1: Not initialized at all (initialized = false)
         assertThatThrownBy(() -> testIndex.addFile(Path.of("test.groovy")))
@@ -463,7 +473,10 @@ class SymbolIndexAdditionalTest {
                 .hasMessageContaining("Symbol index is not initialized");
 
         // Test 3: Create a new index and test uninitialized state
-        SymbolIndex newIndex = new SymbolIndex(tempDir.resolve("new-test"));
+        SymbolIndex newIndex =
+                new SymbolIndex(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                                .resolve("new-test"));
 
         // Test multiple operations on uninitialized index to trigger different code paths
         assertThatThrownBy(() -> newIndex.addFile(Path.of("test.groovy")))

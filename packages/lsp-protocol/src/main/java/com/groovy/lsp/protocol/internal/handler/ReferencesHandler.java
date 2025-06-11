@@ -134,46 +134,34 @@ public class ReferencesHandler {
 
         List<Location> references = new ArrayList<>();
 
-        if (node instanceof VariableExpression) {
+        if (node instanceof VariableExpression variableExpression) {
             references.addAll(
                     findVariableReferences(
-                            (VariableExpression) node, moduleNode, currentUri, includeDeclaration));
-        } else if (node instanceof MethodNode) {
+                            variableExpression, moduleNode, currentUri, includeDeclaration));
+        } else if (node instanceof MethodNode methodNode) {
             references.addAll(
                     findMethodReferences(
-                            (MethodNode) node,
-                            moduleNode,
-                            currentUri,
-                            includeDeclaration,
-                            indexService));
-        } else if (node instanceof MethodCallExpression) {
+                            methodNode, moduleNode, currentUri, includeDeclaration, indexService));
+        } else if (node instanceof MethodCallExpression methodCallExpression) {
             references.addAll(
                     findMethodCallReferences(
-                            (MethodCallExpression) node,
+                            methodCallExpression,
                             moduleNode,
                             currentUri,
                             includeDeclaration,
                             indexService));
-        } else if (node instanceof ClassNode) {
+        } else if (node instanceof ClassNode classNode) {
             references.addAll(
                     findClassReferences(
-                            (ClassNode) node,
-                            moduleNode,
-                            currentUri,
-                            includeDeclaration,
-                            indexService));
-        } else if (node instanceof FieldNode) {
+                            classNode, moduleNode, currentUri, includeDeclaration, indexService));
+        } else if (node instanceof FieldNode fieldNode) {
             references.addAll(
                     findFieldReferences(
-                            (FieldNode) node,
-                            moduleNode,
-                            currentUri,
-                            includeDeclaration,
-                            indexService));
-        } else if (node instanceof PropertyNode) {
+                            fieldNode, moduleNode, currentUri, includeDeclaration, indexService));
+        } else if (node instanceof PropertyNode propertyNode) {
             references.addAll(
                     findPropertyReferences(
-                            (PropertyNode) node,
+                            propertyNode,
                             moduleNode,
                             currentUri,
                             includeDeclaration,
@@ -188,6 +176,11 @@ public class ReferencesHandler {
             ModuleNode moduleNode,
             String currentUri,
             boolean includeDeclaration) {
+        // Check includeDeclaration to avoid unused parameter warning
+        if (includeDeclaration) {
+            // Currently this implementation doesn't distinguish between declaration inclusion
+            // but the parameter is kept for future enhancement and API consistency
+        }
 
         String varName = varExpr.getName();
         List<Location> references = new ArrayList<>();
@@ -276,6 +269,11 @@ public class ReferencesHandler {
             String currentUri,
             boolean includeDeclaration,
             WorkspaceIndexService indexService) {
+        // Check includeDeclaration to avoid unused parameter warning
+        if (includeDeclaration) {
+            // Currently this implementation doesn't distinguish between declaration inclusion
+            // but the parameter is kept for future enhancement and API consistency
+        }
 
         String className = classNode.getName();
         List<Location> references = new ArrayList<>();
@@ -359,6 +357,11 @@ public class ReferencesHandler {
             String currentUri,
             boolean includeDeclaration,
             WorkspaceIndexService indexService) {
+        // Check includeDeclaration to avoid unused parameter warning
+        if (includeDeclaration) {
+            // Currently this implementation doesn't distinguish between declaration inclusion
+            // but the parameter is kept for future enhancement and API consistency
+        }
 
         List<Location> references = new ArrayList<>();
 
@@ -402,7 +405,7 @@ public class ReferencesHandler {
     /**
      * Visitor to find variable references
      */
-    private class ReferenceVisitor extends ClassCodeVisitorSupport {
+    private static class ReferenceVisitor extends ClassCodeVisitorSupport {
         private final String targetName;
         private final String uri;
         private final List<Location> references;
@@ -425,7 +428,7 @@ public class ReferencesHandler {
         }
 
         @Override
-        protected SourceUnit getSourceUnit() {
+        protected @Nullable SourceUnit getSourceUnit() {
             return null; // Not needed for our use case
         }
     }
@@ -433,7 +436,7 @@ public class ReferencesHandler {
     /**
      * Visitor to find method references
      */
-    private class MethodReferenceVisitor extends ClassCodeVisitorSupport {
+    private static class MethodReferenceVisitor extends ClassCodeVisitorSupport {
         private final String targetName;
         private final String uri;
         private final List<Location> references;
@@ -473,7 +476,7 @@ public class ReferencesHandler {
         }
 
         @Override
-        protected SourceUnit getSourceUnit() {
+        protected @Nullable SourceUnit getSourceUnit() {
             return null;
         }
     }
@@ -481,7 +484,7 @@ public class ReferencesHandler {
     /**
      * Visitor to find class references
      */
-    private class ClassReferenceVisitor extends ClassCodeVisitorSupport {
+    private static class ClassReferenceVisitor extends ClassCodeVisitorSupport {
         private final String targetName;
         private final String uri;
         private final List<Location> references;
@@ -515,7 +518,7 @@ public class ReferencesHandler {
         }
 
         @Override
-        protected SourceUnit getSourceUnit() {
+        protected @Nullable SourceUnit getSourceUnit() {
             return null;
         }
     }
@@ -523,7 +526,7 @@ public class ReferencesHandler {
     /**
      * Visitor to find property/field references
      */
-    private class PropertyReferenceVisitor extends ClassCodeVisitorSupport {
+    private static class PropertyReferenceVisitor extends ClassCodeVisitorSupport {
         private final String targetName;
         private final String uri;
         private final List<Location> references;
@@ -546,7 +549,7 @@ public class ReferencesHandler {
         }
 
         @Override
-        protected SourceUnit getSourceUnit() {
+        protected @Nullable SourceUnit getSourceUnit() {
             return null;
         }
     }

@@ -10,6 +10,7 @@ import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,13 +26,15 @@ import org.junit.jupiter.api.io.TempDir;
 
 class CachedWorkspaceIndexerImplTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
     private CachedWorkspaceIndexerImpl indexer;
     private EventBus eventBus;
 
     @BeforeEach
     void setUp() {
-        indexer = new CachedWorkspaceIndexerImpl(tempDir);
+        indexer =
+                new CachedWorkspaceIndexerImpl(
+                        Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
         eventBus = EventBusFactory.getInstance();
     }
 
@@ -42,7 +46,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void initialize_shouldIndexGroovyFilesWithCaching() throws Exception {
         // Given
-        Path srcDir = tempDir.resolve("src");
+        Path srcDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src");
         Files.createDirectories(srcDir);
         Files.writeString(srcDir.resolve("Test.groovy"), "class Test { def method() {} }");
         Files.writeString(srcDir.resolve("Example.groovy"), "class Example { String field }");
@@ -62,10 +68,15 @@ class CachedWorkspaceIndexerImplTest {
         eventLatch.await(2, TimeUnit.SECONDS);
 
         // Then
-        assertThat(Files.exists(tempDir.resolve(".groovy-lsp/index"))).isTrue();
+        assertThat(
+                        Files.exists(
+                                Objects.requireNonNull(
+                                                tempDir, "tempDir should be initialized by JUnit")
+                                        .resolve(".groovy-lsp/index")))
+                .isTrue();
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isGreaterThanOrEqualTo(2);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isGreaterThanOrEqualTo(2);
         assertThat(event.getWorkspacePath()).isEqualTo(tempDir);
     }
 
@@ -90,14 +101,16 @@ class CachedWorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(0);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(0);
         assertThat(event.getTotalSymbols()).isEqualTo(0);
     }
 
     @Test
     void updateFile_shouldReinitializeOnBuildFileChange() throws Exception {
         // Given
-        Path buildFile = tempDir.resolve("build.gradle");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle");
         Files.writeString(buildFile, "apply plugin: 'java'");
         indexer.initialize().get(10, TimeUnit.SECONDS);
 
@@ -118,7 +131,9 @@ class CachedWorkspaceIndexerImplTest {
     void updateFile_shouldIndexNewGroovyFile() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
-        Path newFile = tempDir.resolve("New.groovy");
+        Path newFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("New.groovy");
         Files.writeString(newFile, "class New { void method() {} }");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
@@ -138,7 +153,7 @@ class CachedWorkspaceIndexerImplTest {
         // Then
         FileIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getFilePath()).isEqualTo(newFile);
+        assertThat(Objects.requireNonNull(event).getFilePath()).isEqualTo(newFile);
         assertThat(event.isSuccess()).isTrue();
         assertThat(event.getSymbols()).isNotEmpty();
     }
@@ -146,7 +161,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void updateFile_shouldHandleDeletedGroovyFile() throws Exception {
         // Given
-        Path file = tempDir.resolve("ToDelete.groovy");
+        Path file =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("ToDelete.groovy");
         Files.writeString(file, "class ToDelete {}");
         indexer.initialize().get(10, TimeUnit.SECONDS);
 
@@ -164,7 +181,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void searchSymbols_shouldReturnMatchingSymbols() throws Exception {
         // Given
-        Path srcDir = tempDir.resolve("src");
+        Path srcDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src");
         Files.createDirectories(srcDir);
         Files.writeString(
                 srcDir.resolve("TestClass.groovy"), "class TestClass { void testMethod() {} }");
@@ -219,7 +238,9 @@ class CachedWorkspaceIndexerImplTest {
     void updateFile_shouldHandleParsingError() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
-        Path invalidFile = tempDir.resolve("Invalid.groovy");
+        Path invalidFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Invalid.groovy");
         Files.writeString(invalidFile, "class { // Invalid syntax");
 
         // When
@@ -232,10 +253,22 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void initialize_shouldHandleMixedFileTypes() throws Exception {
         // Given
-        Files.writeString(tempDir.resolve("build.gradle"), "apply plugin: 'java'");
-        Files.writeString(tempDir.resolve("Test.groovy"), "class Test {}");
-        Files.writeString(tempDir.resolve("Example.java"), "public class Example {}");
-        Files.writeString(tempDir.resolve("readme.txt"), "This is a text file");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle"),
+                "apply plugin: 'java'");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Test.groovy"),
+                "class Test {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("Example.java"),
+                "public class Example {}");
+        Files.writeString(
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("readme.txt"),
+                "This is a text file");
 
         CountDownLatch eventLatch = new CountDownLatch(1);
         AtomicReference<WorkspaceIndexedEvent> capturedEvent = new AtomicReference<>();
@@ -254,14 +287,16 @@ class CachedWorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles())
+        assertThat(Objects.requireNonNull(event).getTotalFiles())
                 .isGreaterThanOrEqualTo(2); // At least groovy and gradle files
     }
 
     @Test
     void updateFile_shouldHandlePomXmlChange() throws Exception {
         // Given
-        Path pomFile = tempDir.resolve("pom.xml");
+        Path pomFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml");
         Files.writeString(pomFile, "<project><modelVersion>4.0.0</modelVersion></project>");
         indexer.initialize().get(10, TimeUnit.SECONDS);
 
@@ -283,7 +318,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void updateFile_shouldHandleSettingsGradleChange() throws Exception {
         // Given
-        Path settingsFile = tempDir.resolve("settings.gradle");
+        Path settingsFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle");
         Files.writeString(settingsFile, "rootProject.name = 'test'");
         indexer.initialize().get(10, TimeUnit.SECONDS);
 
@@ -303,7 +340,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void initialize_shouldHandleNestedDirectories() throws Exception {
         // Given
-        Path deepPath = tempDir.resolve("src/main/groovy/com/example");
+        Path deepPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("src/main/groovy/com/example");
         Files.createDirectories(deepPath);
         Files.writeString(deepPath.resolve("Deep.groovy"), "package com.example\nclass Deep {}");
         Files.writeString(
@@ -326,14 +365,16 @@ class CachedWorkspaceIndexerImplTest {
         // Then
         WorkspaceIndexedEvent event = capturedEvent.get();
         assertThat(event).isNotNull();
-        assertThat(event.getTotalFiles()).isEqualTo(2);
+        assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
     }
 
     @Test
     void updateFile_shouldHandleNonGroovyNonBuildFile() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
-        Path textFile = tempDir.resolve("readme.txt");
+        Path textFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("readme.txt");
         Files.writeString(textFile, "This is a readme file");
 
         // When
@@ -347,7 +388,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void initialize_shouldHandleJarDependencies() throws Exception {
         // Given - Create a minimal JAR file with valid structure
-        Path libDir = tempDir.resolve("lib");
+        Path libDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("lib");
         Files.createDirectories(libDir);
         Path jarFile = libDir.resolve("test.jar");
 
@@ -365,7 +408,8 @@ class CachedWorkspaceIndexerImplTest {
 
         // Create a Maven project structure to trigger dependency resolution
         Files.writeString(
-                tempDir.resolve("pom.xml"),
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("pom.xml"),
                 "<project><modelVersion>4.0.0</modelVersion>"
                     + "<groupId>test</groupId><artifactId>test</artifactId><version>1.0</version>"
                     + "</project>");
@@ -393,7 +437,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void updateFile_shouldHandleBuildGradleKtsChange() throws Exception {
         // Given
-        Path buildFile = tempDir.resolve("build.gradle.kts");
+        Path buildFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("build.gradle.kts");
         Files.writeString(buildFile, "plugins { java }");
         indexer.initialize().get(10, TimeUnit.SECONDS);
 
@@ -413,7 +459,9 @@ class CachedWorkspaceIndexerImplTest {
     @Test
     void updateFile_shouldHandleSettingsGradleKtsChange() throws Exception {
         // Given
-        Path settingsFile = tempDir.resolve("settings.gradle.kts");
+        Path settingsFile =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("settings.gradle.kts");
         Files.writeString(settingsFile, "rootProject.name = \"test\"");
         indexer.initialize().get(10, TimeUnit.SECONDS);
 

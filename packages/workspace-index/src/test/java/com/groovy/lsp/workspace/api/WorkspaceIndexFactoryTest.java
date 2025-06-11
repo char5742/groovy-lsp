@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,12 +16,14 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class WorkspaceIndexFactoryTest {
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     @Test
     void createWorkspaceIndexService_shouldCreateServiceWithValidWorkspaceRoot() throws Exception {
         // given
-        Path workspaceRoot = tempDir.resolve("workspace");
+        Path workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("workspace");
         Files.createDirectories(workspaceRoot);
 
         // when
@@ -32,17 +36,24 @@ class WorkspaceIndexFactoryTest {
     }
 
     @Test
-    void createWorkspaceIndexService_shouldThrowExceptionForNullWorkspaceRoot() {
+    void createWorkspaceIndexService_shouldThrowExceptionForNullWorkspaceRoot() throws Exception {
         // when/then
-        assertThatThrownBy(() -> WorkspaceIndexFactory.createWorkspaceIndexService(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Workspace root cannot be null");
+        // Use reflection to bypass NullAway compile-time check
+        var method =
+                WorkspaceIndexFactory.class.getMethod("createWorkspaceIndexService", Path.class);
+        assertThatThrownBy(() -> method.invoke(null, (Path) null))
+                .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class)
+                .getCause()
+                .hasMessageContaining("Workspace root cannot be null");
     }
 
     @Test
     void createWorkspaceIndexService_shouldThrowExceptionForNonExistentWorkspaceRoot() {
         // given
-        Path nonExistentPath = tempDir.resolve("non-existent");
+        Path nonExistentPath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("non-existent");
 
         // when/then
         assertThatThrownBy(() -> WorkspaceIndexFactory.createWorkspaceIndexService(nonExistentPath))
@@ -53,7 +64,9 @@ class WorkspaceIndexFactoryTest {
     @Test
     void createWorkspaceIndexService_shouldHandleFileAsWorkspaceRoot() throws Exception {
         // given
-        Path file = tempDir.resolve("file.txt");
+        Path file =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("file.txt");
         Files.createFile(file);
 
         // when
@@ -66,8 +79,12 @@ class WorkspaceIndexFactoryTest {
     @Test
     void createWorkspaceIndexService_shouldCreateMultipleInstances() throws Exception {
         // given
-        Path workspace1 = tempDir.resolve("workspace1");
-        Path workspace2 = tempDir.resolve("workspace2");
+        Path workspace1 =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("workspace1");
+        Path workspace2 =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("workspace2");
         Files.createDirectories(workspace1);
         Files.createDirectories(workspace2);
 
@@ -87,7 +104,9 @@ class WorkspaceIndexFactoryTest {
     void createWorkspaceIndexService_shouldCreateMultipleInstancesForSameWorkspace()
             throws Exception {
         // given
-        Path workspaceRoot = tempDir.resolve("workspace");
+        Path workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("workspace");
         Files.createDirectories(workspaceRoot);
 
         // when
@@ -105,7 +124,9 @@ class WorkspaceIndexFactoryTest {
     @Test
     void createWorkspaceIndexService_shouldHandleBothAbsoluteAndRelativePaths() throws Exception {
         // given
-        Path absolutePath = tempDir.resolve("absolute-workspace");
+        Path absolutePath =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("absolute-workspace");
         Files.createDirectories(absolutePath);
 
         // when
@@ -119,8 +140,12 @@ class WorkspaceIndexFactoryTest {
     @Test
     void createWorkspaceIndexService_shouldHandleSymbolicLinks() throws Exception {
         // given
-        Path actualDir = tempDir.resolve("actual-workspace");
-        Path symlink = tempDir.resolve("symlink-workspace");
+        Path actualDir =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("actual-workspace");
+        Path symlink =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .resolve("symlink-workspace");
         Files.createDirectories(actualDir);
 
         // シンボリックリンクをサポートするシステムでのみテスト

@@ -1,25 +1,44 @@
 package com.groovy.lsp.server.launcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.server.launcher.di.ServerModule;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.*;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import javax.annotation.Nullable;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -35,7 +54,7 @@ class MainLaunchTest {
     private PrintStream originalOut;
     private PrintStream originalErr;
 
-    @TempDir Path tempDir;
+    @TempDir @Nullable Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -66,6 +85,7 @@ class MainLaunchTest {
     }
 
     @Test
+    @SuppressWarnings("AddressSelection") // Intentional for test - mocking socket addresses
     void testRunServerWithSocketMode() throws Exception {
         // Test runServer method with socket mode - using mocks
         GroovyLanguageServer mockServer = mock(GroovyLanguageServer.class);
@@ -87,7 +107,11 @@ class MainLaunchTest {
                                             .thenReturn(new ByteArrayOutputStream());
                                     when(clientSocket.getRemoteSocketAddress())
                                             .thenReturn(
-                                                    new InetSocketAddress("test-client", 12345));
+                                                    new InetSocketAddress(
+                                                            "test-client",
+                                                            12345)); // Error-prone suppression:
+                                    // AddressSelection intentional
+                                    // for test
                                     when(mock.accept()).thenReturn(clientSocket);
                                 });
                 MockedStatic<LSPLauncher> launcherMock = mockStatic(LSPLauncher.class)) {
@@ -203,7 +227,7 @@ class MainLaunchTest {
     @Test
     void testRunServerWithInvalidWorkspace() {
         // Test with non-existent workspace
-        String nonExistentPath = tempDir.resolve("non-existent").toString();
+        String nonExistentPath = Objects.requireNonNull(tempDir).resolve("non-existent").toString();
 
         Exception exception =
                 assertThrows(
@@ -216,7 +240,7 @@ class MainLaunchTest {
     @Test
     void testRunServerWithWorkspaceAsFile() throws Exception {
         // Test with workspace path pointing to a file
-        Path file = tempDir.resolve("test.txt");
+        Path file = Objects.requireNonNull(tempDir).resolve("test.txt");
         Files.createFile(file);
 
         Exception exception =
@@ -268,6 +292,7 @@ class MainLaunchTest {
     }
 
     @Test
+    @SuppressWarnings("AddressSelection") // Intentional for test - mocking socket addresses
     void testLaunchSocketDirectly() throws Exception {
         // Use reflection to test launchSocket method directly
         Method launchSocketMethod =
@@ -293,7 +318,11 @@ class MainLaunchTest {
                                             .thenReturn(new ByteArrayOutputStream());
                                     when(clientSocket.getRemoteSocketAddress())
                                             .thenReturn(
-                                                    new InetSocketAddress("test-client", 12345));
+                                                    new InetSocketAddress(
+                                                            "test-client",
+                                                            12345)); // Error-prone suppression:
+                                    // AddressSelection intentional
+                                    // for test
                                     when(mock.accept()).thenReturn(clientSocket);
                                 });
                 MockedStatic<LSPLauncher> launcherMock = mockStatic(LSPLauncher.class)) {
@@ -349,8 +378,12 @@ class MainLaunchTest {
                             () -> launchSocketMethod.invoke(null, mockServer, "localhost", 8888));
 
             // The InvocationTargetException wraps the actual IOException
-            assertThat(exception.getCause()).isInstanceOf(IOException.class);
-            assertThat(exception.getCause().getMessage()).contains("Network error");
+            Throwable cause = exception.getCause();
+            assertThat(cause).isNotNull();
+            assertThat(cause).isInstanceOf(IOException.class);
+            if (cause != null) {
+                assertThat(cause.getMessage()).contains("Network error");
+            }
         }
     }
 
@@ -392,13 +425,10 @@ class MainLaunchTest {
         launchSocketMethod.setAccessible(true);
 
         GroovyLanguageServer mockServer = mock(GroovyLanguageServer.class);
-        ServerSocket mockServerSocket = mock(ServerSocket.class);
         Socket mockClientSocket = mock(Socket.class);
 
         // Setup mocks to throw exception during processing
         when(mockClientSocket.getInputStream()).thenThrow(new IOException("Stream error"));
-        when(mockServerSocket.accept()).thenReturn(mockClientSocket);
-        when(mockServerSocket.isClosed()).thenReturn(false);
 
         try (MockedConstruction<ServerSocket> serverSocketMock =
                 mockConstruction(

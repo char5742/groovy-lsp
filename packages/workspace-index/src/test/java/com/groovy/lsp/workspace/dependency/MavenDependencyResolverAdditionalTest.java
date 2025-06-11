@@ -1,7 +1,6 @@
 package com.groovy.lsp.workspace.dependency;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,7 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class MavenDependencyResolverAdditionalTest {
 
-    @TempDir Path tempDir;
+    @TempDir Path tempDir = Path.of("");
     private MavenDependencyResolver resolver;
 
     @BeforeEach

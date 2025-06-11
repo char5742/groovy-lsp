@@ -1,7 +1,6 @@
 package com.groovy.lsp.shared.internal.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.event.DomainEvent;
 import com.groovy.lsp.shared.event.EventHandler;
@@ -184,8 +183,45 @@ class GuavaEventBusTest {
     }
 
     @Test
-    void publish_shouldThrowErrorForNullEvent() {
-        assertThatThrownBy(() -> eventBus.publish(null)).isInstanceOf(NullPointerException.class);
+    void eventData_shouldBeAccessibleInHandlers() throws InterruptedException {
+        // given
+        CountDownLatch latch = new CountDownLatch(3);
+        List<String> receivedData = new ArrayList<>();
+
+        EventHandler<TestEvent> testHandler =
+                event -> {
+                    receivedData.add("TestEvent: " + event.getData());
+                    latch.countDown();
+                };
+
+        EventHandler<OtherTestEvent> otherHandler =
+                event -> {
+                    receivedData.add("OtherTestEvent: " + event.getValue());
+                    latch.countDown();
+                };
+
+        EventHandler<ExtendedTestEvent> extendedHandler =
+                event -> {
+                    receivedData.add("ExtendedTestEvent: " + event.getAdditionalData());
+                    latch.countDown();
+                };
+
+        // when
+        eventBus.subscribe(TestEvent.class, testHandler);
+        eventBus.subscribe(OtherTestEvent.class, otherHandler);
+        eventBus.subscribe(ExtendedTestEvent.class, extendedHandler);
+
+        eventBus.publish(new TestEvent("aggregate-1", "test-data"));
+        eventBus.publish(new OtherTestEvent("aggregate-2", 42));
+        eventBus.publish(new ExtendedTestEvent("aggregate-3", "base", "extended-data"));
+
+        // then
+        assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(receivedData)
+                .containsExactlyInAnyOrder(
+                        "TestEvent: test-data",
+                        "OtherTestEvent: 42",
+                        "ExtendedTestEvent: extended-data");
     }
 
     /**

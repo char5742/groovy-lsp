@@ -150,9 +150,11 @@ subprojects {
             check("BadImport", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
 
             // WildcardImport: ワイルドカードインポートを禁止
-            check("WildcardImport", net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+            check("WildcardImport", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
         }
 
+        // Error Proneの警告をエラーとして扱い、ビルドを失敗させる
+        options.compilerArgs += ["-Werror"]
     }
 }
 

@@ -16,6 +16,9 @@ dependencies {
     // LSP4J dependencies
     implementation libs.bundles.lsp4j
 
+    // API Guardian (required by LSP4J)
+    compileOnly libs.apiguardian.api
+
     // Guice for dependency injection
     implementation libs.guice
 
@@ -49,6 +52,285 @@ shadowJar {
             'Built-Date': new Date().format('yyyy-MM-dd HH:mm:ss'),
             'Built-JDK': System.getProperty('java.version')
         )
+    }
+
+    // Exclude unnecessary files to reduce size
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/NOTICE*'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/DEPENDENCIES*'
+    exclude 'META-INF/maven/**'
+    exclude 'about.html'
+    exclude '**/*.groovy'
+    exclude '**/*.html'
+    exclude '**/*.txt'
+    exclude '**/*.md'
+    exclude 'plugin.properties'
+    exclude '.api_description'
+    exclude 'lib/**'
+
+    // Exclude Gradle tooling API (not needed at runtime)
+    exclude 'org/gradle/tooling/**'
+    exclude 'org/gradle/wrapper/**'
+    exclude 'org/gradle/cli/**'
+
+    // Exclude unnecessary Eclipse bundles
+    exclude 'org/eclipse/core/internal/**'
+    exclude 'org/eclipse/osgi/**'
+    exclude 'org/eclipse/equinox/**'
+
+    // Exclude test frameworks
+    exclude 'junit/**'
+    exclude 'org/junit/**'
+    exclude 'org/hamcrest/**'
+    exclude 'org/testng/**'
+
+    // Exclude build tools
+    exclude 'org/apache/maven/**'
+    exclude 'org/apache/ivy/**'
+
+    // Exclude documentation and resources (but keep important config files)
+    exclude 'LICENSE'
+    exclude 'LICENSE.txt'
+    exclude 'NOTICE'
+    exclude 'NOTICE.txt'
+    exclude '**/*.gif'
+    exclude '**/*.png'
+    exclude '**/*.jpg'
+    exclude '**/*.jpeg'
+    exclude '**/*.ico'
+    exclude 'schema/**'
+    exclude 'schemas/**'
+
+    // Exclude native libraries for platforms we don't support in VS Code
+    exclude 'com/sun/jna/aix-*/**'
+    exclude 'com/sun/jna/sunos-*/**'
+    exclude 'com/sun/jna/freebsd-*/**'
+    exclude 'com/sun/jna/openbsd-*/**'
+    exclude 'com/sun/jna/linux-ppc*/**'
+    exclude 'com/sun/jna/linux-s390*/**'
+    exclude 'com/sun/jna/linux-mips*/**'
+    exclude 'com/sun/jna/linux-loongarch*/**'
+    exclude 'com/sun/jna/linux-riscv*/**'
+    exclude 'com/sun/jna/win32-aarch64/**'
+    exclude 'jni/**'
+    exclude 'org/lmdbjava/*.so'
+    exclude 'org/lmdbjava/*.dll'
+    exclude 'org/lmdbjava/*.dylib'
+
+    // Exclude large unused classes
+    exclude 'groovyjarjarantlr4/v4/unicode/**'
+    exclude 'com/sun/jna/platform/**'
+
+    // Exclude test dependencies
+    dependencies {
+        exclude(dependency('junit:junit'))
+        exclude(dependency('org.junit.jupiter:.*'))
+        exclude(dependency('org.mockito:.*'))
+        exclude(dependency('org.assertj:.*'))
+        exclude(dependency('ch.qos.logback:logback-test'))
+
+        // Exclude Gradle dependencies (not needed at runtime)
+        exclude(dependency('org.gradle:.*'))
+        exclude(dependency('org.gradle.tooling:.*'))
+
+        // Exclude Maven dependencies (not needed at runtime)
+        exclude(dependency('org.apache.maven:.*'))
+        exclude(dependency('org.apache.maven.resolver:.*'))
+        exclude(dependency('org.apache.maven.wagon:.*'))
+
+        // Exclude unnecessary Eclipse platform dependencies
+        exclude(dependency('org.eclipse.platform:.*'))
+        exclude(dependency('org.eclipse.osgi:.*'))
+        exclude(dependency('org.eclipse.equinox:.*'))
+    }
+
+    // Exclude unnecessary Groovy modules to reduce size
+    dependencies {
+        exclude(dependency('org.apache.groovy:groovy-ant'))
+        exclude(dependency('org.apache.groovy:groovy-cli-commons'))
+        exclude(dependency('org.apache.groovy:groovy-cli-picocli'))
+        exclude(dependency('org.apache.groovy:groovy-console'))
+        exclude(dependency('org.apache.groovy:groovy-contracts'))
+        exclude(dependency('org.apache.groovy:groovy-datetime'))
+        exclude(dependency('org.apache.groovy:groovy-dateutil'))
+        exclude(dependency('org.apache.groovy:groovy-docgenerator'))
+        exclude(dependency('org.apache.groovy:groovy-groovydoc'))
+        exclude(dependency('org.apache.groovy:groovy-groovysh'))
+        exclude(dependency('org.apache.groovy:groovy-jmx'))
+        exclude(dependency('org.apache.groovy:groovy-jsr223'))
+        exclude(dependency('org.apache.groovy:groovy-macro'))
+        exclude(dependency('org.apache.groovy:groovy-servlet'))
+        exclude(dependency('org.apache.groovy:groovy-sql'))
+        exclude(dependency('org.apache.groovy:groovy-swing'))
+        exclude(dependency('org.apache.groovy:groovy-test'))
+        exclude(dependency('org.apache.groovy:groovy-testng'))
+        exclude(dependency('org.apache.groovy:groovy-toml'))
+        exclude(dependency('org.apache.groovy:groovy-typecheckers'))
+    }
+
+    // Exclude unused Eclipse dependencies
+    dependencies {
+        exclude(dependency('org.eclipse.core:org.eclipse.core.filesystem'))
+        exclude(dependency('org.eclipse.core:org.eclipse.core.contenttype'))
+        exclude(dependency('org.eclipse.core:org.eclipse.core.expressions'))
+        exclude(dependency('org.eclipse.core:org.eclipse.core.variables'))
+        exclude(dependency('org.eclipse.jdt:org.eclipse.jdt.launching'))
+        exclude(dependency('org.eclipse.debug:org.eclipse.debug.core'))
+    }
+}
+
+// Minimal shadowJar for VS Code extension
+task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    from sourceSets.main.output
+    configurations = [project.configurations.runtimeClasspath]
+
+    archiveBaseName = 'groovy-language-server-minimal'
+    archiveClassifier = ''
+    archiveVersion = project.version
+
+    // Merge service files
+    mergeServiceFiles()
+
+    manifest {
+        attributes(
+            'Main-Class': 'com.groovy.lsp.server.launcher.Main',
+            'Implementation-Title': 'Groovy Language Server',
+            'Implementation-Version': project.version
+        )
+    }
+
+    // Balanced exclusions for VS Code extension
+    // Keep service loader configurations
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/MANIFEST.MF'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/NOTICE*'
+    exclude 'META-INF/DEPENDENCIES'
+    exclude 'META-INF/maven/**'
+
+    exclude 'about.html'
+    exclude '**/*.groovy'
+    exclude '**/*.html'
+    exclude '**/*.txt'
+    exclude '**/*.md'
+    // Keep important properties files
+    exclude 'log4j.properties'
+    exclude 'log4j2.properties'
+    exclude 'logging.properties'
+
+    exclude '**/*.xsd'
+    exclude '**/*.dtd'
+    exclude 'schema/**'
+    exclude 'schemas/**'
+    exclude '**/*.gif'
+    exclude '**/*.png'
+    exclude '**/*.jpg'
+    exclude '**/*.jpeg'
+    exclude '**/*.ico'
+
+    // Exclude all native libraries
+    exclude 'com/sun/jna/**'
+    exclude 'jni/**'
+    exclude 'org/lmdbjava/**'
+    exclude 'jnr/**'
+    exclude 'com/kenai/**'
+
+    // Exclude build tools and test frameworks
+    exclude 'org/gradle/**'
+    exclude 'org/apache/maven/**'
+    exclude 'org/apache/ivy/**'
+    exclude 'junit/**'
+    exclude 'org/junit/**'
+    exclude 'org/hamcrest/**'
+    exclude 'org/testng/**'
+    exclude 'org/mockito/**'
+    exclude 'org/assertj/**'
+
+    // Exclude unused Eclipse bundles
+    exclude 'org/eclipse/core/internal/**'
+    exclude 'org/eclipse/osgi/**'
+    exclude 'org/eclipse/equinox/**'
+
+    // Exclude CodeNarc reports and rules (keep only essential ones)
+    exclude 'org/codenarc/report/**'
+    exclude 'org/codenarc/rule/unnecessary/**'
+    exclude 'org/codenarc/rule/junit/**'
+    exclude 'org/codenarc/rule/grails/**'
+    exclude 'org/codenarc/rule/concurrency/**'
+    exclude 'org/codenarc/rule/security/**'
+    exclude 'org/codenarc/rule/serialization/**'
+    exclude 'org/gmetrics/**'
+
+    // Exclude Groovy modules we don't need
+    exclude 'groovy/ant/**'
+    exclude 'groovy/cli/**'
+    exclude 'groovy/console/**'
+    exclude 'groovy/grape/**'
+    exclude 'groovy/json/**'
+    exclude 'groovy/servlet/**'
+    exclude 'groovy/sql/**'
+    exclude 'groovy/swing/**'
+    exclude 'groovy/test/**'
+    exclude 'groovy/ui/**'
+    exclude 'groovy/xml/**'
+    exclude 'groovyjarjarpicocli/**'
+    exclude 'picocli/**'
+
+    // Exclude large antlr4 classes
+    exclude 'groovyjarjarantlr4/v4/unicode/**'
+    exclude 'groovyjarjarantlr4/v4/gui/**'
+    exclude 'groovyjarjarantlr4/v4/codegen/**'
+    exclude 'groovyjarjarantlr4/v4/automata/**'
+    exclude 'groovyjarjarantlr4/v4/semantics/**'
+    exclude 'groovyjarjarantlr4/v4/tool/**'
+
+    // Exclude Guava modules we might not need
+    exclude 'com/google/common/graph/**'
+    exclude 'com/google/common/escape/**'
+    exclude 'com/google/common/eventbus/**'
+    exclude 'com/google/common/html/**'
+    exclude 'com/google/common/net/**'
+    exclude 'com/google/common/xml/**'
+
+    // Exclude JavaParser (used for Java parsing, not Groovy)
+    exclude 'com/github/javaparser/**'
+
+    // Keep Sentry for production debugging
+    // exclude 'io/sentry/**' // Commented out - needed for error tracking
+
+    // Dependencies exclusions
+    dependencies {
+        exclude(dependency('org.gradle:.*'))
+        exclude(dependency('org.gradle.tooling:.*'))
+        exclude(dependency('org.apache.maven:.*'))
+        exclude(dependency('org.apache.maven.resolver:.*'))
+        exclude(dependency('com.github.javaparser:.*'))
+        // Keep Sentry for production debugging
+        // exclude(dependency('io.sentry:.*'))
+        exclude(dependency('org.lmdbjava:.*'))
+        exclude(dependency('com.sun.jna:.*'))
+        exclude(dependency('jnr:.*'))
+    }
+}
+
+// Task to build VSCode extension JAR
+task buildVSCodeJar(type: Copy, dependsOn: minimalShadowJar) {
+    from minimalShadowJar
+    into "${rootProject.projectDir}/packages/vscode-extension/server"
+    rename { 'groovy-language-server.jar' }
+
+    doLast {
+        def jarFile = file("${rootProject.projectDir}/packages/vscode-extension/server/groovy-language-server.jar")
+        def size = jarFile.length() / 1024 / 1024
+        println "JAR size: ${size.round(2)} MB"
+        if (size > 18) {
+            throw new GradleException("JAR size (${size.round(2)} MB) exceeds 18MB limit for VS Code extension")
+        }
     }
 }
 

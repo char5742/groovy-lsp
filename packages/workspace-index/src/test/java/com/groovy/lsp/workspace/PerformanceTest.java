@@ -47,7 +47,7 @@ public class PerformanceTest {
     private static final int WARMUP_ITERATIONS = 5;
     private static final int TEST_ITERATIONS = 10;
 
-    @TempDir private Path tempDir;
+    @TempDir private Path tempDir = Path.of("");
 
     private SymbolIndex symbolIndex;
     private List<SymbolInfo> testSymbols;
@@ -267,7 +267,8 @@ public class PerformanceTest {
 
     private long measureSearchTime(String query) {
         long start = System.nanoTime();
-        var results = symbolIndex.search(query).collect(Collectors.toList());
+        // Force evaluation of search results to measure actual search time
+        symbolIndex.search(query).forEach(symbol -> {});
         long end = System.nanoTime();
 
         return TimeUnit.NANOSECONDS.toMillis(end - start);

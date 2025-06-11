@@ -139,21 +139,19 @@ public class DefinitionHandler {
 
         List<Location> locations = new ArrayList<>();
 
-        if (node instanceof VariableExpression) {
-            locations.addAll(
-                    findVariableDefinition((VariableExpression) node, moduleNode, currentUri));
-        } else if (node instanceof MethodCallExpression) {
+        if (node instanceof VariableExpression variableExpression) {
+            locations.addAll(findVariableDefinition(variableExpression, moduleNode, currentUri));
+        } else if (node instanceof MethodCallExpression methodCallExpression) {
             locations.addAll(
                     findMethodDefinition(
-                            (MethodCallExpression) node, moduleNode, currentUri, indexService));
-        } else if (node instanceof PropertyExpression) {
+                            methodCallExpression, moduleNode, currentUri, indexService));
+        } else if (node instanceof PropertyExpression propertyExpression) {
             locations.addAll(
                     findPropertyDefinition(
-                            (PropertyExpression) node, moduleNode, currentUri, indexService));
-        } else if (node instanceof ClassExpression) {
-            locations.addAll(findClassDefinition((ClassExpression) node, currentUri, indexService));
-        } else if (node instanceof ConstructorCallExpression) {
-            ConstructorCallExpression ctorCall = (ConstructorCallExpression) node;
+                            propertyExpression, moduleNode, currentUri, indexService));
+        } else if (node instanceof ClassExpression classExpression) {
+            locations.addAll(findClassDefinition(classExpression, currentUri, indexService));
+        } else if (node instanceof ConstructorCallExpression ctorCall) {
             locations.addAll(findClassDefinition(ctorCall.getType(), currentUri, indexService));
         }
 
@@ -165,7 +163,7 @@ public class DefinitionHandler {
 
         Variable variable = varExpr.getAccessedVariable();
         if (variable == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
 
         // Check if it's a local variable or parameter
@@ -175,12 +173,14 @@ public class DefinitionHandler {
             if (declaringNode != null) {
                 Location location = LocationUtils.createLocation(currentUri, declaringNode);
                 if (location != null) {
-                    return Collections.singletonList(location);
+                    List<Location> result = new ArrayList<>();
+                    result.add(location);
+                    return result;
                 }
             }
         }
 
-        return Collections.emptyList();
+        return new ArrayList<>();
     }
 
     private List<Location> findMethodDefinition(
@@ -191,7 +191,7 @@ public class DefinitionHandler {
 
         String methodName = methodCall.getMethodAsString();
         if (methodName == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
 
         List<Location> locations = new ArrayList<>();
@@ -246,7 +246,7 @@ public class DefinitionHandler {
 
         String propertyName = propExpr.getPropertyAsString();
         if (propertyName == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
 
         List<Location> locations = new ArrayList<>();
@@ -316,7 +316,9 @@ public class DefinitionHandler {
         if (!classNode.isPrimaryClassNode()) {
             Location location = LocationUtils.createLocation(currentUri, classNode);
             if (location != null) {
-                return Collections.singletonList(location);
+                List<Location> result = new ArrayList<>();
+                result.add(location);
+                return result;
             }
         }
 
@@ -395,21 +397,20 @@ public class DefinitionHandler {
      */
     private static class VariableDeclarationVisitor extends ClassCodeVisitorSupport {
         private final Variable targetVariable;
-        private ASTNode declarationNode;
+        private @Nullable ASTNode declarationNode;
 
         public VariableDeclarationVisitor(Variable targetVariable) {
             this.targetVariable = targetVariable;
         }
 
-        public ASTNode getDeclarationNode() {
+        public @Nullable ASTNode getDeclarationNode() {
             return declarationNode;
         }
 
         @Override
         public void visitDeclarationExpression(DeclarationExpression expression) {
             Expression leftExpression = expression.getLeftExpression();
-            if (leftExpression instanceof VariableExpression) {
-                VariableExpression varExpr = (VariableExpression) leftExpression;
+            if (leftExpression instanceof VariableExpression varExpr) {
                 if (varExpr.getName().equals(targetVariable.getName())) {
                     declarationNode = expression;
                 }
@@ -464,7 +465,7 @@ public class DefinitionHandler {
         }
 
         @Override
-        protected SourceUnit getSourceUnit() {
+        protected @Nullable SourceUnit getSourceUnit() {
             return null; // Not needed for our use case
         }
     }

@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Internal implementation of TypeInferenceService.
@@ -72,7 +73,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @return the inferred ClassNode or null
      */
     @Override
-    public ClassNode inferExpressionType(Expression expression, ModuleNode moduleNode) {
+    public ClassNode inferExpressionType(Expression expression, @Nullable ModuleNode moduleNode) {
         if (expression == null) {
             return ClassHelper.OBJECT_TYPE;
         }
@@ -114,7 +115,8 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module context
      * @return the inferred type or null
      */
-    private ClassNode inferVariableType(VariableExpression varExpr, ModuleNode moduleNode) {
+    private ClassNode inferVariableType(
+            VariableExpression varExpr, @Nullable ModuleNode moduleNode) {
         String varName = varExpr.getName();
 
         // Check if it's a special variable
@@ -180,7 +182,8 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module context
      * @return the inferred return type or null
      */
-    private ClassNode inferMethodCallType(MethodCallExpression call, ModuleNode moduleNode) {
+    private ClassNode inferMethodCallType(
+            MethodCallExpression call, @Nullable ModuleNode moduleNode) {
         Expression objectExpr = call.getObjectExpression();
         ClassNode receiverType = inferExpressionType(objectExpr, moduleNode);
 
@@ -220,7 +223,8 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module context
      * @return the inferred type or null
      */
-    private ClassNode inferPropertyType(PropertyExpression propExpr, ModuleNode moduleNode) {
+    private ClassNode inferPropertyType(
+            PropertyExpression propExpr, @Nullable ModuleNode moduleNode) {
         Expression objectExpr = propExpr.getObjectExpression();
         ClassNode receiverType = inferExpressionType(objectExpr, moduleNode);
 
@@ -263,7 +267,8 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module context
      * @return the inferred type
      */
-    private ClassNode inferBinaryExpressionType(BinaryExpression binExpr, ModuleNode moduleNode) {
+    private ClassNode inferBinaryExpressionType(
+            BinaryExpression binExpr, @Nullable ModuleNode moduleNode) {
         int op = binExpr.getOperation().getType();
 
         // Comparison operators return boolean
@@ -299,10 +304,12 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module node
      * @return the enclosing ClassNode or null
      */
-    private ClassNode findEnclosingClass(ASTNode node, ModuleNode moduleNode) {
-        for (ClassNode classNode : moduleNode.getClasses()) {
-            if (isNodeWithinClass(node, classNode)) {
-                return classNode;
+    private ClassNode findEnclosingClass(ASTNode node, @Nullable ModuleNode moduleNode) {
+        if (moduleNode != null) {
+            for (ClassNode classNode : moduleNode.getClasses()) {
+                if (isNodeWithinClass(node, classNode)) {
+                    return classNode;
+                }
             }
         }
         return ClassHelper.OBJECT_TYPE;
@@ -327,22 +334,26 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      * @param moduleNode the module node
      * @return the declaration type or null
      */
-    private ClassNode findVariableDeclarationType(String varName, ModuleNode moduleNode) {
+    private ClassNode findVariableDeclarationType(String varName, @Nullable ModuleNode moduleNode) {
         VariableDeclarationFinder finder = new VariableDeclarationFinder(varName);
 
-        // Visit classes
-        for (ClassNode classNode : moduleNode.getClasses()) {
-            classNode.visitContents(finder);
+        if (moduleNode != null) {
+            // Visit classes
+            for (ClassNode classNode : moduleNode.getClasses()) {
+                classNode.visitContents(finder);
+            }
         }
 
         // Visit script body (statements outside classes)
-        BlockStatement statementBlock = moduleNode.getStatementBlock();
-        if (statementBlock != null) {
-            for (Statement stmt : statementBlock.getStatements()) {
-                if (stmt instanceof ExpressionStatement exprStmt) {
-                    Expression expr = exprStmt.getExpression();
-                    if (expr instanceof DeclarationExpression) {
-                        expr.visit(finder);
+        if (moduleNode != null) {
+            BlockStatement statementBlock = moduleNode.getStatementBlock();
+            if (statementBlock != null) {
+                for (Statement stmt : statementBlock.getStatements()) {
+                    if (stmt instanceof ExpressionStatement exprStmt) {
+                        Expression expr = exprStmt.getExpression();
+                        if (expr instanceof DeclarationExpression) {
+                            expr.visit(finder);
+                        }
                     }
                 }
             }
@@ -356,7 +367,7 @@ public class TypeInferenceServiceImpl implements TypeInferenceService {
      */
     private class VariableDeclarationFinder extends ClassCodeVisitorSupport {
         private final String targetVarName;
-        private ClassNode variableType = null;
+        private @Nullable ClassNode variableType = null;
 
         public VariableDeclarationFinder(String varName) {
             this.targetVarName = varName;

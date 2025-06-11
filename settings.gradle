@@ -23,6 +23,7 @@ include ':workspace-index'
 include ':formatting'
 include ':integration-tests'
 include ':benchmarks'
+include ':vscode-extension'
 
 project(':shared').projectDir = file('packages/shared')
 project(':server-launcher').projectDir = file('packages/server-launcher')
@@ -34,3 +35,4 @@ project(':workspace-index').projectDir = file('packages/workspace-index')
 project(':formatting').projectDir = file('packages/formatting')
 project(':integration-tests').projectDir = file('packages/integration-tests')
 project(':benchmarks').projectDir = file('packages/benchmarks')
+project(':vscode-extension').projectDir = file('packages/vscode-extension')
