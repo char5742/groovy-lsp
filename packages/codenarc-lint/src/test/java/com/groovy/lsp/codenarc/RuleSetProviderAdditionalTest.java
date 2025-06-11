@@ -2,6 +2,7 @@ package com.groovy.lsp.codenarc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.SlowTest;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ class RuleSetProviderAdditionalTest {
         ruleSetProvider = new RuleSetProvider();
     }
 
-    @UnitTest
+    @SlowTest
     void getRuleSet_shouldReturnDefaultRuleSetWhenNoCustomConfig() {
         // when
         RuleSet ruleSet = ruleSetProvider.getRuleSet();

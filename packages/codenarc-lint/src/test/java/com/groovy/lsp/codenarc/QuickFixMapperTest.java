@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.SlowTest;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,7 @@ class QuickFixMapperTest {
         lenient().when(mockViolation.getRule()).thenReturn(mockRule);
     }
 
-    @UnitTest
+    @SlowTest
     void getSupportedRules_shouldReturnDefaultRegisteredRules() {
         // when
         Set<String> supportedRules = quickFixMapper.getSupportedRules();

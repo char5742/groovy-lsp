@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.SlowTest;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +75,7 @@ class LintEngineAdditionalTest {
                         });
     }
 
-    @UnitTest
+    @SlowTest
     void analyzeDirectory_shouldHandleNullIncludes() {
         // Use reflection to bypass NullAway for null parameter testing
         try {

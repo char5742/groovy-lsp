@@ -8,6 +8,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.groovy.lsp.test.annotations.SlowTest;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -267,7 +268,7 @@ class LintEngineTest {
         }
     }
 
-    @UnitTest
+    @SlowTest
     void analyzeFile_shouldHandleQuickFixMapperReturningNonEmptyList()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -386,7 +387,7 @@ class LintEngineTest {
                 });
     }
 
-    @UnitTest
+    @SlowTest
     void analyzeFile_shouldHandleExceptionDuringAnalysis()
             throws ExecutionException, InterruptedException {
         // given - Use an invalid file path that will cause an exception

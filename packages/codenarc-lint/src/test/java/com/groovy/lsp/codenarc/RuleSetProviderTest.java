@@ -2,6 +2,7 @@ package com.groovy.lsp.codenarc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.SlowTest;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -244,7 +245,7 @@ class RuleSetProviderTest {
         assertThat(newRuleSet).isNotNull();
     }
 
-    @UnitTest
+    @SlowTest
     void loadRuleSet_shouldHandleInvalidRuleSetPaths() {
         // given
         ruleSetProvider.resetToDefaults();
