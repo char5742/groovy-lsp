@@ -174,6 +174,8 @@ jobs:
       # octocovでカバレッジレポートを表示
       - name: Generate coverage report with octocov
         uses: k1LoW/octocov-action@v1
+        with:
+          config: .octocov.yml
 
   # 最終的なステータスチェック
   check:
