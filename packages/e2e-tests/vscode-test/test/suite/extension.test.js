@@ -6,11 +6,11 @@ suite('Groovy Language Server Extension Test Suite', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('groovy-lsp'));
+        assert.ok(vscode.extensions.getExtension('groovy-lsp.groovy-language-server'));
     });
 
     test('Should activate extension', async () => {
-        const ext = vscode.extensions.getExtension('groovy-lsp');
+        const ext = vscode.extensions.getExtension('groovy-lsp.groovy-language-server');
         if (ext) {
             await ext.activate();
             assert.ok(ext.isActive);

@@ -4,8 +4,10 @@
   "description": "VS Code integration tests for Groovy Language Server",
   "scripts": {
     "test": "node ./test/runTest.js",
-    "compile": "tsc -p ./",
-    "pretest": "npm run compile"
+    "test:mock": "node ./test/mock-test.js",
+    "test:download": "node ./test/download-vscode.js",
+    "test:ci": "node ./test/ci-runner.js",
+    "test:headless": "sh ./test-headless.sh"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
