@@ -162,3 +162,4 @@ nullaway = { id = "net.ltgt.nullaway", version.ref = "nullaway-plugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmh-plugin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless-plugin" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger-plugin" }
+jacoco = { id = "jacoco" }

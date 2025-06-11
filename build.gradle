@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.jmh) apply false
     alias(libs.plugins.test.logger) apply false
+    id 'jacoco'
 }
 
 // Spotless設定をすべてのプロジェクトに適用
@@ -246,15 +247,13 @@ task jacocoRootReport(type: JacocoReport) {
     description = "Aggregate JaCoCo reports from all subprojects"
     group = "verification"
 
-    dependsOn subprojects.test
-
     sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.from = files(subprojects.sourceSets.main.output)
     executionData.from = files(subprojects.jacocoTestReport.executionData).filter { it.exists() }
 
     reports {
-        html.required = true
-        xml.required = true
-        csv.required = false
+        html.required.set(true)
+        xml.required.set(true)
+        csv.required.set(false)
     }
 }
