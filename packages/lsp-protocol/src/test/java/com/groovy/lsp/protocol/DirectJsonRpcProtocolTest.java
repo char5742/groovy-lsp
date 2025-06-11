@@ -12,6 +12,7 @@ import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,7 +35,6 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
@@ -66,7 +66,7 @@ class DirectJsonRpcProtocolTest {
         server = new GroovyLanguageServer(textDocumentService, workspaceService);
     }
 
-    @Test
+    @UnitTest
     void testInitializeJsonProtocol() throws Exception {
         // Prepare JSON request
         String jsonRequest =
@@ -117,7 +117,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.result.capabilities.definitionProvider");
     }
 
-    @Test
+    @UnitTest
     void testHoverJsonProtocol() throws Exception {
         // Initialize server first
         InitializeParams initParams = new InitializeParams();
@@ -198,7 +198,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.result");
     }
 
-    @Test
+    @UnitTest
     void testCompletionJsonProtocol() throws Exception {
         // Initialize
         InitializeParams initParams = new InitializeParams();
@@ -246,7 +246,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.result");
     }
 
-    @Test
+    @UnitTest
     void testInvalidMethodError() throws Exception {
         // Create an error response for invalid method
 
@@ -270,7 +270,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.error.message", "Method not found");
     }
 
-    @Test
+    @UnitTest
     void testInvalidMethodServerResponse() throws Exception {
         // Initialize server first
         InitializeParams initParams = new InitializeParams();
@@ -303,7 +303,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.error.data");
     }
 
-    @Test
+    @UnitTest
     void testDefinitionJsonProtocol() throws Exception {
         // Initialize
         InitializeParams initParams = new InitializeParams();
@@ -352,7 +352,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.result");
     }
 
-    @Test
+    @UnitTest
     void testMalformedParamsError() throws Exception {
         // Simulate a malformed params scenario
         JsonObject response = new JsonObject();
@@ -374,7 +374,7 @@ class DirectJsonRpcProtocolTest {
                 .hasJsonPath("$.error.message", "Invalid params");
     }
 
-    @Test
+    @UnitTest
     void testNotificationHandling() throws Exception {
         // Test didChange notification with unique file name
         Path testFile =

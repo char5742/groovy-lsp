@@ -2,6 +2,7 @@ package com.groovy.lsp.protocol.internal.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.lsp4j.CreateFilesParams;
@@ -25,7 +26,6 @@ import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,7 +45,7 @@ class GroovyWorkspaceServiceTest {
         service = new GroovyWorkspaceService();
     }
 
-    @Test
+    @UnitTest
     void connect_shouldSetClient() {
         // when
         service.connect(mockClient);
@@ -55,7 +55,7 @@ class GroovyWorkspaceServiceTest {
         // The mock client is stored but not used in current implementation
     }
 
-    @Test
+    @UnitTest
     void symbol_shouldReturnEmptySymbolList() throws Exception {
         // given
         WorkspaceSymbolParams params = new WorkspaceSymbolParams("test");
@@ -69,7 +69,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result.getLeft()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void symbol_shouldSearchWithEmptyQuery() throws Exception {
         // given
         WorkspaceSymbolParams params = new WorkspaceSymbolParams("");
@@ -83,7 +83,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result.getLeft()).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void didChangeConfiguration_shouldHandleConfigurationChanges() {
         // given
         service.connect(mockClient);
@@ -94,7 +94,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeConfiguration(params);
     }
 
-    @Test
+    @UnitTest
     void didChangeConfiguration_shouldWorkWithoutClient() {
         // given
         DidChangeConfigurationParams params = new DidChangeConfigurationParams(new Object());
@@ -103,7 +103,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeConfiguration(params);
     }
 
-    @Test
+    @UnitTest
     void didChangeWatchedFiles_shouldHandleFileChanges() {
         // given
         FileEvent event1 = new FileEvent("file:///test1.groovy", FileChangeType.Created);
@@ -116,7 +116,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeWatchedFiles(params);
     }
 
-    @Test
+    @UnitTest
     void didChangeWatchedFiles_shouldHandleEmptyChangeList() {
         // given
         DidChangeWatchedFilesParams params = new DidChangeWatchedFilesParams(Arrays.asList());
@@ -125,7 +125,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeWatchedFiles(params);
     }
 
-    @Test
+    @UnitTest
     void executeCommand_shouldExecuteCommand() throws Exception {
         // given
         String command = "groovy.test.command";
@@ -139,7 +139,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result).isNull();
     }
 
-    @Test
+    @UnitTest
     void executeCommand_shouldExecuteCommandWithoutArguments() throws Exception {
         // given
         ExecuteCommandParams params = new ExecuteCommandParams("groovy.simple.command", null);
@@ -151,7 +151,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result).isNull();
     }
 
-    @Test
+    @UnitTest
     void didChangeWorkspaceFolders_shouldHandleFolderAddition() {
         // given
         WorkspaceFolder folder1 = new WorkspaceFolder("file:///workspace1", "workspace1");
@@ -164,7 +164,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeWorkspaceFolders(params);
     }
 
-    @Test
+    @UnitTest
     void didChangeWorkspaceFolders_shouldHandleFolderRemoval() {
         // given
         WorkspaceFolder folder = new WorkspaceFolder("file:///old-workspace", "old-workspace");
@@ -176,7 +176,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeWorkspaceFolders(params);
     }
 
-    @Test
+    @UnitTest
     void didChangeWorkspaceFolders_shouldHandleFolderAdditionAndRemoval() {
         // given
         WorkspaceFolder added = new WorkspaceFolder("file:///new", "new");
@@ -189,7 +189,7 @@ class GroovyWorkspaceServiceTest {
         service.didChangeWorkspaceFolders(params);
     }
 
-    @Test
+    @UnitTest
     void willRenameFiles_shouldReturnEmptyWorkspaceEdit() throws Exception {
         // given
         FileRename rename1 = new FileRename("file:///old1.groovy", "file:///new1.groovy");
@@ -204,7 +204,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result.getChanges()).isNullOrEmpty();
     }
 
-    @Test
+    @UnitTest
     void didRenameFiles_shouldHandleFileRename() {
         // given
         FileRename rename = new FileRename("file:///old.groovy", "file:///new.groovy");
@@ -214,7 +214,7 @@ class GroovyWorkspaceServiceTest {
         service.didRenameFiles(params);
     }
 
-    @Test
+    @UnitTest
     void didRenameFiles_shouldHandleMultipleFileRenames() {
         // given
         FileRename rename1 = new FileRename("file:///a.groovy", "file:///b.groovy");
@@ -226,7 +226,7 @@ class GroovyWorkspaceServiceTest {
         service.didRenameFiles(params);
     }
 
-    @Test
+    @UnitTest
     void willDeleteFiles_shouldReturnEmptyWorkspaceEdit() throws Exception {
         // given
         FileDelete delete = new FileDelete("file:///delete-me.groovy");
@@ -240,7 +240,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result.getChanges()).isNullOrEmpty();
     }
 
-    @Test
+    @UnitTest
     void didDeleteFiles_shouldHandleFileDeletion() {
         // given
         FileDelete delete1 = new FileDelete("file:///deleted1.groovy");
@@ -251,7 +251,7 @@ class GroovyWorkspaceServiceTest {
         service.didDeleteFiles(params);
     }
 
-    @Test
+    @UnitTest
     void willCreateFiles_shouldReturnEmptyWorkspaceEdit() throws Exception {
         // given
         FileCreate create = new FileCreate("file:///new-file.groovy");
@@ -265,7 +265,7 @@ class GroovyWorkspaceServiceTest {
         assertThat(result.getChanges()).isNullOrEmpty();
     }
 
-    @Test
+    @UnitTest
     void didCreateFiles_shouldHandleFileCreation() {
         // given
         FileCreate create1 = new FileCreate("file:///created1.groovy");
@@ -277,7 +277,7 @@ class GroovyWorkspaceServiceTest {
         service.didCreateFiles(params);
     }
 
-    @Test
+    @UnitTest
     void didCreateFiles_shouldHandleEmptyFileList() {
         // given
         CreateFilesParams params = new CreateFilesParams(Arrays.asList());

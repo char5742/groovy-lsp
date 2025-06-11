@@ -180,6 +180,37 @@ server-launcher
 - E2Eテスト（VS Code環境での動作確認）
 - パフォーマンスベンチマーク（JMH）
 
+### テストピラミッド戦略
+
+プロジェクトではGoogleのテストピラミッド戦略を採用しています：
+- **Unit Tests (70%)**: 高速で独立したコンポーネントテスト
+- **Integration Tests (20%)**: コンポーネント間の相互作用テスト
+- **E2E Tests (10%)**: システム全体の動作確認
+
+詳細は[docs/TEST_PYRAMID.md](docs/TEST_PYRAMID.md)を参照してください。
+
+### アーキテクチャテスト
+
+ArchUnitを使用してアーキテクチャルールを自動的に検証しています：
+- `@Test`アノテーションの直接使用を禁止（カスタムアノテーションを使用）
+- テストメソッドの命名規則とアノテーション使用の強制
+
+詳細は[docs/ARCHITECTURE_TESTS.md](docs/ARCHITECTURE_TESTS.md)を参照してください。
+
+```bash
+# 単体テストのみ実行（デフォルト）
+./gradlew test
+
+# 統合テストのみ実行
+./gradlew integrationTest
+
+# E2Eテストのみ実行
+./gradlew e2eTest
+
+# すべてのテストを実行
+./gradlew allTests
+```
+
 ## 貢献方法
 
 ### 開発ワークフロー

@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.nullaway) apply false
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.jmh) apply false
+    alias(libs.plugins.test.logger) apply false
+    id 'jacoco'
 }
 
 // Spotless設定をすべてのプロジェクトに適用
@@ -35,6 +37,7 @@ subprojects {
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: 'net.ltgt.nullaway'
     apply plugin: 'jacoco'
+    apply plugin: 'com.adarshr.test-logger'
 
     java {
         toolchain {
@@ -69,16 +72,97 @@ subprojects {
         testImplementation libs.jmolecules.integrations.archunit
         testImplementation libs.jmolecules.onion.architecture
         testRuntimeOnly libs.junit.platform.launcher
+
+        // Test annotations from shared module
+        if (project.name != 'shared') {
+            testImplementation project(path: ':shared', configuration: 'testOutput')
+        }
     }
 
     test {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            // デフォルトでは単体テストのみ実行
+            includeTags 'unit'
+            excludeTags 'integration', 'e2e', 'slow'
+        }
         finalizedBy jacocoTestReport
 
         testLogging {
             events "passed", "skipped", "failed"
             exceptionFormat "full"
         }
+
+        // テスト実行時間の最適化
+        maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+        forkEvery = 100
+    }
+
+    // 統合テスト用タスク（integration-testsモジュール以外）
+    if (project.name != 'integration-tests') {
+        task integrationTest(type: Test) {
+            useJUnitPlatform {
+                includeTags 'integration'
+                excludeTags 'unit', 'e2e', 'slow'
+            }
+            shouldRunAfter test
+        }
+    }
+
+    // E2Eテスト用タスク
+    task e2eTest(type: Test) {
+        useJUnitPlatform {
+            includeTags 'e2e'
+            excludeTags 'unit', 'integration'
+        }
+        shouldRunAfter test
+        if (project.name != 'integration-tests') {
+            shouldRunAfter integrationTest
+        }
+    }
+
+    // パフォーマンステスト用タスク
+    task performanceTest(type: Test) {
+        useJUnitPlatform {
+            includeTags 'performance'
+        }
+        shouldRunAfter test
+    }
+
+    // 遅いテスト用タスク
+    task slowTest(type: Test) {
+        useJUnitPlatform {
+            includeTags 'slow'
+        }
+        shouldRunAfter test
+    }
+
+    // すべてのテストを実行
+    task allTests {
+        dependsOn test, e2eTest
+        if (project.name != 'integration-tests') {
+            dependsOn integrationTest
+        }
+    }
+
+    testlogger {
+        theme 'mocha-parallel'
+        showExceptions true
+        showStackTraces true
+        showFullStackTraces false
+        showCauses true
+        slowThreshold 2000  // 2秒以上を遅いテストとして警告
+        showSummary true
+        showPassed true
+        showSkipped true
+        showFailed true
+        showStandardStreams false
+        showPassedStandardStreams false
+        showSkippedStandardStreams false
+        showFailedStandardStreams false
+
+        // テスト実行時間でグループ化
+        logLevel 'lifecycle'
+        showSimpleNames true
     }
 
     jacoco {
@@ -163,15 +247,21 @@ task jacocoRootReport(type: JacocoReport) {
     description = "Aggregate JaCoCo reports from all subprojects"
     group = "verification"
 
-    dependsOn subprojects.test
-
     sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.from = files(subprojects.sourceSets.main.output)
-    executionData.from = files(subprojects.jacocoTestReport.executionData).filter { it.exists() }
+
+    // 各サブプロジェクトのtest.execファイルを収集
+    executionData.from = files(subprojects.collect { subproject ->
+        file("${subproject.buildDir}/jacoco/test.exec")
+    }).filter { it.exists() }
 
     reports {
-        html.required = true
-        xml.required = true
-        csv.required = false
+        html.required.set(true)
+        xml.required.set(true)
+        csv.required.set(false)
     }
+
+    // レポート出力先を明示的に設定
+    reports.xml.outputLocation.set(file("${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"))
+    reports.html.outputLocation.set(file("${buildDir}/reports/jacoco/jacocoRootReport/html"))
 }

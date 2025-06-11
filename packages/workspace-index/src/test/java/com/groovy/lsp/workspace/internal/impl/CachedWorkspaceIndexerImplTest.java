@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.test.annotations.UnitTest;
 import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
 import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import java.nio.file.Files;
@@ -21,7 +22,6 @@ import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class CachedWorkspaceIndexerImplTest {
@@ -43,7 +43,7 @@ class CachedWorkspaceIndexerImplTest {
         indexer.close();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldIndexGroovyFilesWithCaching() throws Exception {
         // Given
         Path srcDir =
@@ -80,7 +80,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(event.getWorkspacePath()).isEqualTo(tempDir);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleEmptyWorkspace() throws Exception {
         // Given - empty workspace
 
@@ -105,7 +105,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(event.getTotalSymbols()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldReinitializeOnBuildFileChange() throws Exception {
         // Given
         Path buildFile =
@@ -127,7 +127,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(eventLatch.getCount()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldIndexNewGroovyFile() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
@@ -158,7 +158,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(event.getSymbols()).isNotEmpty();
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleDeletedGroovyFile() throws Exception {
         // Given
         Path file =
@@ -178,7 +178,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(future.isDone()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void searchSymbols_shouldReturnMatchingSymbols() throws Exception {
         // Given
         Path srcDir =
@@ -198,7 +198,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(symbolList).anyMatch(s -> s.name().contains("Test"));
     }
 
-    @Test
+    @UnitTest
     void searchSymbols_shouldReturnEmptyStreamForNoMatches() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
@@ -210,7 +210,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(results.count()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void shutdown_shouldLogCacheStatistics() {
         // Given
         indexer.initialize().join();
@@ -222,7 +222,7 @@ class CachedWorkspaceIndexerImplTest {
         // Cache statistics should be logged (check logs if needed)
     }
 
-    @Test
+    @UnitTest
     void close_shouldCallShutdown() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
@@ -234,7 +234,7 @@ class CachedWorkspaceIndexerImplTest {
         // Resources should be cleaned up
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleParsingError() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
@@ -250,7 +250,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(future.get(10, TimeUnit.SECONDS)).isNull();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleMixedFileTypes() throws Exception {
         // Given
         Files.writeString(
@@ -291,7 +291,7 @@ class CachedWorkspaceIndexerImplTest {
                 .isGreaterThanOrEqualTo(2); // At least groovy and gradle files
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandlePomXmlChange() throws Exception {
         // Given
         Path pomFile =
@@ -315,7 +315,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(eventLatch.getCount()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleSettingsGradleChange() throws Exception {
         // Given
         Path settingsFile =
@@ -337,7 +337,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(eventLatch.getCount()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleNestedDirectories() throws Exception {
         // Given
         Path deepPath =
@@ -368,7 +368,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleNonGroovyNonBuildFile() throws Exception {
         // Given
         indexer.initialize().get(10, TimeUnit.SECONDS);
@@ -385,7 +385,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(future.isDone()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleJarDependencies() throws Exception {
         // Given - Create a minimal JAR file with valid structure
         Path libDir =
@@ -434,7 +434,7 @@ class CachedWorkspaceIndexerImplTest {
         // Should complete without error, even if no dependencies are resolved
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleBuildGradleKtsChange() throws Exception {
         // Given
         Path buildFile =
@@ -456,7 +456,7 @@ class CachedWorkspaceIndexerImplTest {
         assertThat(eventLatch.getCount()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldHandleSettingsGradleKtsChange() throws Exception {
         // Given
         Path settingsFile =

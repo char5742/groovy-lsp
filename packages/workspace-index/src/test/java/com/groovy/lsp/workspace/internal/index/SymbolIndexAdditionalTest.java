@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -12,7 +13,6 @@ import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -41,7 +41,7 @@ class SymbolIndexAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void search_shouldHandleNoResultsForQuery() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -54,7 +54,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void search_shouldHandleEmptyIndexWithEmptyQuery() {
         // when - search on empty index with empty query
         List<SymbolInfo> results = symbolIndex.search("").collect(Collectors.toList());
@@ -63,7 +63,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getFileSymbols_shouldReturnEmptyForNonExistentFile() {
         // given
         Path nonExistentFile = Path.of("/test/NonExistent.groovy");
@@ -76,7 +76,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getFileSymbols_shouldHandleEmptyIndex() {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -88,7 +88,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void removeFile_shouldHandleNonExistentFile() {
         // given
         Path nonExistentFile = Path.of("/test/NonExistent.groovy");
@@ -97,7 +97,7 @@ class SymbolIndexAdditionalTest {
         symbolIndex.removeFile(nonExistentFile);
     }
 
-    @Test
+    @UnitTest
     void removeFile_shouldClearFileButKeepOtherFiles() {
         // given
         Path file1 = Path.of("/test/File1.groovy");
@@ -123,7 +123,7 @@ class SymbolIndexAdditionalTest {
         assertThat(file2Symbols.get(0).name()).isEqualTo("Class2");
     }
 
-    @Test
+    @UnitTest
     void checkInitialized_shouldNotThrowWhenInitialized() {
         // given - already initialized in setUp
 
@@ -132,7 +132,7 @@ class SymbolIndexAdditionalTest {
         symbolIndex.addDependency(Path.of("/lib/dep.jar"));
     }
 
-    @Test
+    @UnitTest
     void checkInitialized_shouldThrowForAllOperationsWhenNotInitialized() throws Exception {
         // given
         symbolIndex.close();
@@ -175,7 +175,7 @@ class SymbolIndexAdditionalTest {
                 .hasMessageContaining("Symbol index is not initialized");
     }
 
-    @Test
+    @UnitTest
     void deserializeSymbol_shouldHandleCorruptedData() {
         // This test would require accessing internal methods or injecting corrupted data
         // For now, we'll test the normal serialization/deserialization path
@@ -189,7 +189,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results.get(0).name()).isEqualTo("TestClass");
     }
 
-    @Test
+    @UnitTest
     void search_shouldHandleCursorNotFindingRange() {
         // given - add symbols that won't match our search prefix
         Path file = Path.of("/test/Example.groovy");
@@ -203,7 +203,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void removeSymbolEntry_shouldHandleMultipleEntriesForSameKey() {
         // given
         Path file1 = Path.of("/test/File1.groovy");
@@ -222,7 +222,7 @@ class SymbolIndexAdditionalTest {
         assertThat(results.get(0).location()).isEqualTo(file2);
     }
 
-    @Test
+    @UnitTest
     void close_shouldHandleMultipleCalls() throws Exception {
         // given
         Path file = Path.of("/test/Example.groovy");
@@ -237,7 +237,7 @@ class SymbolIndexAdditionalTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    @Test
+    @UnitTest
     void checkInitialized_shouldDetectIndividualNullStates() throws Exception {
         // Test individual null conditions in checkInitialized
         // This requires testing the internal state conditions:
@@ -267,7 +267,7 @@ class SymbolIndexAdditionalTest {
                 .hasMessageContaining("Symbol index is not initialized");
     }
 
-    @Test
+    @UnitTest
     void search_shouldHandleEdgeCasesWithCursorPositioning() {
         // Test edge cases in search method that might miss branches
 
@@ -296,7 +296,7 @@ class SymbolIndexAdditionalTest {
         assertThat(afterResults).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void removeSymbolEntry_shouldHandleVariousEdgeCases() {
         // Test edge cases in removeSymbolEntry that might cause missed branches
 
@@ -328,7 +328,7 @@ class SymbolIndexAdditionalTest {
         symbolIndex.removeFile(emptyFile); // Should not cause issues
     }
 
-    @Test
+    @UnitTest
     void getFileSymbols_shouldHandleEmptyAndMissingCursorCases() {
         // Test edge cases in getFileSymbols that might miss branches
 
@@ -366,7 +366,7 @@ class SymbolIndexAdditionalTest {
         assertThat(emptyFileResults).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void deserializeSymbol_shouldHandleMalformedData() {
         // Test the missing branch in deserializeSymbol for malformed data
         // This is tricky since the method is private, but we can trigger it indirectly
@@ -409,7 +409,7 @@ class SymbolIndexAdditionalTest {
         assertThat(longResults.get(0).name()).isEqualTo(longName);
     }
 
-    @Test
+    @UnitTest
     void search_shouldHandleSpecialQueryCharacters() {
         // Test search with special characters that might affect cursor operations
 
@@ -442,7 +442,7 @@ class SymbolIndexAdditionalTest {
         assertThat(withPrefixResults).hasSize(3); // Should find all "With*" symbols
     }
 
-    @Test
+    @UnitTest
     void checkInitialized_shouldCoverAllBranchConditions() throws Exception {
         // This test aims to improve branch coverage for checkInitialized() method
         // The method checks: (!initialized || env == null || symbolsDb == null || filesDb == null

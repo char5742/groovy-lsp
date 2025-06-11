@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -32,7 +33,6 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -56,7 +56,7 @@ class ReferencesHandlerVisitorTest {
         handler = new ReferencesHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find all method references including declaration")
     void testMethodReferenceVisitor_WithDeclaration() throws Exception {
         // Arrange
@@ -141,7 +141,7 @@ class ReferencesHandlerVisitorTest {
         assertTrue(locations.size() >= 2, "Should find at least method calls");
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find class references")
     void testClassReferenceVisitor() throws Exception {
         // Arrange
@@ -209,7 +209,7 @@ class ReferencesHandlerVisitorTest {
         // Should find references but not the declaration itself
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find property references")
     void testPropertyReferenceVisitor() throws Exception {
         // Arrange
@@ -288,7 +288,7 @@ class ReferencesHandlerVisitorTest {
         // Should find property accesses
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find variable references in complex expressions")
     void testReferenceVisitor_ComplexExpressions() throws Exception {
         // Arrange
@@ -354,7 +354,7 @@ class ReferencesHandlerVisitorTest {
         // Should find all references to 'x'
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle method references with different call styles")
     void testMethodReferenceVisitor_DifferentCallStyles() throws Exception {
         // Arrange

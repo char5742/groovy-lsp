@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.GroovyCoreFactory;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,6 @@ import java.util.Objects;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
@@ -36,7 +36,7 @@ class GroovyFileParserAdditionalTest {
         parser = new GroovyFileParser();
     }
 
-    @Test
+    @UnitTest
     void parseFile_shouldReturnEmptyListForOversizedFile() throws IOException {
         // Given - Create a file that's too large (> 10MB)
         Path largeFile = Objects.requireNonNull(tempDir).resolve("large.groovy");
@@ -60,7 +60,7 @@ class GroovyFileParserAdditionalTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void parseFile_shouldReturnEmptyListForFileWithNoClasses() throws IOException {
         // Given - Mock ASTService to return module with no classes
         try (MockedStatic<GroovyCoreFactory> mockedFactory = mockStatic(GroovyCoreFactory.class)) {
@@ -87,7 +87,7 @@ class GroovyFileParserAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void parseFile_shouldHandleParsingException() throws IOException {
         // Given - Mock ASTService to throw exception
         try (MockedStatic<GroovyCoreFactory> mockedFactory = mockStatic(GroovyCoreFactory.class)) {
@@ -113,7 +113,7 @@ class GroovyFileParserAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void parseFile_shouldHandleExceptionDuringSymbolExtraction() throws IOException {
         // Given - Mock to throw exception during symbol extraction
         try (MockedStatic<GroovyCoreFactory> mockedFactory = mockStatic(GroovyCoreFactory.class)) {
@@ -142,7 +142,7 @@ class GroovyFileParserAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void parseFile_shouldHandleEmptyFileContent() throws IOException {
         // Given - File with empty content (empty groovy files create script classes)
         Path emptyFile = Objects.requireNonNull(tempDir).resolve("empty.groovy");
@@ -155,7 +155,7 @@ class GroovyFileParserAdditionalTest {
         assertThat(symbols).isNotEmpty(); // Script class generates symbols
     }
 
-    @Test
+    @UnitTest
     void parseFile_shouldLogContentForEmptyClasses() throws IOException {
         // Given - Mock to simulate empty classes with long content
         try (MockedStatic<GroovyCoreFactory> mockedFactory = mockStatic(GroovyCoreFactory.class)) {

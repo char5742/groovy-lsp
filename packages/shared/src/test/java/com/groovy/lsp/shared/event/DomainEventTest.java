@@ -2,16 +2,16 @@ package com.groovy.lsp.shared.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.time.Instant;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
 
 /**
  * DomainEventのテストクラス。
  */
 class DomainEventTest {
 
-    @Test
+    @UnitTest
     void constructor_shouldInitializeCorrectly() {
         // given
         String aggregateId = "test-aggregate-123";
@@ -29,7 +29,7 @@ class DomainEventTest {
         assertThat(event.getOccurredOn()).isBeforeOrEqualTo(Instant.now());
     }
 
-    @Test
+    @UnitTest
     void getEventType_shouldReturnClassName() {
         // given
         TestDomainEvent event = new TestDomainEvent("aggregate-1");
@@ -41,7 +41,7 @@ class DomainEventTest {
         assertThat(eventType).isEqualTo("TestDomainEvent");
     }
 
-    @Test
+    @UnitTest
     void multipleEvents_shouldHaveDifferentIds() {
         // given
         String aggregateId = "aggregate-1";
@@ -55,7 +55,7 @@ class DomainEventTest {
         assertThat(event1.getOccurredOn()).isBeforeOrEqualTo(event2.getOccurredOn());
     }
 
-    @Test
+    @UnitTest
     void shouldCreateEventsWithDifferentAggregateIds() {
         // when
         TestDomainEvent event1 = new TestDomainEvent("aggregate-1");

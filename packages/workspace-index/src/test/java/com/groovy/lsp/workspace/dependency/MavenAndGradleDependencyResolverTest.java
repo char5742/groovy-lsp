@@ -5,18 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class MavenAndGradleDependencyResolverTest {
 
     @TempDir Path tempDir = Path.of("");
 
-    @Test
+    @UnitTest
     void detectsGradleProject() throws IOException {
         // Create a build.gradle file
         Path buildFile = tempDir.resolve("build.gradle");
@@ -28,7 +28,7 @@ class MavenAndGradleDependencyResolverTest {
         assertEquals(DependencyResolver.BuildSystem.GRADLE, resolver.getBuildSystem());
     }
 
-    @Test
+    @UnitTest
     void detectsMavenProject() throws IOException {
         // Create a pom.xml file
         Path pomFile = tempDir.resolve("pom.xml");
@@ -40,7 +40,7 @@ class MavenAndGradleDependencyResolverTest {
         assertEquals(DependencyResolver.BuildSystem.MAVEN, resolver.getBuildSystem());
     }
 
-    @Test
+    @UnitTest
     void detectsNoBuildSystem() {
         MavenAndGradleDependencyResolver resolver = new MavenAndGradleDependencyResolver(tempDir);
 
@@ -48,7 +48,7 @@ class MavenAndGradleDependencyResolverTest {
         assertEquals(DependencyResolver.BuildSystem.NONE, resolver.getBuildSystem());
     }
 
-    @Test
+    @UnitTest
     void prefersGradleOverMaven() throws IOException {
         // Create both build.gradle and pom.xml
         Path buildFile = tempDir.resolve("build.gradle");
@@ -62,7 +62,7 @@ class MavenAndGradleDependencyResolverTest {
         assertEquals(DependencyResolver.BuildSystem.GRADLE, resolver.getBuildSystem());
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_withNoBuildSystem_returnsDefaultDirectories() throws IOException {
         // Create some default directories
         Files.createDirectories(tempDir.resolve("src"));
@@ -75,7 +75,7 @@ class MavenAndGradleDependencyResolverTest {
                 .containsExactlyInAnyOrder(tempDir.resolve("src"), tempDir.resolve("groovy"));
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withNoBuildSystem_returnsEmptyList() {
         MavenAndGradleDependencyResolver resolver = new MavenAndGradleDependencyResolver(tempDir);
 
@@ -84,7 +84,7 @@ class MavenAndGradleDependencyResolverTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_delegatesToMavenResolver() throws IOException {
         // Create a pom.xml with JUnit dependency
         Path pomFile = tempDir.resolve("pom.xml");
@@ -103,7 +103,7 @@ class MavenAndGradleDependencyResolverTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_handlesResolverExceptions() throws IOException {
         // Create an invalid pom.xml
         Path pomFile = tempDir.resolve("pom.xml");

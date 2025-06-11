@@ -7,6 +7,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.server.launcher.di.ServerModule;
+import com.groovy.lsp.test.annotations.IntegrationTest;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,7 +39,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -66,7 +66,7 @@ class ServerIntegrationTest {
         var unused = server.shutdown();
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("サーバーの初期化と基本的な機能の動作確認")
     void testServerInitialization(@TempDir Path workspaceRoot) throws Exception {
         // Initialize parameters
@@ -93,7 +93,7 @@ class ServerIntegrationTest {
         server.initialized(new InitializedParams());
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("テキストドキュメントの同期機能")
     void testTextDocumentSync(@TempDir Path workspaceRoot) throws Exception {
         // Initialize server first
@@ -128,7 +128,7 @@ class ServerIntegrationTest {
         assertThat(diagnosticsForUri.get(0).getUri()).isEqualTo(uri);
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("補完機能の動作確認")
     void testCompletion(@TempDir Path workspaceRoot) throws Exception {
         // Initialize and open document
@@ -148,7 +148,7 @@ class ServerIntegrationTest {
         assertThat(completionFuture).isNotNull();
     }
 
-    @Test
+    @IntegrationTest
     @DisplayName("ホバー機能の基本的な動作確認")
     void testBasicHover(@TempDir Path workspaceRoot) throws Exception {
         // Initialize and open a simple document

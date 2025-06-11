@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Additional tests for DependencyCacheFactory to improve branch coverage.
@@ -25,7 +25,7 @@ class DependencyCacheFactoryAdditionalTest {
         DependencyCacheFactory.reset();
     }
 
-    @Test
+    @UnitTest
     void testMemoryMonitoringScheduledTask() throws Exception {
         // Reset to ensure fresh state
         DependencyCacheFactory.reset();
@@ -87,7 +87,7 @@ class DependencyCacheFactoryAdditionalTest {
         assertTrue(mockCache.evictCalled, "evictIfNeeded should have been called");
     }
 
-    @Test
+    @UnitTest
     void testStopMemoryMonitoringWithInterruption() throws Exception {
         // Get instance to start monitoring
         DependencyCacheFactory.getInstance();
@@ -119,7 +119,7 @@ class DependencyCacheFactoryAdditionalTest {
         assertTrue(mockExecutor.isShutdown(), "Executor should be shutdown");
     }
 
-    @Test
+    @UnitTest
     void testMemoryMonitoringWithNullInstance() throws Exception {
         // Reset to clean state
         DependencyCacheFactory.reset();
@@ -145,7 +145,7 @@ class DependencyCacheFactoryAdditionalTest {
         // (In real scenario it runs every 5 minutes, we're just verifying it doesn't crash)
     }
 
-    @Test
+    @UnitTest
     void testStopMemoryMonitoringWithTimeoutExpired() throws Exception {
         // Get instance to start monitoring
         DependencyCacheFactory.getInstance();
@@ -186,7 +186,7 @@ class DependencyCacheFactoryAdditionalTest {
         assertTrue(mockExecutor.isShutdown(), "Executor should be shutdown");
     }
 
-    @Test
+    @UnitTest
     void testGetInstanceInitializesMonitoringOnlyOnce() throws Exception {
         // Reset to clean state
         DependencyCacheFactory.reset();
@@ -210,7 +210,7 @@ class DependencyCacheFactoryAdditionalTest {
         assertSame(firstMonitor, secondMonitor, "Should use same memory monitor");
     }
 
-    @Test
+    @UnitTest
     void testMemoryMonitoringTaskExecution() throws Exception {
         // This test verifies the actual lambda execution in the scheduled task
         DependencyCacheFactory.reset();

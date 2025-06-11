@@ -3,6 +3,7 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,7 +11,6 @@ import java.util.List;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Additional tests for CompilerFactoryImpl to improve branch coverage.
@@ -24,7 +24,7 @@ class CompilerFactoryImplAdditionalTest {
         factory = new CompilerFactoryImpl();
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldHandleEmptyClasspath() {
         // given
         List<String> emptyClasspath = Collections.emptyList();
@@ -38,7 +38,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getSourceEncoding()).isEqualTo("UTF-8");
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldHandleImmutableList() {
         // given
         List<String> immutableClasspath = List.of("/lib1.jar", "/lib2.jar");
@@ -50,7 +50,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getClasspath()).containsAll(immutableClasspath);
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldHandleMutableList() {
         // given
         List<String> mutableClasspath = new ArrayList<>();
@@ -64,7 +64,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getClasspath()).containsAll(mutableClasspath);
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldHandleClasspathWithDuplicates() {
         // given
         List<String> classpathWithDuplicates = Arrays.asList("/lib.jar", "/lib.jar", "/other.jar");
@@ -77,7 +77,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getClasspath()).containsAll(classpathWithDuplicates);
     }
 
-    @Test
+    @UnitTest
     void createScriptConfiguration_shouldSetupCorrectly() {
         // when
         CompilerConfiguration config = factory.createScriptConfiguration();
@@ -89,7 +89,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getCompilationCustomizers()).isNotEmpty();
     }
 
-    @Test
+    @UnitTest
     void createTypeCheckingConfiguration_shouldHandleBothTrueAndFalse() {
         // when - true case
         CompilerConfiguration configTrue = factory.createTypeCheckingConfiguration(true);
@@ -104,7 +104,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(configFalse.getCompilationCustomizers()).hasSize(1); // Only import customizer
     }
 
-    @Test
+    @UnitTest
     void defaultConfiguration_shouldHaveCorrectOptimizationOptions() {
         // when
         CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -117,7 +117,7 @@ class CompilerFactoryImplAdditionalTest {
                 .containsEntry("int", false);
     }
 
-    @Test
+    @UnitTest
     void defaultConfiguration_shouldHaveImportCustomizer() {
         // when
         CompilerConfiguration config = factory.createDefaultConfiguration();
@@ -128,7 +128,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(customizer.getClass().getName()).contains("ImportCustomizer");
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldPreserveCustomizers() {
         // given
         List<String> classpath = List.of("/lib.jar");
@@ -140,7 +140,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getCompilationCustomizers()).isNotEmpty();
     }
 
-    @Test
+    @UnitTest
     void staticFactoryMethods_shouldProduceEquivalentConfigurations() {
         // Test that static methods produce configurations equivalent to instance methods
 
@@ -165,7 +165,7 @@ class CompilerFactoryImplAdditionalTest {
                 .isEqualTo(instanceScript.getScriptExtensions());
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldHandlePathsWithSpaces() {
         // given
         List<String> pathsWithSpaces =
@@ -178,7 +178,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getClasspath()).containsAll(pathsWithSpaces);
     }
 
-    @Test
+    @UnitTest
     void createConfigurationWithClasspath_shouldHandleRelativePaths() {
         // given
         List<String> relativePaths = List.of("./lib/lib1.jar", "../libs/lib2.jar", "lib3.jar");
@@ -190,7 +190,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config.getClasspath()).containsAll(relativePaths);
     }
 
-    @Test
+    @UnitTest
     void multipleConfigurations_shouldBeIndependent() {
         // when - create multiple configurations
         CompilerConfiguration config1 = factory.createDefaultConfiguration();
@@ -203,7 +203,7 @@ class CompilerFactoryImplAdditionalTest {
         assertThat(config2.getSourceEncoding()).isEqualTo("UTF-8");
     }
 
-    @Test
+    @UnitTest
     void createScriptConfiguration_shouldHandleScriptExtensions() {
         // when
         CompilerConfiguration config = factory.createScriptConfiguration();
@@ -214,7 +214,7 @@ class CompilerFactoryImplAdditionalTest {
                 .hasSizeGreaterThanOrEqualTo(4);
     }
 
-    @Test
+    @UnitTest
     void allConfigurations_shouldBeNonNull() {
         // Test that all factory methods return non-null configurations
         assertThatCode(

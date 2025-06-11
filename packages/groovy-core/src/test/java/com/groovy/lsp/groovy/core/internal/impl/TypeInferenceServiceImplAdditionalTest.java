@@ -3,6 +3,7 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Objects;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -39,7 +40,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Additional tests for TypeInferenceServiceImpl to improve branch coverage.
@@ -55,7 +55,7 @@ class TypeInferenceServiceImplAdditionalTest {
         typeInferenceService = new TypeInferenceServiceImpl(astService);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleConstructorCall() {
         // given
         String sourceCode =
@@ -76,7 +76,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type.getName()).contains("ArrayList");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleCastExpression() {
         // given
         String sourceCode =
@@ -95,7 +95,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleClosureExpression() {
         // given
         String sourceCode =
@@ -115,7 +115,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type.getName()).contains("Closure");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleArrayExpression() {
         // given
         // Create an ArrayExpression programmatically since they're not created from source code
@@ -135,7 +135,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE.makeArray());
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleRangeExpression() {
         // given
         String sourceCode =
@@ -153,7 +153,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type.getName()).contains("Range");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleGStringExpression() {
         // given
         String sourceCode =
@@ -172,7 +172,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type.getName()).contains("GString");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleTernaryExpression() {
         // given
         String sourceCode =
@@ -191,7 +191,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleElvisExpression() {
         // given
         String sourceCode =
@@ -212,7 +212,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleSpreadExpression() {
         // given
         // Create a SpreadExpression programmatically
@@ -226,7 +226,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleUnaryExpression() {
         // given
         String sourceCode =
@@ -248,7 +248,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandlePostfixExpression() {
         // given
         String sourceCode =
@@ -268,7 +268,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleFieldExpression() {
         // given
         // Create a FieldExpression programmatically since they're not created from source code
@@ -292,7 +292,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleBitwiseNegationExpression() {
         // given
         String sourceCode =
@@ -311,7 +311,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleNotExpression() {
         // given
         String sourceCode =
@@ -330,7 +330,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.boolean_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferTypeAtPosition_shouldHandleNonExpressionNode() {
         // given
         String sourceCode =
@@ -361,7 +361,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandlePropertyWithGetterNotStartingWithGet() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -390,7 +390,7 @@ class TypeInferenceServiceImplAdditionalTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleComplexBinaryExpression() {
         // given
         String sourceCode =

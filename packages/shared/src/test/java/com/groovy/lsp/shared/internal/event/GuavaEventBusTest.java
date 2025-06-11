@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.shared.event.DomainEvent;
 import com.groovy.lsp.shared.event.EventHandler;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * GuavaEventBusのテストクラス。
@@ -24,7 +24,7 @@ class GuavaEventBusTest {
         eventBus = new GuavaEventBus();
     }
 
-    @Test
+    @UnitTest
     void subscribe_shouldRegisterHandlerAndReceiveEvents() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
@@ -46,7 +46,7 @@ class GuavaEventBusTest {
         assertThat(receivedEvents.get(0)).isEqualTo(testEvent);
     }
 
-    @Test
+    @UnitTest
     void subscribe_shouldRegisterMultipleHandlers() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(2);
@@ -72,7 +72,7 @@ class GuavaEventBusTest {
         assertThat(counter.get()).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void unsubscribe_shouldRemoveHandler() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
@@ -94,7 +94,7 @@ class GuavaEventBusTest {
         assertThat(counter.get()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void unsubscribe_shouldNotErrorWhenRemovingUnregisteredHandler() {
         // given
         EventHandler<TestEvent> handler = event -> {};
@@ -103,7 +103,7 @@ class GuavaEventBusTest {
         eventBus.unsubscribe(TestEvent.class, handler);
     }
 
-    @Test
+    @UnitTest
     void publish_shouldDeliverDifferentEventTypesToDifferentHandlers() throws InterruptedException {
         // given
         CountDownLatch testEventLatch = new CountDownLatch(1);
@@ -136,7 +136,7 @@ class GuavaEventBusTest {
         assertThat(otherEvents).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void publish_shouldNotDeliverSubclassEventsToParentHandlers() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
@@ -156,7 +156,7 @@ class GuavaEventBusTest {
         assertThat(receivedEvents).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void publish_shouldContinueWithOtherHandlersWhenOneThrows() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
@@ -182,7 +182,7 @@ class GuavaEventBusTest {
         assertThat(counter.get()).isEqualTo(1);
     }
 
-    @Test
+    @UnitTest
     void eventData_shouldBeAccessibleInHandlers() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(3);

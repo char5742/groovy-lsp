@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
+import com.groovy.lsp.test.annotations.UnitTest;
 import com.groovy.lsp.workspace.api.events.FileIndexedEvent;
 import com.groovy.lsp.workspace.api.events.WorkspaceIndexedEvent;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
@@ -19,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class WorkspaceIndexerImplTest {
@@ -41,7 +41,7 @@ class WorkspaceIndexerImplTest {
         indexer.close();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldIndexGroovyFiles() throws Exception {
         // Given
         Path srcDir =
@@ -78,7 +78,7 @@ class WorkspaceIndexerImplTest {
         assertThat(event.getWorkspacePath()).isEqualTo(tempDir);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldIndexJavaFiles() throws Exception {
         // Given
         Path srcDir =
@@ -104,7 +104,7 @@ class WorkspaceIndexerImplTest {
                 .isTrue();
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldIndexGradleFiles() throws Exception {
         // Given
         Files.writeString(
@@ -136,7 +136,7 @@ class WorkspaceIndexerImplTest {
         assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleEmptyWorkspace() throws Exception {
         // Given - empty workspace
 
@@ -161,7 +161,7 @@ class WorkspaceIndexerImplTest {
         assertThat(Objects.requireNonNull(event).getTotalSymbols()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldSkipNonIndexableFiles() throws Exception {
         // Given
         Files.writeString(
@@ -197,7 +197,7 @@ class WorkspaceIndexerImplTest {
                 .isEqualTo(0); // No indexable files
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldIndexNewFile() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -227,7 +227,7 @@ class WorkspaceIndexerImplTest {
         assertThat(event.isSuccess()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void updateFile_shouldRemoveDeletedFile() throws Exception {
         // Given
         Path file =
@@ -249,7 +249,7 @@ class WorkspaceIndexerImplTest {
         assertThat(symbolIndex.getFileSymbols(file)).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void searchSymbols_shouldReturnEmptyStreamForEmptyIndex() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -261,7 +261,7 @@ class WorkspaceIndexerImplTest {
         assertThat(results.count()).isEqualTo(0);
     }
 
-    @Test
+    @UnitTest
     void getSymbolIndex_shouldReturnNonNullIndex() {
         // When
         SymbolIndex symbolIndex = indexer.getSymbolIndex();
@@ -270,7 +270,7 @@ class WorkspaceIndexerImplTest {
         assertThat(symbolIndex).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void shutdown_shouldCloseResources() throws Exception {
         // Given
         indexer.initialize().get(5, TimeUnit.SECONDS);
@@ -282,7 +282,7 @@ class WorkspaceIndexerImplTest {
         indexer.shutdown(); // Should not throw
     }
 
-    @Test
+    @UnitTest
     void close_shouldBeIdempotent() {
         // When - close multiple times
         indexer.close();
@@ -291,7 +291,7 @@ class WorkspaceIndexerImplTest {
         // Then - should not throw
     }
 
-    @Test
+    @UnitTest
     void initialize_shouldHandleIOException() throws Exception {
         // Given - Create a file where the index directory should be
         Path indexPath =
@@ -308,7 +308,7 @@ class WorkspaceIndexerImplTest {
                 .hasCauseInstanceOf(RuntimeException.class);
     }
 
-    @Test
+    @UnitTest
     void shouldHandleNestedDirectoryStructure() throws Exception {
         // Given
         Path deepPath =
@@ -338,7 +338,7 @@ class WorkspaceIndexerImplTest {
         assertThat(Objects.requireNonNull(event).getTotalFiles()).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void shouldHandleSymbolicLinks() throws Exception {
         // Given
         Path targetDir =

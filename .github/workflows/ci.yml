@@ -74,9 +74,11 @@ jobs:
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-${{ matrix.module }}
           path: packages/${{ matrix.module }}/build/jacoco/test.exec
+          if-no-files-found: warn
 
   # 統合テストは別ジョブで実行
   integration-test:
@@ -110,9 +112,11 @@ jobs:
 
       - name: Upload integration coverage reports
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-integration-tests
           path: packages/integration-tests/build/jacoco/test.exec
+          if-no-files-found: warn
 
   # カバレッジレポートの集約とoctocov実行
   coverage:
@@ -140,21 +144,32 @@ jobs:
       # カバレッジレポートを正しい場所に配置
       - name: Organize coverage reports
         run: |
+          # デバッグ: ダウンロードされたファイルの構造を確認
+          echo "Downloaded artifacts structure:"
+          find . -name "*.exec" -type f | head -20
+
           for m in shared server-launcher lsp-protocol groovy-core jdt-adapter \
                   codenarc-lint workspace-index formatting integration-tests; do
-            if [ -d "coverage-${m}" ]; then
+            if [ -f "coverage-${m}/test.exec" ]; then
+              echo "Processing coverage for ${m}"
               mkdir -p "packages/${m}/build/jacoco/"
-              cp "coverage-${m}/test.exec" "packages/${m}/build/jacoco/" || true
+              cp "coverage-${m}/test.exec" "packages/${m}/build/jacoco/"
+            else
+              echo "Warning: coverage-${m}/test.exec not found"
             fi
           done
 
       # Gradleのビルドディレクトリ構造を再構築（クラスファイルが必要）
       - name: Build all modules (for coverage aggregation)
-        run: ./gradlew classes testClasses -x test --no-daemon
+        run: ./gradlew classes testClasses --no-daemon
 
       # 統合カバレッジレポートの生成
       - name: Generate aggregated coverage report
-        run: ./gradlew jacocoRootReport -x test --no-daemon
+        run: |
+          ./gradlew jacocoRootReport --no-daemon
+          echo "Generated coverage report files:"
+          find build -name "*.xml" -type f | grep -i jacoco || echo "No jacoco XML files found in build/"
+          ls -la build/reports/jacoco/ || echo "build/reports/jacoco/ directory not found"
 
       # octocovでカバレッジレポートを表示
       - name: Generate coverage report with octocov

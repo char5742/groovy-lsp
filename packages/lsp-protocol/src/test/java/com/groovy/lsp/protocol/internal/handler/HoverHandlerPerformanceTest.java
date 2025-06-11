@@ -10,6 +10,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.PerformanceTest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
@@ -24,7 +25,6 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 public class HoverHandlerPerformanceTest {
@@ -48,7 +48,7 @@ public class HoverHandlerPerformanceTest {
         hoverHandler = new HoverHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @PerformanceTest
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testHoverPerformanceUnder100ms() throws Exception {
         // Arrange
@@ -78,7 +78,7 @@ public class HoverHandlerPerformanceTest {
         assertTrue(durationMs < 100, "Hover request took " + durationMs + "ms, expected < 100ms");
     }
 
-    @Test
+    @PerformanceTest
     void testHoverPerformanceWithGroovydoc() throws Exception {
         // Arrange
         String uri = createTestUri();
@@ -115,7 +115,7 @@ public class HoverHandlerPerformanceTest {
                 "Average hover request took " + averageTimeMs + "ms, expected < 100ms");
     }
 
-    @Test
+    @PerformanceTest
     @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
     void testHoverPerformanceWithTypeInference() throws Exception {
         // Arrange

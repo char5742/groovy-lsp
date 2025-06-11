@@ -11,9 +11,9 @@ import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.reflect.Constructor;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for ServiceRouter class.
@@ -39,7 +39,7 @@ class ServiceRouterTest {
         lintEngine = mock(LintEngine.class);
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldInitializeWithAllServices() {
         // when
         ServiceRouter router =
@@ -63,7 +63,7 @@ class ServiceRouterTest {
         assertThat(router.getLintEngine()).isSameAs(lintEngine);
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullAstService() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -93,7 +93,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("ASTService must not be null");
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullCompilerConfigurationService() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -123,7 +123,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("CompilerConfigurationService must not be null");
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullIncrementalCompilationService() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -153,7 +153,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("IncrementalCompilationService must not be null");
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullTypeInferenceService() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -183,7 +183,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("TypeInferenceService must not be null");
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullWorkspaceIndexService() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -213,7 +213,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("WorkspaceIndexService must not be null");
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullFormattingService() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -243,7 +243,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("FormattingService must not be null");
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullLintEngine() throws Exception {
         // Use reflection to bypass NullAway compile-time checks
         Constructor<ServiceRouter> constructor =
@@ -273,7 +273,7 @@ class ServiceRouterTest {
                 .hasMessageContaining("LintEngine must not be null");
     }
 
-    @Test
+    @UnitTest
     void areAllServicesAvailable_shouldReturnTrueWhenAllServicesAvailable() {
         // given
         ServiceRouter router =
@@ -293,7 +293,7 @@ class ServiceRouterTest {
         assertThat(result).isTrue();
     }
 
-    @Test
+    @UnitTest
     void getAstService_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -313,7 +313,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(astService);
     }
 
-    @Test
+    @UnitTest
     void getCompilerConfigurationService_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -333,7 +333,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(compilerConfigurationService);
     }
 
-    @Test
+    @UnitTest
     void getIncrementalCompilationService_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -353,7 +353,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(incrementalCompilationService);
     }
 
-    @Test
+    @UnitTest
     void getTypeInferenceService_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -373,7 +373,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(typeInferenceService);
     }
 
-    @Test
+    @UnitTest
     void getWorkspaceIndexService_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -393,7 +393,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(workspaceIndexService);
     }
 
-    @Test
+    @UnitTest
     void getFormattingService_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -413,7 +413,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(formattingService);
     }
 
-    @Test
+    @UnitTest
     void getLintEngine_shouldReturnService() {
         // given
         ServiceRouter router =
@@ -433,7 +433,7 @@ class ServiceRouterTest {
         assertThat(result).isSameAs(lintEngine);
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldCompleteSuccessfullyWithValidServices() {
         // given - All services are valid mocks
         // when
@@ -452,7 +452,7 @@ class ServiceRouterTest {
         assertThat(router.areAllServicesAvailable()).isTrue();
     }
 
-    @Test
+    @UnitTest
     void ensureServiceAvailable_shouldThrowWhenServiceIsNull() {
         // Test this by creating a router with reflection to set a service to null
         ServiceRouter router =
@@ -529,7 +529,7 @@ class ServiceRouterTest {
         }
     }
 
-    @Test
+    @UnitTest
     void areAllServicesAvailable_shouldReturnFalseWhenAnyServiceIsNull() {
         // Test each service being null individually to cover all branches
         ServiceRouter router =

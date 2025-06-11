@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
@@ -21,7 +22,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 /**
@@ -36,7 +36,7 @@ class LRUDependencyCacheAdditionalTest {
         cache = new LRUDependencyCache();
     }
 
-    @Test
+    @UnitTest
     void testEvictionWhenCacheSizeExceeded() {
         // Force eviction by adding more than MAX_CACHE_SIZE (100) entries
         // Add 101 different classloaders
@@ -50,7 +50,7 @@ class LRUDependencyCacheAdditionalTest {
         assertTrue(stats.getEvictionCount() > 0, "Should have evicted at least one entry");
     }
 
-    @Test
+    @UnitTest
     void testWeakReferenceCollection() throws InterruptedException {
         // Create a classloader that can be garbage collected
         Set<Path> deps = Set.of(Paths.get("gctest.jar"));
@@ -69,7 +69,7 @@ class LRUDependencyCacheAdditionalTest {
         assertTrue(stats.getMissCount() >= 2, "Should have at least 2 misses");
     }
 
-    @Test
+    @UnitTest
     void testConcurrentAccess() throws Exception {
         Set<Path> deps = Set.of(Paths.get("concurrent.jar"));
 
@@ -89,7 +89,7 @@ class LRUDependencyCacheAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testCacheDependenciesWithExpiration() throws InterruptedException {
         Path projectPath = Paths.get("/test/project");
         List<Path> deps = List.of(Paths.get("dep1.jar"), Paths.get("dep2.jar"));
@@ -103,7 +103,7 @@ class LRUDependencyCacheAdditionalTest {
         assertEquals(deps, cached.get());
     }
 
-    @Test
+    @UnitTest
     void testInvalidateCacheForProject() {
         Path projectPath = Paths.get("/test/project");
         List<Path> deps = List.of(Paths.get("dep1.jar"));
@@ -119,7 +119,7 @@ class LRUDependencyCacheAdditionalTest {
         assertFalse(cached.isPresent(), "Dependencies should be invalidated");
     }
 
-    @Test
+    @UnitTest
     void testClearCache() {
         // Add multiple entries
         for (int i = 0; i < 5; i++) {
@@ -139,7 +139,7 @@ class LRUDependencyCacheAdditionalTest {
         assertEquals(0, stats.getDependencyCacheSize(), "Dependency cache size should be 0");
     }
 
-    @Test
+    @UnitTest
     void testGetOrCreateClassLoaderWithKey() {
         String customKey = "custom-key";
         Set<Path> deps = Set.of(Paths.get("custom.jar"));
@@ -156,7 +156,7 @@ class LRUDependencyCacheAdditionalTest {
         assertEquals(1, stats.getHitCount());
     }
 
-    @Test
+    @UnitTest
     void testEmptyDependencies() {
         Set<Path> emptyDeps = Set.of();
 
@@ -164,7 +164,7 @@ class LRUDependencyCacheAdditionalTest {
         assertNotNull(loader, "Should handle empty dependencies");
     }
 
-    @Test
+    @UnitTest
     void testLargeDependencySet() {
         // Test with a large number of dependencies
         Set<Path> largeDeps = new HashSet<>();
@@ -176,7 +176,7 @@ class LRUDependencyCacheAdditionalTest {
         assertNotNull(loader, "Should handle large dependency sets");
     }
 
-    @Test
+    @UnitTest
     @Timeout(10)
     void testMemoryCheckInterval() throws InterruptedException {
         // Add entries to trigger memory check
@@ -190,7 +190,7 @@ class LRUDependencyCacheAdditionalTest {
         assertTrue(stats.getTotalMemoryUsageMB() >= 0, "Memory usage should be tracked");
     }
 
-    @Test
+    @UnitTest
     void testCachedDependenciesExpiration() throws InterruptedException {
         Path projectPath = Paths.get("/expiring/project");
         List<Path> deps = List.of(Paths.get("exp.jar"));
@@ -205,7 +205,7 @@ class LRUDependencyCacheAdditionalTest {
         // which is not practical in unit tests
     }
 
-    @Test
+    @UnitTest
     void testMultipleProjectCaching() {
         Map<Path, List<Path>> projectDeps = new HashMap<>();
 
@@ -225,7 +225,7 @@ class LRUDependencyCacheAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testEvictIfNeededWithHighMemoryUsage() throws Exception {
         // Test evictIfNeeded when memory usage is high
         // First, set lastMemoryCheck to past time to bypass time check
@@ -246,7 +246,7 @@ class LRUDependencyCacheAdditionalTest {
         assertTrue(stats.getEvictionCount() > 0, "Should have evicted entries");
     }
 
-    @Test
+    @UnitTest
     void testEvictIfNeededWithinTimeInterval() {
         // Test that evictIfNeeded returns early when called too frequently
         cache.evictIfNeeded(100);
@@ -262,7 +262,7 @@ class LRUDependencyCacheAdditionalTest {
                 "Should not evict when called within time interval");
     }
 
-    @Test
+    @UnitTest
     void testInvalidateProjectWithMatchingClassLoaders() {
         Path projectPath = Paths.get("/test/project");
 
@@ -301,7 +301,7 @@ class LRUDependencyCacheAdditionalTest {
                 "Should have two misses for removed entries");
     }
 
-    @Test
+    @UnitTest
     void testGetCachedDependenciesWithExpiredEntry() throws Exception {
         Path projectPath = Paths.get("/expired/project");
         List<Path> deps = List.of(Paths.get("expired.jar"));
@@ -328,7 +328,7 @@ class LRUDependencyCacheAdditionalTest {
         assertFalse(result.isPresent(), "Should not return expired dependencies");
     }
 
-    @Test
+    @UnitTest
     void testEvictOldestWithEmptyCache() throws Exception {
         // Access private evictOldest method
         var evictOldestMethod = LRUDependencyCache.class.getDeclaredMethod("evictOldest");
@@ -341,7 +341,7 @@ class LRUDependencyCacheAdditionalTest {
         assertEquals(0, stats.getEvictionCount(), "Should not evict from empty cache");
     }
 
-    @Test
+    @UnitTest
     void testCreateClassLoaderWithInvalidPath() {
         // Test with a path that cannot be converted to URL
         Set<Path> invalidDeps = Set.of(Paths.get("::invalid::path::"));
@@ -351,7 +351,7 @@ class LRUDependencyCacheAdditionalTest {
         assertNotNull(loader, "Should create classloader even with invalid paths");
     }
 
-    @Test
+    @UnitTest
     void testDoubleCheckLockingInGetOrCreateClassLoader() throws Exception {
         String key = "concurrent-test-key";
         Set<Path> deps = Set.of(Paths.get("concurrent.jar"));
@@ -387,7 +387,7 @@ class LRUDependencyCacheAdditionalTest {
         assertTrue(stats.getHitCount() > 0, "Should have cache hits from concurrent access");
     }
 
-    @Test
+    @UnitTest
     void testInvalidateAllWithNullClassLoader() throws Exception {
         // Add a classloader and then make it null via weak reference
         Set<Path> deps = Set.of(Paths.get("nulltest.jar"));

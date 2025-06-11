@@ -8,6 +8,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.groovy.lsp.test.annotations.SlowTest;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +23,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
@@ -46,7 +47,7 @@ class LintEngineTest {
         lintEngine = new LintEngine(ruleSetProvider, quickFixMapper);
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldAnalyzeValidGroovyFile()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -76,7 +77,7 @@ class LintEngineTest {
         // The actual number of diagnostics will depend on the rules configured
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldReturnEmptyListForNonExistentFile()
             throws ExecutionException, InterruptedException {
         // when
@@ -88,7 +89,7 @@ class LintEngineTest {
         assertThat(diagnostics).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldAnalyzeFileWithEmptyIfStatement()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -117,7 +118,7 @@ class LintEngineTest {
         // With basic ruleset, this should trigger EmptyIfStatement rule
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldAnalyzeFileWithEmptyWhileStatement()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -147,7 +148,7 @@ class LintEngineTest {
         // With basic ruleset, this should trigger EmptyWhileStatement rule
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldAnalyzeMultipleGroovyFiles()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -191,7 +192,7 @@ class LintEngineTest {
         // Results might be empty due to CodeNarc configuration, but should not throw
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldUseExclusionPatterns()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -215,7 +216,7 @@ class LintEngineTest {
         // Exclude.groovy should be excluded from analysis
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldReturnEmptyListForNonExistentDirectory()
             throws ExecutionException, InterruptedException {
         // when
@@ -227,7 +228,7 @@ class LintEngineTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldIntegrateWithQuickFixMapper()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -267,7 +268,7 @@ class LintEngineTest {
         }
     }
 
-    @Test
+    @SlowTest
     void analyzeFile_shouldHandleQuickFixMapperReturningNonEmptyList()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -304,7 +305,7 @@ class LintEngineTest {
         }
     }
 
-    @Test
+    @UnitTest
     void FileAnalysisResult_shouldHoldFilePathAndDiagnostics() {
         // given
         String filePath = "/test/file.groovy";
@@ -319,7 +320,7 @@ class LintEngineTest {
         assertThat(result.getDiagnostics()).isEqualTo(diagnostics);
     }
 
-    @Test
+    @UnitTest
     void mapPriorityToSeverity_shouldMapPriorityCorrectly()
             throws IOException, ExecutionException, InterruptedException {
         // given - Create files with different violation priorities
@@ -352,7 +353,7 @@ class LintEngineTest {
         // Priority 1 -> Error, 2 -> Warning, 3 -> Information, others -> Hint
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldSetSourceInDiagnostics()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -386,7 +387,7 @@ class LintEngineTest {
                 });
     }
 
-    @Test
+    @SlowTest
     void analyzeFile_shouldHandleExceptionDuringAnalysis()
             throws ExecutionException, InterruptedException {
         // given - Use an invalid file path that will cause an exception
@@ -400,7 +401,7 @@ class LintEngineTest {
         assertThat(diagnostics).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldHandleExceptionDuringAnalysis()
             throws ExecutionException, InterruptedException {
         // given - Use an invalid directory path
@@ -415,7 +416,7 @@ class LintEngineTest {
         assertThat(results).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void convertResultsToDiagnostics_shouldHandleNullResults()
             throws ExecutionException, InterruptedException {
         // This test requires accessing the private method through reflection or testing via public
@@ -433,7 +434,7 @@ class LintEngineTest {
         assertThat(diagnostics).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void mapPriorityToSeverity_shouldMapAllPriorityLevels()
             throws IOException, ExecutionException, InterruptedException {
         // given - We need to test all priority levels (1, 2, 3, and default)
@@ -485,7 +486,7 @@ class LintEngineTest {
                 });
     }
 
-    @Test
+    @UnitTest
     void analyzeFile_shouldSetDiagnosticCodeToRuleName()
             throws IOException, ExecutionException, InterruptedException {
         // given
@@ -522,7 +523,7 @@ class LintEngineTest {
         }
     }
 
-    @Test
+    @UnitTest
     void analyzeDirectory_shouldProcessMultipleFilesWithDifferentViolations()
             throws IOException, ExecutionException, InterruptedException {
         // given

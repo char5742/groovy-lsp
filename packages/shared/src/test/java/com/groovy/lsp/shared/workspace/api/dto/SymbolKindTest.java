@@ -5,15 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 class SymbolKindTest {
 
-    @Test
+    @UnitTest
     @DisplayName("Should have all expected symbol kinds")
     void testAllSymbolKinds() {
         // Assert
@@ -40,7 +40,7 @@ class SymbolKindTest {
         assertEquals(expectedKinds, actualKinds);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should return correct enum value for valueOf")
     void testValueOf() {
         // Act & Assert
@@ -57,7 +57,7 @@ class SymbolKindTest {
         assertEquals(SymbolKind.CLOSURE, SymbolKind.valueOf("CLOSURE"));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should throw exception for invalid valueOf")
     void testValueOfInvalid() {
         // Act & Assert
@@ -65,7 +65,7 @@ class SymbolKindTest {
         assertThrows(IllegalArgumentException.class, () -> SymbolKind.valueOf(""));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test enum toString")
     void testToString() {
         // Act & Assert
@@ -75,7 +75,7 @@ class SymbolKindTest {
         assertEquals("PROPERTY", SymbolKind.PROPERTY.toString());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test enum name")
     void testName() {
         // Act & Assert
@@ -85,7 +85,7 @@ class SymbolKindTest {
         assertEquals("PROPERTY", SymbolKind.PROPERTY.name());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test values() returns all enums")
     void testValues() {
         // Act
@@ -107,7 +107,7 @@ class SymbolKindTest {
         assertTrue(Arrays.asList(values).contains(SymbolKind.CLOSURE));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should maintain enum constants order")
     void testEnumOrder() {
         // Act
@@ -127,7 +127,7 @@ class SymbolKindTest {
         assertEquals(SymbolKind.CLOSURE, values[10]);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should compare enum constants")
     void testCompareTo() {
         // Act & Assert
@@ -138,7 +138,7 @@ class SymbolKindTest {
         assertEquals(0, classKind.compareTo(SymbolKind.CLASS));
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test equals for enum constants")
     void testEquals() {
         // Act & Assert
@@ -147,7 +147,7 @@ class SymbolKindTest {
         assertTrue(SymbolKind.CLASS != SymbolKind.METHOD);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test hashCode for enum constants")
     void testHashCode() {
         // Arrange
@@ -162,7 +162,7 @@ class SymbolKindTest {
         assertEquals(SymbolKind.values().length, hashCodes.size());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should test getDeclaringClass")
     void testGetDeclaringClass() {
         // Act & Assert

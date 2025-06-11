@@ -19,6 +19,8 @@ dependencies {
 
     // Test dependencies
     testImplementation libs.bundles.lsp4j
+    testImplementation libs.archunit
+    testImplementation libs.jmolecules.integrations.archunit
 }
 
 jar {
@@ -28,4 +30,18 @@ jar {
             'Implementation-Version': project.version
         )
     }
+}
+
+// Export test classes for other modules
+configurations {
+    testOutput.extendsFrom testCompileClasspath
+}
+
+task testJar(type: Jar) {
+    archiveClassifier = 'tests'
+    from sourceSets.test.output
+}
+
+artifacts {
+    testOutput testJar
 }

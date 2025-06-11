@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -18,7 +19,6 @@ import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -34,7 +34,7 @@ class GradleDependencyResolverAdditionalTest {
         resolver = new GradleDependencyResolver(tempDir);
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyWhenNotValidGradleProject() throws IOException {
         // Given - No Gradle build files exist (invalid project)
         // When
@@ -44,7 +44,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleProjectWithGradleWrapper() throws IOException {
         // Given - Valid Gradle project with wrapper
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -57,7 +57,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleProjectWithGradlewBat() throws IOException {
         // Given - Valid Gradle project with Windows wrapper
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -70,7 +70,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldWorkInNonTestEnvironment() throws IOException {
         // Given - Valid Gradle project
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -91,7 +91,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleVariousTestEnvironmentConditions() {
         // Test different branches of isTestEnvironment()
 
@@ -123,7 +123,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleInvalidGradleProject() throws IOException {
         // Create only a settings file without build file (edge case)
         Files.createFile(tempDir.resolve("settings.gradle"));
@@ -135,7 +135,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldHandleEdgeCases() throws IOException {
         // Test with only some directories existing
         Path srcMain = tempDir.resolve("src/main/groovy");
@@ -153,7 +153,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(sourceDirs).containsExactly(srcMain); // Should skip the file
     }
 
-    @Test
+    @UnitTest
     void getGradleClasspath_shouldHandleException() throws Exception {
         // Given - Mock ProjectConnection that throws exception
         ProjectConnection mockConnection = mock(ProjectConnection.class);
@@ -177,7 +177,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleTimeoutException() throws IOException {
         // Given - Valid Gradle project in non-test environment
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -222,7 +222,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleNonExistentDependencyFiles() throws Exception {
         // This test simulates the case where dependencies are resolved but files don't exist
         // We'll use reflection to test the filtering logic
@@ -239,7 +239,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleInterruptedException() throws Exception {
         // Given - Valid Gradle project
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -268,7 +268,7 @@ class GradleDependencyResolverAdditionalTest {
         Thread.interrupted();
     }
 
-    @Test
+    @UnitTest
     void isTestEnvironment_shouldHandleClassNotFoundException() throws Exception {
         // This tests the branch where JUnit is not on classpath
         // We'll use a custom ClassLoader that throws ClassNotFoundException
@@ -301,7 +301,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleConnectionCloseException() throws Exception {
         // Test the case where connection.close() throws an exception
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -328,7 +328,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleSystemPropertiesEdgeCases() throws IOException {
         // Test edge cases for system properties
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -356,7 +356,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void canHandle_shouldReturnTrueForSettingsGradleKts() throws IOException {
         // Test the fourth condition in canHandle method
         Files.createFile(tempDir.resolve("settings.gradle.kts"));
@@ -364,7 +364,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(resolver.canHandle(tempDir)).isTrue();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleProjectWithoutWrapper() throws IOException {
         // Given - Valid Gradle project without wrapper (no gradlew or gradlew.bat)
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -377,7 +377,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void isTestEnvironment_shouldDetectJUnitInStackTrace() throws Exception {
         // Use reflection to test private method
         Method method = GradleDependencyResolver.class.getDeclaredMethod("isTestEnvironment");
@@ -404,7 +404,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withBuildGradleKts() throws IOException {
         // Test with build.gradle.kts instead of build.gradle
         Files.createFile(tempDir.resolve("build.gradle.kts"));
@@ -413,7 +413,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withOnlySettingsGradle() throws IOException {
         // Test with only settings.gradle (no build.gradle)
         Files.createFile(tempDir.resolve("settings.gradle"));
@@ -422,7 +422,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldReturnAllFourDirectories() throws IOException {
         // Create all four standard directories
         Files.createDirectories(tempDir.resolve("src/main/java"));
@@ -441,7 +441,7 @@ class GradleDependencyResolverAdditionalTest {
                         tempDir.resolve("src/test/java"));
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withInvalidGradleProject_shouldReturnEmpty() throws Exception {
         // Test the branch where isValidGradleProject() returns false
         // Create a resolver with no build files
@@ -499,7 +499,7 @@ class GradleDependencyResolverAdditionalTest {
         }
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_withGradleWrapperPresent_shouldLogWrapperUsage() throws IOException {
         // Test the hasGradleWrapper() true branch
         Files.createFile(tempDir.resolve("build.gradle"));
@@ -510,7 +510,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getGradleClasspath_shouldHandleSuccessfulExecution() throws Exception {
         // Test successful execution of getGradleClasspath
         ProjectConnection mockConnection = mock(ProjectConnection.class);
@@ -538,7 +538,7 @@ class GradleDependencyResolverAdditionalTest {
         verify(mockBuildLauncher).run();
     }
 
-    @Test
+    @UnitTest
     void isValidGradleProject_shouldReturnTrueForBuildGradleKts() throws IOException {
         // Given - Project with build.gradle.kts
         Files.writeString(tempDir.resolve("build.gradle.kts"), "plugins { id(\"java\") }");
@@ -552,7 +552,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void isValidGradleProject_shouldReturnTrueForSettingsGradle() throws IOException {
         // Given - Project with settings.gradle
         Files.writeString(tempDir.resolve("settings.gradle"), "rootProject.name = 'test'");
@@ -566,7 +566,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void isValidGradleProject_shouldReturnTrueForSettingsGradleKts() throws IOException {
         // Given - Project with settings.gradle.kts
         Files.writeString(tempDir.resolve("settings.gradle.kts"), "rootProject.name = \"test\"");
@@ -580,7 +580,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void hasGradleWrapper_shouldDetectGradlewBat() throws IOException {
         // Given - Project with gradlew.bat
         Files.writeString(tempDir.resolve("build.gradle"), "apply plugin: 'java'");
@@ -595,7 +595,7 @@ class GradleDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldReturnEmptyListForInvalidProject() throws IOException {
         // Given - Empty directory with no Gradle files
         Path invalidProject = tempDir.resolve("invalid-project");

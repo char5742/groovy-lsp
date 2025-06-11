@@ -16,6 +16,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.server.launcher.di.ServerModule;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,14 +32,13 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import javax.annotation.Nullable;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -72,7 +72,7 @@ class MainLaunchTest {
         System.setErr(originalErr);
     }
 
-    @Test
+    @UnitTest
     void testMainMethodExecution() throws Exception {
         // Use reflection to test the main method behavior
         Method mainMethod = Main.class.getDeclaredMethod("main", String[].class);
@@ -84,7 +84,7 @@ class MainLaunchTest {
                 .anyMatch(field -> field.getName().equals("logger"));
     }
 
-    @Test
+    @UnitTest
     @SuppressWarnings("AddressSelection") // Intentional for test - mocking socket addresses
     void testRunServerWithSocketMode() throws Exception {
         // Test runServer method with socket mode - using mocks
@@ -149,7 +149,7 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testRunServerWithStdioMode() throws Exception {
         // Test runServer method with stdio mode
         GroovyLanguageServer mockServer = mock(GroovyLanguageServer.class);
@@ -193,7 +193,7 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testLaunchSocketWithPortInUse() throws Exception {
         // Test socket launch with port already in use
         try (ServerSocket blockingSocket = new ServerSocket(0)) {
@@ -224,7 +224,7 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testRunServerWithInvalidWorkspace() {
         // Test with non-existent workspace
         String nonExistentPath = Objects.requireNonNull(tempDir).resolve("non-existent").toString();
@@ -237,7 +237,7 @@ class MainLaunchTest {
         assertThat(exception.getMessage()).contains("Workspace directory does not exist");
     }
 
-    @Test
+    @UnitTest
     void testRunServerWithWorkspaceAsFile() throws Exception {
         // Test with workspace path pointing to a file
         Path file = Objects.requireNonNull(tempDir).resolve("test.txt");
@@ -251,7 +251,7 @@ class MainLaunchTest {
         assertThat(exception.getMessage()).contains("Workspace path is not a directory");
     }
 
-    @Test
+    @UnitTest
     void testLaunchStdioDirectly() throws Exception {
         // Use reflection to test launchStdio method directly
         Method launchStdioMethod =
@@ -291,7 +291,7 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     @SuppressWarnings("AddressSelection") // Intentional for test - mocking socket addresses
     void testLaunchSocketDirectly() throws Exception {
         // Use reflection to test launchSocket method directly
@@ -352,7 +352,7 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testLaunchSocketWithBindFailure() throws Exception {
         // Test socket launch with generic bind failure
         Method launchSocketMethod =
@@ -387,7 +387,7 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testRunServerUnknownLaunchMode() throws Exception {
         // This test is tricky because LaunchType is an enum with only two values
         // We'll test the edge case by using reflection to modify the launch mode
@@ -409,14 +409,14 @@ class MainLaunchTest {
         }
     }
 
-    @Test
+    @UnitTest
     void testMainConstructor() throws Exception {
         // Test that Main constructor exists (for coverage)
         Main instance = Main.class.getDeclaredConstructor().newInstance();
         assertThat(instance).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void testSocketCleanupOnError() throws Exception {
         // Test that socket resources are properly cleaned up on error
         Method launchSocketMethod =

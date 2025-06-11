@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.time.Instant;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -28,7 +29,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Token;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,7 +48,7 @@ class TypeInferenceServiceImplTest {
         typeInferenceService = new TypeInferenceServiceImpl(mockAstService);
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowExceptionForNullASTService() {
         // Testing null-safety behavior - Using reflection to bypass compile-time checks
         assertThatThrownBy(
@@ -67,7 +67,7 @@ class TypeInferenceServiceImplTest {
                 .hasRootCauseMessage("ASTService cannot be null");
     }
 
-    @Test
+    @UnitTest
     void inferTypeAtPosition_shouldReturnObjectTypeWhenParseFails() {
         // given
         when(mockAstService.parseSource(anyString(), anyString())).thenReturn(null);
@@ -79,7 +79,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferTypeAtPosition_shouldReturnObjectTypeWhenNodeNotFound() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -93,7 +93,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferTypeAtPosition_shouldInferTypeOfExpressionNode() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -110,7 +110,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnObjectTypeForNullExpression() {
         // Testing null handling - Using reflection to bypass compile-time checks
         try {
@@ -129,7 +129,7 @@ class TypeInferenceServiceImplTest {
         }
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnExistingType() {
         // given
         Expression expr = new ConstantExpression("test");
@@ -143,7 +143,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldInferConstantExpressionTypes() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -178,7 +178,7 @@ class TypeInferenceServiceImplTest {
         assertThat(nullType).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnListTypeForListExpression() {
         // given
         ListExpression listExpr = new ListExpression();
@@ -191,7 +191,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.LIST_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnMapTypeForMapExpression() {
         // given
         MapExpression mapExpr = new MapExpression();
@@ -204,7 +204,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.MAP_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnEnclosingClassTypeForThisKeyword() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -223,7 +223,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("TestClass");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnAccessedVariableTypeForVariableExpression() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -236,7 +236,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnBooleanTypeForComparisonOperators() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -253,7 +253,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.boolean_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnLeftTypeForArithmeticOperators() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -272,7 +272,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnPropertyTypeForPropertyExpression() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -292,7 +292,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnFieldTypeForPropertyExpression() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -311,7 +311,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnMethodReturnTypeForMethodCall() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -332,7 +332,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.lang.Object");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnPropertyTypeForGetterPattern() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -354,7 +354,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnObjectTypeForUnknownExpression() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -378,7 +378,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldFindVariableDeclarationInModule() {
         // given - Use real AST service to test VariableDeclarationFinder
         ASTService realAstService = new ASTServiceImpl();
@@ -403,7 +403,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.lang.String");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldInferTypeFromConstantInDeclaration() {
         // given - Test VariableDeclarationFinder's ability to infer from right side
         ASTService realAstService = new ASTServiceImpl();
@@ -427,7 +427,7 @@ class TypeInferenceServiceImplTest {
         assertThat(stringType.getName()).isEqualTo("java.lang.String");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleVariableNotFound() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -440,7 +440,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandlePropertyExpressionWithNullReceiver() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -455,7 +455,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandlePropertyExpressionWithNullPropertyName() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -474,7 +474,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnGetterTypeFromPropertyExpression() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -502,7 +502,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleMethodCallWithNullMethodName() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -523,7 +523,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleMethodCallWithNullReceiverType() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -539,7 +539,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldReturnMethodReturnType() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -569,7 +569,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleAllComparisonOperators() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -597,7 +597,7 @@ class TypeInferenceServiceImplTest {
         }
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleConstantExpressionWithCustomType() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -613,7 +613,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.time.Instant");
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleLongConstant() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -627,7 +627,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.long_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldHandleFloatConstant() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -641,7 +641,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.float_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldNotRecomputeExistingTypeForNonMethodCall() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -657,7 +657,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(customType);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldRecomputeTypeForMethodCall() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -690,7 +690,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void findEnclosingClass_shouldHandleNodeOutsideAnyClass() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -710,7 +710,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldHandleAllPrimitiveTypes() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -752,7 +752,7 @@ class TypeInferenceServiceImplTest {
         assertThat(boolType.getName()).isEqualTo("java.lang.Boolean");
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldHandleOtherTypeWithExpressionType() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -770,7 +770,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.math.BigDecimal");
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldUseValueClassForOtherTypes() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -793,7 +793,7 @@ class TypeInferenceServiceImplTest {
         assertThat(customType.getName()).isEqualTo("java.lang.String");
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldHandleByteAndShort() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -814,7 +814,7 @@ class TypeInferenceServiceImplTest {
         assertThat(charType.getName()).isEqualTo("java.lang.Character");
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldHandleObjectTypeInExpression() throws Exception {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -830,7 +830,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.net.URL");
     }
 
-    @Test
+    @UnitTest
     void inferMethodCallType_shouldReturnObjectTypeForGetterWithoutMatchingProperty() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -850,7 +850,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferMethodCallType_shouldHandleGetterWithShortName() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -869,7 +869,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferPropertyType_shouldReturnObjectTypeWhenPropertyNotFound() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -887,7 +887,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferBinaryExpressionType_shouldReturnLeftTypeForAssignmentOperator() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -909,7 +909,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.STRING_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferBinaryExpressionType_shouldReturnLeftTypeForBitwiseOperator() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -931,7 +931,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferVariableType_shouldReturnObjectTypeForThisOutsideClass() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -947,7 +947,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldInferTypeFromVariableInClassField() {
         // given - Test variable declaration finder with field initialization
         ASTService realAstService = new ASTServiceImpl();
@@ -977,7 +977,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.lang.Object"); // def defaults to Object
     }
 
-    @Test
+    @UnitTest
     void inferVariableType_shouldHandleVariableWithNullAccessedVariable() {
         // given
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -992,7 +992,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.OBJECT_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferExpressionType_shouldInferTypeFromNonConstantRightExpression() {
         // given - Test VariableDeclarationFinder with non-constant right expression
         ASTService realAstService = new ASTServiceImpl();
@@ -1017,7 +1017,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type.getName()).isEqualTo("java.lang.Object"); // def defaults to Object
     }
 
-    @Test
+    @UnitTest
     void inferMethodCallType_shouldHandleGetterPatternCaseSensitivity() {
         // given - Test getter pattern with different case scenarios
         ModuleNode moduleNode = new ModuleNode((SourceUnit) null);
@@ -1043,7 +1043,7 @@ class TypeInferenceServiceImplTest {
         assertThat(type).isEqualTo(ClassHelper.int_TYPE);
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldReturnPrimitiveTypesDirectly() {
         // given - Force the branches for primitive type checks to be covered
 
@@ -1098,7 +1098,7 @@ class TypeInferenceServiceImplTest {
         }
     }
 
-    @Test
+    @UnitTest
     void inferConstantType_shouldUseExpressionTypeWhenNotObjectType() {
         // given - Test the branch where expression has a non-OBJECT_TYPE set
 

@@ -3,6 +3,7 @@ package com.groovy.lsp.groovy.core.internal.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.Objects;
 import org.codehaus.groovy.ast.ASTNode;
@@ -12,7 +13,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * ASTServiceImplのテストクラス。
@@ -34,7 +34,7 @@ class ASTServiceImplTest {
         astService = new ASTServiceImpl();
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldParseValidGroovyCode() {
         // given
         String sourceCode =
@@ -59,7 +59,7 @@ class ASTServiceImplTest {
                 .isEqualTo("TestClass");
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldReturnNullForInvalidCode() {
         // given
         String invalidCode = "class { invalid syntax";
@@ -72,7 +72,7 @@ class ASTServiceImplTest {
         assertThat(moduleNode).isNull();
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldParseWithCustomCompilerConfiguration() {
         // given
         String sourceCode = "println 'test'";
@@ -87,7 +87,7 @@ class ASTServiceImplTest {
         assertThat(moduleNode).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldReturnFromCacheForSameSourceCode() {
         // given
         String sourceCode = "class CacheTest {}";
@@ -102,7 +102,7 @@ class ASTServiceImplTest {
         assertThat(second).isSameAs(first); // Same instance from cache
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldThrowExceptionForNullParameters() throws Exception {
         // when/then
         // Testing null source code parameter using reflection to bypass NullAway
@@ -160,7 +160,7 @@ class ASTServiceImplTest {
                 .hasMessageContaining("Compiler configuration cannot be null");
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindNodeAtCorrectPosition() {
         // given
         String sourceCode =
@@ -184,7 +184,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     @SuppressWarnings("NullAway") // Intentionally testing null parameter handling
     void findNodeAtPosition_shouldReturnNullForNullModule() {
         // when
@@ -194,7 +194,7 @@ class ASTServiceImplTest {
         assertThat(node).isNull();
     }
 
-    @Test
+    @UnitTest
     void findAllVariables_shouldFindAllVariables() {
         // given
         String sourceCode =
@@ -221,7 +221,7 @@ class ASTServiceImplTest {
         // Variables include field references and local variable references
     }
 
-    @Test
+    @UnitTest
     @SuppressWarnings("NullAway") // Intentionally testing null parameter handling
     void findAllVariables_shouldReturnEmptyListForNullModule() {
         // when
@@ -231,7 +231,7 @@ class ASTServiceImplTest {
         assertThat(variables).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void findAllMethodCalls_shouldFindAllMethodCalls() {
         // given
         String sourceCode =
@@ -261,7 +261,7 @@ class ASTServiceImplTest {
                 .contains("println", "method2", "toUpperCase");
     }
 
-    @Test
+    @UnitTest
     @SuppressWarnings("NullAway") // Intentionally testing null parameter handling
     void findAllMethodCalls_shouldReturnEmptyListForNullModule() {
         // when
@@ -271,7 +271,7 @@ class ASTServiceImplTest {
         assertThat(methodCalls).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void clearCache_shouldClearCache() {
         // given
         String sourceCode = "class ClearTest {}";
@@ -290,7 +290,7 @@ class ASTServiceImplTest {
         // If cache was working, it would return the old AST
     }
 
-    @Test
+    @UnitTest
     void invalidateCache_shouldInvalidateSpecificSourceCache() {
         // given
         String sourceCode1 = "class Test1 {}";
@@ -310,7 +310,7 @@ class ASTServiceImplTest {
         assertThat(node2).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldParseComplexGroovyCode() {
         // given
         String complexCode =
@@ -358,7 +358,7 @@ class ASTServiceImplTest {
         assertThat(nonNullModule.getClasses().get(0).getMethods()).hasSizeGreaterThan(1);
     }
 
-    @Test
+    @UnitTest
     void parseSource_shouldParseScript() {
         // given
         String scriptCode =
@@ -385,7 +385,7 @@ class ASTServiceImplTest {
         assertThat(requireNonNullForTest(moduleNode).getStatementBlock()).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindFieldNode() {
         // given
         String sourceCode =
@@ -406,7 +406,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindBinaryExpression() {
         // given
         String sourceCode =
@@ -428,7 +428,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindPropertyExpression() {
         // given
         String sourceCode =
@@ -451,7 +451,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindFieldExpression() {
         // given
         String sourceCode =
@@ -475,7 +475,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindClassExpression() {
         // given
         String sourceCode =
@@ -497,7 +497,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindConstantExpression() {
         // given
         String sourceCode =
@@ -520,7 +520,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldFindStatementInScriptBody() {
         // given
         String sourceCode =
@@ -541,7 +541,7 @@ class ASTServiceImplTest {
         assertThat(node).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void findNodeAtPosition_shouldReturnNullWhenPositionOutOfBounds() {
         // given
         String sourceCode =
@@ -561,7 +561,7 @@ class ASTServiceImplTest {
         assertThat(node).isNull();
     }
 
-    @Test
+    @UnitTest
     void findAllVariables_shouldIncludeScriptVariables() {
         // given
         String scriptCode =
@@ -589,7 +589,7 @@ class ASTServiceImplTest {
                 .contains("scriptVar1", "scriptVar2");
     }
 
-    @Test
+    @UnitTest
     void findAllMethodCalls_shouldIncludeScriptMethodCalls() {
         // given
         String scriptCode =

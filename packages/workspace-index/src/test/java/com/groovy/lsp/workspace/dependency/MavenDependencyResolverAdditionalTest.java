@@ -2,11 +2,11 @@ package com.groovy.lsp.workspace.dependency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -22,7 +22,7 @@ class MavenDependencyResolverAdditionalTest {
         resolver = new MavenDependencyResolver(tempDir);
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleMalformedPom() throws IOException {
         // Given - Malformed pom.xml
         Path pomFile = tempDir.resolve("pom.xml");
@@ -35,7 +35,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleEmptyPom() throws IOException {
         // Given - Empty pom.xml
         Path pomFile = tempDir.resolve("pom.xml");
@@ -48,7 +48,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandlePomWithoutDependencies() throws IOException {
         // Given - Valid pom.xml but no dependencies
         Path pomFile = tempDir.resolve("pom.xml");
@@ -74,7 +74,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleDependencyWithCustomType() throws IOException {
         // Given - pom.xml with dependency that has custom type
         Path pomFile = tempDir.resolve("pom.xml");
@@ -109,7 +109,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleDependencyResolutionFailure() throws IOException {
         // Given - pom.xml with non-existent dependency
         Path pomFile = tempDir.resolve("pom.xml");
@@ -142,7 +142,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldHandlePartialDirectoryStructure() throws IOException {
         // Create only some Maven directories
         Path srcMainJava = tempDir.resolve("src/main/java");
@@ -159,7 +159,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(sourceDirs).containsExactlyInAnyOrder(srcMainJava, srcTestGroovy);
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandlePomReadException() throws IOException {
         // Given - Create pom.xml as a directory instead of file
         Path pomFile = tempDir.resolve("pom.xml");
@@ -172,7 +172,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleDependencyWithNullType() throws IOException {
         // Given - pom.xml with dependency that has null type (should default to jar)
         Path pomFile = tempDir.resolve("pom.xml");
@@ -206,7 +206,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandlePomWithParent() throws IOException {
         // Given - pom.xml with parent POM reference
         Path pomFile = tempDir.resolve("pom.xml");
@@ -245,7 +245,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleSuccessfulResolution() throws IOException {
         // Given - pom.xml with a simple common dependency that likely exists in local repo
         Path pomFile = tempDir.resolve("pom.xml");
@@ -279,7 +279,7 @@ class MavenDependencyResolverAdditionalTest {
         // Note: The actual resolution depends on whether slf4j is in the local Maven repo
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleDependencyWithClassifier() throws IOException {
         // Given - pom.xml with dependency that has a classifier
         Path pomFile = tempDir.resolve("pom.xml");
@@ -313,7 +313,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleProvidedScope() throws IOException {
         // Given - pom.xml with provided scope dependency
         Path pomFile = tempDir.resolve("pom.xml");
@@ -347,7 +347,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleRuntimeScope() throws IOException {
         // Given - pom.xml with runtime scope dependency
         Path pomFile = tempDir.resolve("pom.xml");
@@ -381,7 +381,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void initializeMavenResolver_shouldHandleException() throws Exception {
         // This test uses reflection to test the exception handling in initializeMavenResolver
         // Create a new resolver but sabotage the initialization
@@ -395,7 +395,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(testResolver.getBuildSystem()).isEqualTo(DependencyResolver.BuildSystem.MAVEN);
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleUnresolvedArtifacts() throws IOException {
         // Test the case where artifacts are not resolved
         Path pomFile = tempDir.resolve("pom.xml");
@@ -426,7 +426,7 @@ class MavenDependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldHandleArtifactWithNullFile() throws IOException {
         // Test the case where artifact.getFile() returns null
         Path pomFile = tempDir.resolve("pom.xml");

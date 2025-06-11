@@ -2,13 +2,13 @@ package com.groovy.lsp.workspace.api.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.jupiter.api.Test;
 
 class WorkspaceIndexedEventTest {
 
-    @Test
+    @UnitTest
     void constructor_shouldInitializeAllFields() {
         // Given
         Path workspacePath = Paths.get("/workspace");
@@ -29,7 +29,7 @@ class WorkspaceIndexedEventTest {
         assertThat(event.getAggregateId()).isEqualTo(workspacePath.toString());
     }
 
-    @Test
+    @UnitTest
     void toString_shouldReturnFormattedString() {
         // Given
         Path workspacePath = Paths.get("/workspace");
@@ -45,7 +45,7 @@ class WorkspaceIndexedEventTest {
                                 + " duration=800ms}");
     }
 
-    @Test
+    @UnitTest
     void toString_shouldHandleZeroValues() {
         // Given
         Path workspacePath = Paths.get("/empty");
@@ -61,7 +61,7 @@ class WorkspaceIndexedEventTest {
                                 + " duration=0ms}");
     }
 
-    @Test
+    @UnitTest
     void shouldHandleWindowsPaths() {
         // Given
         Path windowsPath = Paths.get("C:\\Users\\workspace");
@@ -72,7 +72,7 @@ class WorkspaceIndexedEventTest {
         assertThat(event.getAggregateId()).isEqualTo(windowsPath.toString());
     }
 
-    @Test
+    @UnitTest
     void shouldHandleLargeNumbers() {
         // Given
         Path workspacePath = Paths.get("/large-project");
@@ -91,7 +91,7 @@ class WorkspaceIndexedEventTest {
         assertThat(event.getIndexingDurationMs()).isEqualTo(longDuration);
     }
 
-    @Test
+    @UnitTest
     void shouldHandleRelativePaths() {
         // Given
         Path relativePath = Paths.get("../relative/path");

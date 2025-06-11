@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
@@ -22,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 /**
@@ -38,7 +38,7 @@ class ClassLoaderLeakTest {
         cache = new LRUDependencyCache();
     }
 
-    @Test
+    @UnitTest
     @Timeout(30)
     void testWeakReferenceGarbageCollection() throws Exception {
         // Create a ClassLoader and keep only a weak reference
@@ -77,7 +77,7 @@ class ClassLoaderLeakTest {
         assertNotNull(newLoader, "Should create new ClassLoader after previous was GC'd");
     }
 
-    @Test
+    @UnitTest
     void testClassLoaderCloseOnInvalidateAll() throws Exception {
         // Track if ClassLoader.close() is called
         AtomicBoolean closeCalled = new AtomicBoolean(false);
@@ -102,7 +102,7 @@ class ClassLoaderLeakTest {
         assertTrue(closeCalled.get(), "ClassLoader.close() should be called on invalidateAll()");
     }
 
-    @Test
+    @UnitTest
     void testNoCircularReferencesInClassLoader() throws Exception {
         Set<Path> deps = Set.of(Paths.get("lib1.jar"), Paths.get("lib2.jar"));
         URLClassLoader loader = Objects.requireNonNull(cache).getOrCreateClassLoader(deps);
@@ -135,7 +135,7 @@ class ClassLoaderLeakTest {
                 "At least one object should be GC'd, indicating no circular reference");
     }
 
-    @Test
+    @UnitTest
     @Timeout(30)
     void testMemoryLeakUnderHighLoad() throws Exception {
         // Create many ClassLoaders and verify they can be GC'd
@@ -164,7 +164,7 @@ class ClassLoaderLeakTest {
                         "At least 80%% of ClassLoaders should be GC'd, but only %d were", gcCount));
     }
 
-    @Test
+    @UnitTest
     void testClassLoaderNotLeakedAfterEviction() throws Exception {
         // Fill cache to trigger eviction
         List<WeakReference<URLClassLoader>> weakRefs = new ArrayList<>();
@@ -187,7 +187,7 @@ class ClassLoaderLeakTest {
         assertTrue(gcCount > 0, "Evicted ClassLoaders should be eligible for garbage collection");
     }
 
-    @Test
+    @UnitTest
     void testConcurrentAccessDoesNotCauseLeak() throws Exception {
         final int threadCount = 10;
         final CountDownLatch startLatch = new CountDownLatch(1);
@@ -246,7 +246,7 @@ class ClassLoaderLeakTest {
                         + " access");
     }
 
-    @Test
+    @UnitTest
     void testParentClassLoaderDoesNotPreventGC() throws Exception {
         // Verify that the parent ClassLoader doesn't prevent GC
         Set<Path> deps = Set.of(Paths.get("test.jar"));

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -36,7 +37,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,7 +60,7 @@ class DefinitionHandlerVariableTest {
         handler = new DefinitionHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find variable declaration in method body")
     void testFindVariableDeclaration_LocalVariable() throws Exception {
         // Arrange
@@ -138,7 +138,7 @@ class DefinitionHandlerVariableTest {
         assertEquals(4, location.getRange().getStart().getCharacter());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find method parameter declaration")
     void testFindVariableDeclaration_MethodParameter() throws Exception {
         // Arrange
@@ -205,7 +205,7 @@ class DefinitionHandlerVariableTest {
         assertEquals(18, location.getRange().getStart().getCharacter());
     }
 
-    @Test
+    @UnitTest
     @Disabled("TODO: Fix field variable resolution")
     @DisplayName("Should find field declaration")
     void testFindVariableDeclaration_Field() throws Exception {
@@ -276,7 +276,7 @@ class DefinitionHandlerVariableTest {
         assertEquals(11, location.getRange().getStart().getCharacter());
     }
 
-    @Test
+    @UnitTest
     @Disabled("TODO: Fix property variable resolution")
     @DisplayName("Should find property declaration")
     void testFindVariableDeclaration_Property() throws Exception {
@@ -348,7 +348,7 @@ class DefinitionHandlerVariableTest {
         assertEquals(11, location.getRange().getStart().getCharacter());
     }
 
-    @Test
+    @UnitTest
     @Disabled("TODO: Fix for loop variable resolution")
     @DisplayName("Should find for loop variable declaration")
     void testFindVariableDeclaration_ForLoopVariable() throws Exception {
@@ -417,7 +417,7 @@ class DefinitionHandlerVariableTest {
         assertEquals(13, location.getRange().getStart().getCharacter());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should find catch block parameter declaration")
     void testFindVariableDeclaration_CatchParameter() throws Exception {
         // Arrange
@@ -492,7 +492,7 @@ class DefinitionHandlerVariableTest {
         assertEquals(23, location.getRange().getStart().getCharacter());
     }
 
-    @Test
+    @UnitTest
     @DisplayName("Should handle script-level variable declaration")
     void testFindVariableDeclaration_ScriptLevel() throws Exception {
         // Arrange

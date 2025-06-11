@@ -13,6 +13,7 @@ import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import groovy.lang.groovydoc.Groovydoc;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +37,6 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -60,7 +60,7 @@ class HoverHandlerTest {
         hoverHandler = new HoverHandler(serviceRouter, documentManager);
     }
 
-    @Test
+    @UnitTest
     void testHoverOnMethod() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -103,7 +103,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("String"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnVariable() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -139,7 +139,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Variable:") && content.contains("name"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnField() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -181,7 +181,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Field"));
     }
 
-    @Test
+    @UnitTest
     void testHoverReturnsNullWhenNoDocumentFound() throws Exception {
         // Given
         String uri = "file:///notfound.groovy";
@@ -197,7 +197,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverReturnsNullWhenParsingFails() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -215,7 +215,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverReturnsNullWhenNoNodeAtPosition() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -236,7 +236,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverOnProperty() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -277,7 +277,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Property"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnClass() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -321,7 +321,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Package:"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnInterface() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -353,7 +353,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("TestInterface"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnEnum() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -389,7 +389,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Status"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnMethodCallExpression() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -423,7 +423,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("println"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnPropertyExpression() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -457,7 +457,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("property"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnParameter() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -488,7 +488,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Parameter"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnVariableWithObjectType() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -522,7 +522,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("variable"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnStaticFinalField() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -562,7 +562,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Field"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnPrivateStaticProperty() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -605,7 +605,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Property"));
     }
 
-    @Test
+    @UnitTest
     void testHoverHandlesException() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -624,7 +624,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverOnExpressionWithNoType() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -649,7 +649,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverOnProtectedMethod() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -691,7 +691,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("String arg2"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnPrivateMethod() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -729,7 +729,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("method"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnStaticFinalMethod() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -769,7 +769,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("utility"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnProtectedField() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -804,7 +804,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Field"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnClassWithNoSuperClassAndNoInterfaces() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -846,7 +846,7 @@ class HoverHandlerTest {
         assertFalse(content.contains("Package:"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnVariableWithNullType() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -871,7 +871,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverOnUnrecognizedNode() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -895,7 +895,7 @@ class HoverHandlerTest {
         assertNull(hover);
     }
 
-    @Test
+    @UnitTest
     void testHoverOnClassWithMultipleInterfaces() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -942,7 +942,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Package:"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnMethodWithAnnotations() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -994,7 +994,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("@java.lang.Deprecated"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnAbstractMethod() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1033,7 +1033,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Abstract method*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnSyntheticMethod() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1072,7 +1072,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Synthetic method*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnFieldWithAnnotations() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1120,7 +1120,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("@javax.inject.Inject"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnEnumField() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1162,7 +1162,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Enum constant*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnSyntheticField() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1202,7 +1202,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Synthetic field*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnAbstractClass() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1240,7 +1240,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Abstract class*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnInterfaceClassNode() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1279,7 +1279,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Interface*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnEnumClassNode() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1317,7 +1317,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("*Enumeration*"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnVariableExpressionWithAccessedVariable() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1351,7 +1351,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("String param"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnVariableExpressionWithoutAccessedVariable() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1386,7 +1386,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("unknown"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnNodeWithoutJavadoc() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1429,7 +1429,7 @@ class HoverHandlerTest {
         assertFalse(content.contains("*Synthetic"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnMethodWithGroovydoc() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1472,7 +1472,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("This is a test method"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnFieldWithGroovydoc() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1518,7 +1518,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Field documentation"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnClassWithGroovydoc() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1560,7 +1560,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Test class documentation"));
     }
 
-    @Test
+    @UnitTest
     void testHoverOnPropertyWithGroovydoc() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1602,7 +1602,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("Property documentation"));
     }
 
-    @Test
+    @UnitTest
     void testHoverWithGroovydocAndAnnotations() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1652,7 +1652,7 @@ class HoverHandlerTest {
         assertTrue(content.contains("@java.lang.Deprecated"));
     }
 
-    @Test
+    @UnitTest
     void testHoverWithNullGroovydoc() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -1693,7 +1693,7 @@ class HoverHandlerTest {
         // Should not throw exception when groovydoc is null
     }
 
-    @Test
+    @UnitTest
     void testHoverWithEmptyGroovydocContent() throws Exception {
         // Given
         String uri = "file:///test.groovy";

@@ -3,16 +3,16 @@ package com.groovy.lsp.server.launcher.di;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for ServerConstants class.
  */
 class ServerConstantsTest {
 
-    @Test
+    @UnitTest
     void constructor_shouldThrowAssertionError() throws NoSuchMethodException {
         // given
         Constructor<ServerConstants> constructor = ServerConstants.class.getDeclaredConstructor();
@@ -31,7 +31,7 @@ class ServerConstantsTest {
                 .hasMessage("Cannot instantiate constants class");
     }
 
-    @Test
+    @UnitTest
     void constants_shouldHaveCorrectValues() {
         // Executor configuration
         assertThat(ServerConstants.MAX_THREAD_POOL_SIZE).isEqualTo(50);
@@ -56,7 +56,7 @@ class ServerConstantsTest {
         assertThat(ServerConstants.SCHEDULER_THREAD_PREFIX).isEqualTo("groovy-lsp-scheduler");
     }
 
-    @Test
+    @UnitTest
     void constants_shouldBePublicStaticFinal() throws NoSuchFieldException {
         // Check a few representative fields
         assertThat(ServerConstants.class.getField("MAX_THREAD_POOL_SIZE").getModifiers())
@@ -72,7 +72,7 @@ class ServerConstantsTest {
                                 | java.lang.reflect.Modifier.FINAL);
     }
 
-    @Test
+    @UnitTest
     void executorConstants_shouldHaveReasonableValues() {
         // Verify executor configuration makes sense
         assertThat(ServerConstants.CORE_THREAD_POOL_SIZE)
@@ -85,7 +85,7 @@ class ServerConstantsTest {
         assertThat(ServerConstants.EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS).isGreaterThan(0);
     }
 
-    @Test
+    @UnitTest
     void serverConstants_shouldHaveValidNetworkValues() {
         // Verify port is in valid range
         assertThat(ServerConstants.DEFAULT_SOCKET_PORT).isBetween(1, 65535);

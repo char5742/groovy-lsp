@@ -16,6 +16,7 @@ import com.groovy.lsp.groovy.core.api.CompilationResult.CompilationError;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +31,6 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -61,7 +61,7 @@ class DiagnosticsHandlerTest {
         diagnosticsHandler.shutdown();
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsImmediate_Success() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -95,7 +95,7 @@ class DiagnosticsHandlerTest {
         assertTrue(params.getDiagnostics().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsImmediate_WithSyntaxError() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -140,7 +140,7 @@ class DiagnosticsHandlerTest {
         assertEquals("groovy-1001", diagnostic.getCode().getLeft());
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsImmediate_WithMultipleErrors() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -187,7 +187,7 @@ class DiagnosticsHandlerTest {
         assertEquals(2, params.getDiagnostics().size());
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsImmediate_WithWarning() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -230,7 +230,7 @@ class DiagnosticsHandlerTest {
         assertEquals("groovy-4001", diagnostic.getCode().getLeft()); // Unused variable warning
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsDebounced() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -267,7 +267,7 @@ class DiagnosticsHandlerTest {
                 "Scheduled tasks should be empty after execution");
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsImmediate_DocumentNotFound() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -282,7 +282,7 @@ class DiagnosticsHandlerTest {
         verify(languageClient, never()).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void testHandleDiagnosticsImmediate_CompilationException() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -303,7 +303,7 @@ class DiagnosticsHandlerTest {
         verify(languageClient, never()).publishDiagnostics(any());
     }
 
-    @Test
+    @UnitTest
     void testClearDiagnostics() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -321,7 +321,7 @@ class DiagnosticsHandlerTest {
         assertTrue(params.getDiagnostics().isEmpty());
     }
 
-    @Test
+    @UnitTest
     void testClearDiagnostics_WithPendingTask() throws Exception {
         // Given
         String uri = "file:///test.groovy";
@@ -345,7 +345,7 @@ class DiagnosticsHandlerTest {
         assertEquals(0, diagnosticsHandler.getScheduledTasksSize());
     }
 
-    @Test
+    @UnitTest
     void testShutdown_CancelsAllTasks() throws Exception {
         // Given
         String uri1 = "file:///test1.groovy";

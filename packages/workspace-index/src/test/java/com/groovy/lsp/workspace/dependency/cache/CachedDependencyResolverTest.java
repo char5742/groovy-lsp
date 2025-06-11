@@ -10,13 +10,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import com.groovy.lsp.workspace.dependency.DependencyResolver;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 /**
@@ -37,7 +37,7 @@ class CachedDependencyResolverTest {
         resolver = new CachedDependencyResolver(mockDelegate, mockCache, workspaceRoot);
     }
 
-    @Test
+    @UnitTest
     void testResolveDependencies_cacheHit_returnsFromCache() {
         List<Path> cachedDeps = List.of(Paths.get("cached1.jar"), Paths.get("cached2.jar"));
 
@@ -50,7 +50,7 @@ class CachedDependencyResolverTest {
         verify(mockCache, never()).cacheDependencies(any(), any());
     }
 
-    @Test
+    @UnitTest
     void testResolveDependencies_cacheMiss_resolvesAndCaches() {
         List<Path> resolvedDeps = List.of(Paths.get("resolved1.jar"), Paths.get("resolved2.jar"));
 
@@ -64,7 +64,7 @@ class CachedDependencyResolverTest {
         verify(mockCache).cacheDependencies(workspaceRoot, resolvedDeps);
     }
 
-    @Test
+    @UnitTest
     void testGetSourceDirectories_delegatesWithoutCaching() {
         List<Path> sourceDirs = List.of(Paths.get("src/main/java"), Paths.get("src/main/groovy"));
 
@@ -77,7 +77,7 @@ class CachedDependencyResolverTest {
         verifyNoInteractions(mockCache);
     }
 
-    @Test
+    @UnitTest
     void testCanHandle_delegates() {
         when(mockDelegate.canHandle(workspaceRoot)).thenReturn(true);
 
@@ -87,7 +87,7 @@ class CachedDependencyResolverTest {
         verify(mockDelegate).canHandle(workspaceRoot);
     }
 
-    @Test
+    @UnitTest
     void testGetBuildSystem_delegates() {
         when(mockDelegate.getBuildSystem()).thenReturn(DependencyResolver.BuildSystem.GRADLE);
 
@@ -97,21 +97,21 @@ class CachedDependencyResolverTest {
         verify(mockDelegate).getBuildSystem();
     }
 
-    @Test
+    @UnitTest
     void testInvalidateCache_invalidatesProjectCache() {
         resolver.invalidateCache();
 
         verify(mockCache).invalidateProject(workspaceRoot);
     }
 
-    @Test
+    @UnitTest
     void testGetDelegate_returnsOriginalResolver() {
         DependencyResolver delegate = resolver.getDelegate();
 
         assertSame(mockDelegate, delegate);
     }
 
-    @Test
+    @UnitTest
     void testGetCacheStatistics_returnsCacheStats() {
         DependencyCache.CacheStatistics mockStats = mock(DependencyCache.CacheStatistics.class);
         when(mockCache.getStatistics()).thenReturn(mockStats);

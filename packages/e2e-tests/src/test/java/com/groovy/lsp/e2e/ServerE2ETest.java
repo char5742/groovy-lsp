@@ -2,17 +2,15 @@ package com.groovy.lsp.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.E2ETest;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 
 /**
  * End-to-end tests for the Groovy Language Server.
  * Tests the server running as a separate process.
  */
-@Tag("e2e")
 class ServerE2ETest extends E2ETestBase {
 
     @Override
@@ -34,14 +32,14 @@ class ServerE2ETest extends E2ETestBase {
         }
     }
 
-    @Test
+    @E2ETest
     void testServerStartsAndStops() {
         // Server should be running (started in setUp)
         assertThat(serverProcess.getProcess().isAlive()).isTrue();
         assertThat(isServerReady()).isTrue();
     }
 
-    @Test
+    @E2ETest
     void testBasicGroovyFileProcessing() throws Exception {
         // Create a simple Groovy file
         Path groovyFile =
@@ -67,7 +65,7 @@ class ServerE2ETest extends E2ETestBase {
         // This is just a basic test to ensure the server can handle files
     }
 
-    @Test
+    @E2ETest
     void testMultipleFileProcessing() throws Exception {
         // Create multiple Groovy files
         createGroovyFile(
@@ -120,7 +118,7 @@ class ServerE2ETest extends E2ETestBase {
         assertThat(serverProcess.getProcess().isAlive()).isTrue();
     }
 
-    @Test
+    @E2ETest
     void testServerHandlesInvalidFiles() throws Exception {
         // Create a file with syntax errors
         createGroovyFile(
@@ -143,7 +141,7 @@ class ServerE2ETest extends E2ETestBase {
         assertThat(isServerReady()).isTrue();
     }
 
-    @Test
+    @E2ETest
     void testServerMemoryUsage() throws Exception {
         // Create many files to test memory handling
         for (int i = 0; i < 50; i++) {

@@ -3,6 +3,7 @@ package com.groovy.lsp.formatting.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.formatting.options.FormatOptions;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -14,7 +15,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * FormattingServiceのテストクラス。
@@ -28,7 +28,7 @@ class FormattingServiceTest {
         formattingService = new FormattingService();
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldCreateWithDefaultOptions() {
         // when
         FormattingService service = new FormattingService();
@@ -37,7 +37,7 @@ class FormattingServiceTest {
         assertThat(service).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void constructor_shouldCreateWithCustomOptions() {
         // given
         FormatOptions options = FormatOptions.builder().indentSize(2).useTabs(true).build();
@@ -49,7 +49,7 @@ class FormattingServiceTest {
         assertThat(service).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldFormatValidGroovyCode()
             throws ExecutionException, InterruptedException {
         // given
@@ -80,7 +80,7 @@ class FormattingServiceTest {
         assertThat(edit.getRange()).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldHandleEmptyCode() throws ExecutionException, InterruptedException {
         // given
         String emptyCode = "";
@@ -98,7 +98,7 @@ class FormattingServiceTest {
         assertThat(edits).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldApplyTabSettings() throws ExecutionException, InterruptedException {
         // given
         String code = "class Test {\n\tdef field\n}";
@@ -115,7 +115,7 @@ class FormattingServiceTest {
         assertThat(edits).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldFormatComplexGroovyCode()
             throws ExecutionException, InterruptedException {
         // given
@@ -156,7 +156,7 @@ class FormattingServiceTest {
         assertThat(edits.get(0).getNewText()).contains("ComplexClass");
     }
 
-    @Test
+    @UnitTest
     void formatRange_shouldFormatSpecifiedRange() throws ExecutionException, InterruptedException {
         // given
         String code =
@@ -189,7 +189,7 @@ class FormattingServiceTest {
         assertThat(edits).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void formatRange_shouldHandleSingleLineRange() throws ExecutionException, InterruptedException {
         // given
         String code = "def x=1;def y=2;def z=3";
@@ -211,7 +211,7 @@ class FormattingServiceTest {
         assertThat(edits).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void formatRange_shouldHandleMultiLineRange() throws ExecutionException, InterruptedException {
         // given
         String code =
@@ -241,7 +241,7 @@ class FormattingServiceTest {
         assertThat(edits).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldReturnEmptyListForInvalidGroovyCode()
             throws ExecutionException, InterruptedException {
         // given
@@ -259,7 +259,7 @@ class FormattingServiceTest {
         assertThat(edits).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void formatRange_shouldReturnEmptyListForInvalidGroovyCode()
             throws ExecutionException, InterruptedException {
         // given
@@ -282,7 +282,7 @@ class FormattingServiceTest {
         assertThat(edits).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldHandleCodeWithNewlines()
             throws ExecutionException, InterruptedException {
         // given
@@ -304,7 +304,7 @@ class FormattingServiceTest {
         assertThat(edit.getRange().getEnd().getLine()).isGreaterThanOrEqualTo(7);
     }
 
-    @Test
+    @UnitTest
     void formatRange_shouldHandleRangeExceedingLineEnd()
             throws ExecutionException, InterruptedException {
         // given
@@ -328,7 +328,7 @@ class FormattingServiceTest {
         assertThat(edits).hasSize(1);
     }
 
-    @Test
+    @UnitTest
     void formatDocument_shouldApplyIndentSize() throws ExecutionException, InterruptedException {
         // given
         String code = "class Test {\ndef method() {\nprintln 'hello'\n}\n}";

@@ -2,13 +2,13 @@ package com.groovy.lsp.workspace.internal.dependency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -27,7 +27,7 @@ class DependencyResolverAdditionalTest {
                         Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit"));
     }
 
-    @Test
+    @UnitTest
     void resolveDependencies_shouldDelegateToNewResolver() throws IOException {
         // Create a valid gradle project
         Files.createFile(
@@ -43,7 +43,7 @@ class DependencyResolverAdditionalTest {
         assertThat(dependencies).isEmpty(); // Test environment returns empty
     }
 
-    @Test
+    @UnitTest
     void detectBuildSystem_shouldReCreateResolverOnReDetection() throws IOException {
         // First detection - should be NONE
         DependencyResolver.BuildSystem firstSystem = resolver.detectBuildSystem();
@@ -59,7 +59,7 @@ class DependencyResolverAdditionalTest {
         assertThat(secondSystem).isEqualTo(DependencyResolver.BuildSystem.GRADLE);
     }
 
-    @Test
+    @UnitTest
     void getBuildSystem_shouldCallDetectBuildSystem() throws IOException {
         // Create a Maven pom.xml
         Files.createFile(
@@ -71,7 +71,7 @@ class DependencyResolverAdditionalTest {
         assertThat(system).isEqualTo(DependencyResolver.BuildSystem.MAVEN);
     }
 
-    @Test
+    @UnitTest
     void enumMappingTest() {
         // Test that enum mapping works correctly
         assertThat(DependencyResolver.BuildSystem.values())
@@ -81,7 +81,7 @@ class DependencyResolverAdditionalTest {
                         DependencyResolver.BuildSystem.NONE);
     }
 
-    @Test
+    @UnitTest
     void getSourceDirectories_shouldDelegateToNewResolver() {
         // This tests that getSourceDirectories delegates correctly
         var sourceDirs = resolver.getSourceDirectories();

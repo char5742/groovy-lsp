@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,7 +14,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -30,7 +30,7 @@ class JarFileIndexerTest {
         jarFileIndexer = new JarFileIndexer();
     }
 
-    @Test
+    @UnitTest
     void testIndexJar_EmptyJar() throws IOException {
         // Create empty JAR
         Path jarFile =
@@ -45,7 +45,7 @@ class JarFileIndexerTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void testIndexJar_WithClasses() throws IOException {
         // Create JAR with sample classes
         Path jarFile =
@@ -106,7 +106,7 @@ class JarFileIndexerTest {
         assertThat(methodSymbol).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void testIndexJar_WithInterface() throws IOException {
         // Create JAR with interface
         Path jarFile =
@@ -128,7 +128,7 @@ class JarFileIndexerTest {
         assertThat(interfaceSymbol).isNotNull();
     }
 
-    @Test
+    @UnitTest
     void testIndexJar_NonExistentFile() {
         Path nonExistentJar =
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
@@ -139,7 +139,7 @@ class JarFileIndexerTest {
         assertThat(symbols).isEmpty();
     }
 
-    @Test
+    @UnitTest
     void testIsRelevantJar() throws IOException {
         // Create JAR with classes
         Path jarFile =
@@ -238,7 +238,7 @@ class JarFileIndexerTest {
         return cw.toByteArray();
     }
 
-    @Test
+    @UnitTest
     void testIndexJar_WithTooManyEntries() throws IOException {
         // Create JAR with more than MAX_ENTRIES
         Path jarFile =
@@ -265,7 +265,7 @@ class JarFileIndexerTest {
         assertThat(symbols.size()).isLessThanOrEqualTo(400_000);
     }
 
-    @Test
+    @UnitTest
     void testIndexJar_WithOversizedEntry() throws IOException {
         Path jarFile =
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")

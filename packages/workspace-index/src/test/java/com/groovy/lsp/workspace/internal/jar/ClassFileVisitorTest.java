@@ -4,12 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -24,7 +24,7 @@ class ClassFileVisitorTest {
         mockJarPath = Paths.get("/test/library.jar");
     }
 
-    @Test
+    @UnitTest
     void testVisitClass() {
         byte[] classBytes = createSimpleClass();
         ClassReader reader = new ClassReader(classBytes);
@@ -42,7 +42,7 @@ class ClassFileVisitorTest {
         assertThat(classSymbol.location().toString()).contains("library.jar");
     }
 
-    @Test
+    @UnitTest
     void testVisitClassWithPackage() {
         byte[] classBytes = createClassWithPackage();
         ClassReader reader = new ClassReader(classBytes);
@@ -59,7 +59,7 @@ class ClassFileVisitorTest {
         assertThat(classSymbol.kind()).isEqualTo(SymbolKind.CLASS);
     }
 
-    @Test
+    @UnitTest
     void testVisitEnum() {
         byte[] enumBytes = createEnum();
         ClassReader reader = new ClassReader(enumBytes);
@@ -76,7 +76,7 @@ class ClassFileVisitorTest {
         assertThat(Objects.requireNonNull(enumSymbol).name()).isEqualTo("TestEnum");
     }
 
-    @Test
+    @UnitTest
     void testVisitMethodsAndFields() {
         byte[] classBytes = createClassWithMembers();
         ClassReader reader = new ClassReader(classBytes);
@@ -103,7 +103,7 @@ class ClassFileVisitorTest {
         assertThat(methodCount).isEqualTo(2);
     }
 
-    @Test
+    @UnitTest
     void testSkipSyntheticMethods() {
         byte[] classBytes = createClassWithSyntheticMethod();
         ClassReader reader = new ClassReader(classBytes);

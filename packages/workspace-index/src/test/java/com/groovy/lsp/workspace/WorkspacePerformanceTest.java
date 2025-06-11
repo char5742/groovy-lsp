@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
 import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
+import com.groovy.lsp.test.annotations.PerformanceTest;
+import com.groovy.lsp.test.annotations.SlowTest;
 import com.groovy.lsp.workspace.internal.index.SymbolIndex;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
  * Performance tests for the workspace index module.
  * Tests that search operations complete within 50ms for 100,000 lines of code.
  */
-public class PerformanceTest {
+public class WorkspacePerformanceTest {
 
     private static final int TOTAL_LINES = 100_000;
     private static final int CLASSES_PER_FILE = 10;
@@ -79,7 +80,8 @@ public class PerformanceTest {
      * Tests that symbol search completes within 50ms for 100,000 lines of code.
      * Disabled in CI environment due to resource constraints.
      */
-    @Test
+    @PerformanceTest
+    @SlowTest
     @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void testSearchPerformance() {
         // Warmup - perform searches to warm up caches
@@ -121,7 +123,8 @@ public class PerformanceTest {
      * Tests index creation performance.
      * Disabled in CI environment due to resource constraints.
      */
-    @Test
+    @PerformanceTest
+    @SlowTest
     @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void testIndexCreationPerformance() {
         // Create a new index
@@ -158,7 +161,8 @@ public class PerformanceTest {
      * Tests concurrent search performance.
      * Disabled in CI environment due to resource constraints.
      */
-    @Test
+    @PerformanceTest
+    @SlowTest
     @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     void testConcurrentSearchPerformance() throws InterruptedException {
         // Warmup

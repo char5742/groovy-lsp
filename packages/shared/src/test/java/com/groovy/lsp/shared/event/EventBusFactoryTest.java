@@ -2,14 +2,14 @@ package com.groovy.lsp.shared.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
+import com.groovy.lsp.test.annotations.UnitTest;
 
 /**
  * EventBusFactoryのテストクラス。
  */
 class EventBusFactoryTest {
 
-    @Test
+    @UnitTest
     void create_shouldCreateNewEventBusInstance() {
         // when
         EventBus eventBus1 = EventBusFactory.create();
@@ -21,7 +21,7 @@ class EventBusFactoryTest {
         assertThat(eventBus1).isNotSameAs(eventBus2);
     }
 
-    @Test
+    @UnitTest
     void getInstance_shouldReturnSingletonInstance() {
         // when
         EventBus instance1 = EventBusFactory.getInstance();
@@ -33,7 +33,7 @@ class EventBusFactoryTest {
         assertThat(instance1).isSameAs(instance2);
     }
 
-    @Test
+    @UnitTest
     void getInstance_shouldReturnSameInstanceInMultithreadedEnvironment()
             throws InterruptedException {
         // given

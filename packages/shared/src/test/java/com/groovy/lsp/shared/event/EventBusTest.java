@@ -2,12 +2,12 @@ package com.groovy.lsp.shared.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.groovy.lsp.test.annotations.UnitTest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * EventBusインターフェースのテストクラス。
@@ -22,7 +22,7 @@ class EventBusTest {
         eventBus = EventBusFactory.create();
     }
 
-    @Test
+    @UnitTest
     void interfaceMethods_shouldWorkCorrectly() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
@@ -44,7 +44,7 @@ class EventBusTest {
         assertThat(receivedEvents.get(0).getAggregateId()).isEqualTo("aggregate-1");
     }
 
-    @Test
+    @UnitTest
     void handler_shouldBeDefinableWithLambda() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
@@ -64,7 +64,7 @@ class EventBusTest {
         assertThat(aggregateIds).containsExactly("test-id");
     }
 
-    @Test
+    @UnitTest
     void handler_shouldBeDefinableWithMethodReference() throws InterruptedException {
         // given
         CountDownLatch latch = new CountDownLatch(1);
