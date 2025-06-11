@@ -90,6 +90,10 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "echo 'VS Code extension tests require UI environment, skipping in CI' && exit 0",
+    "test:unit": "node ./out/test/runTest.js",
+    "test:e2e": "node ./out/test/runE2ETest.js",
+    "test:performance": "node ./out/test/runPerformanceTest.js",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "package": "vsce package",
     "package:pre-release": "vsce package --pre-release"
   },
