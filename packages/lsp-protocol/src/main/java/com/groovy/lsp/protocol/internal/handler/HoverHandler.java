@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol.internal.handler;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
@@ -63,6 +64,8 @@ public class HoverHandler {
 
                         // Get AST service
                         ASTService astService = serviceRouter.getAstService();
+                        CompilerConfigurationService configService =
+                                serviceRouter.getCompilerConfigurationService();
                         TypeInferenceService typeService = serviceRouter.getTypeInferenceService();
 
                         // Get document content
@@ -72,8 +75,12 @@ public class HoverHandler {
                             return null;
                         }
 
-                        // Parse the document
-                        ModuleNode moduleNode = astService.parseSource(sourceCode, uri);
+                        // Parse the document with workspace-aware compiler configuration
+                        ModuleNode moduleNode =
+                                astService.parseSource(
+                                        sourceCode,
+                                        uri,
+                                        configService.createDefaultConfiguration());
                         if (moduleNode == null) {
                             logger.debug("Failed to parse module for {}", uri);
                             return null;

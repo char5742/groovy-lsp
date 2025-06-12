@@ -80,7 +80,8 @@ public class ServerModule {
     @Provides
     @Singleton
     CompilerConfigurationService provideCompilerConfigurationService() {
-        return GroovyCoreFactory.getInstance().createCompilerConfigurationService();
+        return new com.groovy.lsp.groovy.core.internal.impl.WorkspaceAwareCompilerFactoryImpl(
+                java.nio.file.Paths.get(workspaceRoot));
     }
 
     @Provides

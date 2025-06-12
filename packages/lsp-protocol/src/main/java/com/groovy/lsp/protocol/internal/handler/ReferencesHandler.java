@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol.internal.handler;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.util.LocationUtils;
@@ -74,6 +75,8 @@ public class ReferencesHandler {
 
                         // Get services
                         ASTService astService = serviceRouter.getAstService();
+                        CompilerConfigurationService configService =
+                                serviceRouter.getCompilerConfigurationService();
                         WorkspaceIndexService indexService =
                                 serviceRouter.getWorkspaceIndexService();
 
@@ -84,8 +87,12 @@ public class ReferencesHandler {
                             return Collections.emptyList();
                         }
 
-                        // Parse the document
-                        ModuleNode moduleNode = astService.parseSource(sourceCode, uri);
+                        // Parse the document with workspace-aware compiler configuration
+                        ModuleNode moduleNode =
+                                astService.parseSource(
+                                        sourceCode,
+                                        uri,
+                                        configService.createDefaultConfiguration());
                         if (moduleNode == null) {
                             logger.debug("Failed to parse module for {}", uri);
                             return Collections.emptyList();

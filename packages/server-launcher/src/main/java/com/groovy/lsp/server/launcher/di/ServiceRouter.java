@@ -108,6 +108,7 @@ public class ServiceRouter implements IServiceRouter {
      * @return the compiler configuration service
      * @throws IllegalStateException if the service is not available
      */
+    @Override
     public CompilerConfigurationService getCompilerConfigurationService() {
         ensureServiceAvailable(compilerConfigurationService, "CompilerConfigurationService");
         return compilerConfigurationService;
