@@ -3,16 +3,6 @@ name: VSCode Extension E2E Tests
 on:
   workflow_dispatch:
     inputs:
-      os:
-        description: 'Operating System'
-        required: true
-        default: 'ubuntu-latest'
-        type: choice
-        options:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
-          - all
       vscode-version:
         description: 'VS Code Version'
         required: true
@@ -33,10 +23,9 @@ jobs:
   e2e-test:
     strategy:
       matrix:
-        os: ${{ fromJson(github.event.inputs.os == 'all' && '["ubuntu-latest", "windows-latest", "macos-latest"]' || format('["{0}"]', github.event.inputs.os)) }}
         vscode-version: ${{ fromJson(github.event.inputs.vscode-version == 'both' && '["stable", "insiders"]' || format('["{0}"]', github.event.inputs.vscode-version)) }}
       fail-fast: false
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +64,6 @@ jobs:
         run: npm run compile
 
       - name: Install Linux dependencies
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -95,8 +83,7 @@ jobs:
         working-directory: packages/e2e-tests/vscode-test
         run: npm ci
 
-      - name: Run E2E tests (Linux)
-        if: runner.os == 'Linux'
+      - name: Run E2E tests
         working-directory: packages/e2e-tests/vscode-test
         run: |
           export DISPLAY=':99.0'
@@ -105,23 +92,11 @@ jobs:
         env:
           VSCODE_VERSION: ${{ matrix.vscode-version }}
 
-      - name: Install E2E test dependencies (Windows/macOS)
-        if: runner.os != 'Linux'
-        working-directory: packages/e2e-tests/vscode-test
-        run: npm ci
-
-      - name: Run E2E tests (Windows/macOS)
-        if: runner.os != 'Linux'
-        working-directory: packages/e2e-tests/vscode-test
-        run: npm test
-        env:
-          VSCODE_VERSION: ${{ matrix.vscode-version }}
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-test-results-${{ matrix.os }}-${{ matrix.vscode-version }}
+          name: e2e-test-results-${{ matrix.vscode-version }}
           path: |
             packages/e2e-tests/vscode-test/test-results/
             packages/e2e-tests/vscode-test/.vscode-test/logs/
@@ -131,7 +106,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-screenshots-${{ matrix.os }}-${{ matrix.vscode-version }}
+          name: e2e-screenshots-${{ matrix.vscode-version }}
           path: |
             packages/e2e-tests/vscode-test/screenshots/
             packages/e2e-tests/vscode-test/.vscode-test/screenshots/
