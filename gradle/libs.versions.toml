@@ -42,7 +42,7 @@ awaitility = "4.3.0"
 wiremock = "3.0.1"
 asm = "9.8"
 maven-resolver = "1.9.22"
-maven-resolver-connector-basic = "1.9.22"
+maven-resolver-connector-basic = "1.9.23"
 maven-resolver-transport-file = "1.9.23"
 maven-resolver-transport-http = "1.9.23"
 
