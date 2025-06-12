@@ -63,7 +63,7 @@ jobs:
       - name: Copy language server JAR to extension
         run: |
           mkdir -p packages/vscode-extension/server
-          cp packages/server-launcher/build/libs/*-all.jar packages/vscode-extension/server/groovy-language-server.jar
+          cp packages/server-launcher/build/libs/groovy-language-server-*.jar packages/vscode-extension/server/groovy-language-server.jar
         shell: bash
 
       - name: Install extension dependencies
