@@ -1,6 +1,10 @@
-const assert = require('assert');
+import assert from 'assert';
+import path from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+// vscodeモジュールはVS Code内でCJSとして提供されるためrequireを使用
 const vscode = require('vscode');
-const path = require('path');
 
 suite('Groovy Language Features Test Suite', () => {
     

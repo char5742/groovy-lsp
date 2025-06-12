@@ -1,6 +1,11 @@
 // テストを実行せずにテストランナーの動作を確認するモックテスト
 
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 console.log('=== Mock Test Runner ===');
 console.log('This test simulates the test execution without actually running VS Code.');
@@ -27,7 +32,6 @@ testFiles.forEach(file => {
     
     // テストファイルの内容を簡単に解析
     try {
-        const fs = require('fs');
         const content = fs.readFileSync(fullPath, 'utf8');
         const testMatches = content.match(/test\(['"](.+?)['"]/g);
         if (testMatches) {

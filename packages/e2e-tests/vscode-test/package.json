@@ -2,12 +2,11 @@
   "name": "groovy-lsp-vscode-test",
   "version": "1.0.0",
   "description": "VS Code integration tests for Groovy Language Server",
+  "type": "module",
   "scripts": {
     "test": "node ./test/runTest.js",
     "test:mock": "node ./test/mock-test.js",
-    "test:download": "node ./test/download-vscode.js",
-    "test:ci": "node ./test/ci-runner.js",
-    "test:headless": "sh ./test-headless.sh"
+    "test:minimal": "node ./test/minimal/runTest.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
