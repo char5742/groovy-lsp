@@ -23,7 +23,7 @@
     <!-- Logger configurations -->
     <logger name="com.groovy.lsp" level="DEBUG" />
     <logger name="org.eclipse.lsp4j" level="INFO" />
-    <logger name="com.google.inject" level="INFO" />
+    <logger name="dagger" level="INFO" />
 
     <!-- Root logger -->
     <root level="INFO">

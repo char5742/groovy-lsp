@@ -38,6 +38,10 @@ out/
 bin/
 target/
 
+# Build artifacts
+META-INF/
+!META-INF/MANIFEST.MF
+
 # Dev Container
 .devcontainer/.env
 

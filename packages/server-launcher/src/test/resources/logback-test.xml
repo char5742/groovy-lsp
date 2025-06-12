@@ -10,7 +10,7 @@
     <!-- Set log levels for testing -->
     <logger name="com.groovy.lsp" level="DEBUG" />
     <logger name="org.eclipse.lsp4j" level="WARN" />
-    <logger name="com.google.inject" level="WARN" />
+    <logger name="dagger" level="WARN" />
 
     <!-- Root logger -->
     <root level="WARN">

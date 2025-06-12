@@ -1,3 +1,0 @@
-org.codehaus.groovy.macro.transform.MacroTransformation
-org.codehaus.groovy.macro.transform.MacroClassTransformation
-groovy.grape.GrabAnnotationTransformation

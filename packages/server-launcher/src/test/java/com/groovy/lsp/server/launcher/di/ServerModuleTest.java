@@ -2,8 +2,14 @@ package com.groovy.lsp.server.launcher.di;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -550,5 +556,150 @@ class ServerModuleTest {
                 System.clearProperty(ServerConstants.MAX_THREADS_ENV_KEY);
             }
         }
+    }
+
+    // ===== Tests demonstrating TestServerComponent usage =====
+
+    @UnitTest
+    void testServerComponent_shouldProvideAllMockedServices() {
+        // given
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withMocks()
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // when - access all services
+        ASTService astService = component.astService();
+        TypeInferenceService typeInferenceService = component.typeInferenceService();
+        EventBus eventBus = component.eventBus();
+        GroovyLanguageServer languageServer = component.languageServer();
+
+        // then - all services should be available
+        assertThat(astService).isNotNull();
+        assertThat(typeInferenceService).isNotNull();
+        assertThat(eventBus).isNotNull();
+        assertThat(languageServer).isNotNull();
+
+        // Verify services are mocked
+        assertThat(astService.getClass().getName()).contains("Mock");
+        assertThat(typeInferenceService.getClass().getName()).contains("Mock");
+        assertThat(eventBus.getClass().getName()).contains("Mock");
+    }
+
+    @UnitTest
+    void testServerComponent_shouldAllowCustomServiceConfiguration() {
+        // given - create custom mocks with specific behavior
+        ASTService mockAstService = mock(ASTService.class);
+        when(mockAstService.parseSource("test code", "test.groovy")).thenReturn(null);
+
+        EventBus mockEventBus = mock(EventBus.class);
+
+        // when - build component with custom services
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withMocks()
+                                        .withAstService(mockAstService)
+                                        .withEventBus(mockEventBus)
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // then - custom services should be used
+        assertThat(component.astService()).isSameAs(mockAstService);
+        assertThat(component.eventBus()).isSameAs(mockEventBus);
+
+        // Verify custom behavior
+        component.astService().parseSource("test code", "test.groovy");
+        verify(mockAstService).parseSource("test code", "test.groovy");
+    }
+
+    @UnitTest
+    void testServerComponent_shouldProvideRealImplementations() {
+        // given
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withRealImplementations()
+                                        .withTestWorkspace(workspaceRoot)
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // when
+        ASTService astService = component.astService();
+        TypeInferenceService typeInferenceService = component.typeInferenceService();
+        GroovyLanguageServer languageServer = component.languageServer();
+
+        // then - services should be real implementations
+        assertThat(astService).isNotNull();
+        assertThat(typeInferenceService).isNotNull();
+        assertThat(languageServer).isNotNull();
+
+        // Verify not mocks
+        assertThat(astService.getClass().getName()).doesNotContain("Mock");
+        assertThat(typeInferenceService.getClass().getName()).doesNotContain("Mock");
+    }
+
+    @UnitTest
+    void testServerComponent_shouldSupportMixedMockAndRealServices() {
+        // given - use mocks for most services but real implementation for specific ones
+        TestServerModule module =
+                new TestServerModule.Builder()
+                        .withMocks() // Use mocks by default
+                        .withFormattingService(
+                                new com.groovy.lsp.formatting.service
+                                        .FormattingService()) // But use real formatting service
+                        .withTestWorkspace(
+                                Objects.requireNonNull(
+                                        tempDir, "tempDir should be initialized by JUnit"))
+                        .withDirectExecutor()
+                        .build();
+
+        // when
+        TestServerComponent component =
+                DaggerTestServerComponent.builder().testServerModule(module).build();
+
+        // then
+        assertThat(component.astService().getClass().getName()).contains("Mock");
+        assertThat(component.formattingService().getClass().getName()).doesNotContain("Mock");
+        assertThat(component.formattingService())
+                .isInstanceOf(com.groovy.lsp.formatting.service.FormattingService.class);
+    }
+
+    @UnitTest
+    void testServerComponent_shouldUseDirectExecutorForDeterministicTests() {
+        // given
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withMocks()
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // when
+        ExecutorService executor = component.serverExecutor();
+
+        // then - executor should run tasks synchronously
+        java.util.concurrent.atomic.AtomicBoolean taskExecuted =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+        executor.execute(() -> taskExecuted.set(true));
+
+        // Task should be executed immediately without waiting
+        assertThat(taskExecuted.get()).isTrue();
+
+        // Clean up
+        executor.shutdown();
     }
 }
