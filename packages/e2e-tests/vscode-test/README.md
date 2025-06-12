@@ -90,12 +90,18 @@ xvfb-run -a npm test
 - `test/suite/hover-advanced.test.js` - ホバー情報表示のテスト
 - `test/suite/formatting.test.js` - コードフォーマット機能のテスト
 
-### 高度な機能テスト（新規追加）
+### 高度な機能テスト（優先度: 高）
 - `test/suite/cross-file.test.js` - クロスファイル機能のテスト
 - `test/suite/refactoring.test.js` - リファクタリング機能のテスト
 
+### ビルドツール・性能テスト（優先度: 中）
+- `test/suite/gradle-integration.test.js` - Gradle統合機能のテスト
+- `test/suite/performance-scale.test.js` - パフォーマンス・スケーラビリティテスト
+
 ### テストフィクスチャ
 - `test/fixtures/cross-file-project/` - マルチファイルプロジェクトのサンプル
+- `test/fixtures/gradle-project/` - Gradleプロジェクトのサンプル
+- `test/fixtures/large-project/` - パフォーマンステスト用（動的生成）
 
 ## トラブルシューティング
 
