@@ -54,7 +54,11 @@ export async function activate(context: vscode.ExtensionContext) {
     const serverOptions: ServerOptions = {
         run: {
             command: javaExecutable,
-            args: ['-jar', jarPath, ...workspaceArgs],
+            args: [
+                '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+                '-jar', jarPath, 
+                ...workspaceArgs
+            ],
             transport: TransportKind.stdio,
             options: {
                 env: {
@@ -67,7 +71,12 @@ export async function activate(context: vscode.ExtensionContext) {
         },
         debug: {
             command: javaExecutable,
-            args: ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005', '-jar', jarPath, ...workspaceArgs],
+            args: [
+                '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+                '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005', 
+                '-jar', jarPath, 
+                ...workspaceArgs
+            ],
             transport: TransportKind.stdio,
             options: {
                 env: {
