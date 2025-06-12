@@ -17,7 +17,7 @@ suite('Definition E2E Test Suite', () => {
         // Open the Groovy test file
         const groovyPath = path.join(
             __dirname,
-            '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+            '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
         );
         groovyDocument = await openDocument(groovyPath);
 
@@ -26,13 +26,41 @@ suite('Definition E2E Test Suite', () => {
 
         // Position on "Calculator" class usage in "new Calculator()" (line 8, column 22)
         const position = new vscode.Position(7, 22); // 0-indexed
+        
+        // Debug: check what's at the position
+        const line = groovyDocument.lineAt(position.line);
+        console.log(`Line content: "${line.text}"`);
+        console.log(`Character at position ${position.character}: "${line.text.charAt(position.character)}"`);
 
         // Execute go to definition
-        const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
-            'vscode.executeDefinitionProvider',
-            groovyDocument.uri,
-            position
-        );
+        let definitions: vscode.Location[] | undefined;
+        try {
+            definitions = await vscode.commands.executeCommand<vscode.Location[]>(
+                'vscode.executeDefinitionProvider',
+                groovyDocument.uri,
+                position
+            );
+        } catch (error) {
+            console.error(`Error executing definition provider: ${error}`);
+            throw error;
+        }
+
+        // Debug output
+        console.log(`Definitions result: ${JSON.stringify(definitions)}`);
+        console.log(`Number of definitions: ${definitions ? definitions.length : 'null'}`);
+        
+        // If no definitions, wait and try again
+        if (!definitions || definitions.length === 0) {
+            console.log('No definitions found, waiting 3 seconds and trying again...');
+            await sleep(3000);
+            definitions = await vscode.commands.executeCommand<vscode.Location[]>(
+                'vscode.executeDefinitionProvider',
+                groovyDocument.uri,
+                position
+            );
+            console.log(`Retry - Definitions result: ${JSON.stringify(definitions)}`);
+            console.log(`Retry - Number of definitions: ${definitions ? definitions.length : 'null'}`);
+        }
 
         // Verify we got a definition
         assert.ok(definitions, 'Should return definition locations');
@@ -53,7 +81,7 @@ suite('Definition E2E Test Suite', () => {
         if (!groovyDocument) {
             const groovyPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
             );
             groovyDocument = await openDocument(groovyPath);
             await sleep(2000);
@@ -81,7 +109,7 @@ suite('Definition E2E Test Suite', () => {
         if (!groovyDocument) {
             const groovyPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
             );
             groovyDocument = await openDocument(groovyPath);
             await sleep(2000);
@@ -114,7 +142,7 @@ suite('Definition E2E Test Suite', () => {
         // Open the Java file
         const javaPath = path.join(
             __dirname,
-            '../../fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
+            '../../../src/test/fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
         );
         javaDocument = await openDocument(javaPath);
         await sleep(2000);
@@ -141,7 +169,7 @@ suite('Definition E2E Test Suite', () => {
         if (!groovyDocument) {
             const groovyPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
             );
             groovyDocument = await openDocument(groovyPath);
             await sleep(2000);

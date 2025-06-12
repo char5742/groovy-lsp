@@ -24,7 +24,7 @@ class TestClass {
     }
 }`;
         
-        const uri = vscode.Uri.file(path.join(__dirname, '../../fixtures/temp-error.groovy'));
+        const uri = vscode.Uri.file(path.join(__dirname, '../../../src/test/fixtures/temp-error.groovy'));
         const doc = await vscode.workspace.openTextDocument({ content, language: 'groovy' });
         editor = await vscode.window.showTextDocument(doc);
         

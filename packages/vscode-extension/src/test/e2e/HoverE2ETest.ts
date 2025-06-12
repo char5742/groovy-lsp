@@ -11,7 +11,7 @@ suite('Hover E2E Test Suite', () => {
     });
 
     test('should show hover information for Java classes', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
 
         // Hover over Calculator class
@@ -38,7 +38,7 @@ suite('Hover E2E Test Suite', () => {
     });
 
     test('should show hover information for methods', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
 
         // Hover over add method
@@ -62,7 +62,7 @@ suite('Hover E2E Test Suite', () => {
     });
 
     test('should show hover information for Groovy keywords', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
 
         // Hover over 'def' keyword
@@ -81,7 +81,7 @@ suite('Hover E2E Test Suite', () => {
     });
 
     test('should show hover for Spock framework elements', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
 
         // Hover over Specification class

@@ -60,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 env: {
                     ...process.env,
                     'groovy.lsp.debug': 'true',
+                    'groovy.lsp.log.level': 'DEBUG',
                     'groovy.lsp.client.version': context.extension.packageJSON.version
                 }
             }
@@ -72,6 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 env: {
                     ...process.env,
                     'groovy.lsp.debug': 'true',
+                    'groovy.lsp.log.level': 'DEBUG',
                     'groovy.lsp.client.version': context.extension.packageJSON.version
                 }
             }

@@ -17,7 +17,7 @@ suite('References E2E Test Suite', () => {
         // Open the Java file first
         const javaPath = path.join(
             __dirname,
-            '../../fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
+            '../../../src/test/fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
         );
         javaDocument = await openDocument(javaPath);
         await sleep(2000);
@@ -54,7 +54,7 @@ suite('References E2E Test Suite', () => {
         if (!javaDocument) {
             const javaPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
             );
             javaDocument = await openDocument(javaPath);
             await sleep(2000);
@@ -88,7 +88,7 @@ suite('References E2E Test Suite', () => {
         // Open the Groovy file
         const groovyPath = path.join(
             __dirname,
-            '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+            '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
         );
         groovyDocument = await openDocument(groovyPath);
         await sleep(2000);
@@ -124,7 +124,7 @@ suite('References E2E Test Suite', () => {
         if (!groovyDocument) {
             const groovyPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
             );
             groovyDocument = await openDocument(groovyPath);
             await sleep(2000);
@@ -157,7 +157,7 @@ suite('References E2E Test Suite', () => {
         if (!groovyDocument) {
             const groovyPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy'
             );
             groovyDocument = await openDocument(groovyPath);
             await sleep(2000);
@@ -192,7 +192,7 @@ suite('References E2E Test Suite', () => {
         if (!javaDocument) {
             const javaPath = path.join(
                 __dirname,
-                '../../fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
+                '../../../src/test/fixtures/sample-java-groovy-project/src/main/java/com/example/Calculator.java'
             );
             javaDocument = await openDocument(javaPath);
             await sleep(2000);

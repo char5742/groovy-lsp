@@ -12,7 +12,7 @@ suite('Completion E2E Test Suite', () => {
     });
 
     test('should provide completion for Java classes in Groovy file', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
         editor = await vscode.window.showTextDocument(document);
 
@@ -39,7 +39,7 @@ suite('Completion E2E Test Suite', () => {
     });
 
     test('should provide method completion for Java objects', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
         editor = await vscode.window.showTextDocument(document);
 
@@ -68,7 +68,7 @@ suite('Completion E2E Test Suite', () => {
     });
 
     test('should provide Spock framework completions', async () => {
-        const docPath = path.join(__dirname, '../../fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
+        const docPath = path.join(__dirname, '../../../src/test/fixtures/sample-java-groovy-project/src/test/groovy/com/example/CalculatorSpec.groovy');
         document = await openDocument(docPath);
         editor = await vscode.window.showTextDocument(document);
 
