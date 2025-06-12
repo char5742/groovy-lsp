@@ -11,15 +11,16 @@ export async function activateExtension(): Promise<void> {
         await ext.activate();
     }
     
-    // Wait for language server to start
-    await sleep(2000);
+    // Wait for language server to start and index workspace
+    console.log('Waiting for language server to initialize and index workspace...');
+    await sleep(10000); // Increase wait time to 10 seconds for indexing
 }
 
 export async function openDocument(filePath: string): Promise<vscode.TextDocument> {
     const document = await vscode.workspace.openTextDocument(filePath);
     await vscode.window.showTextDocument(document);
-    // Wait for document to be fully loaded
-    await sleep(1000);
+    // Wait for document to be fully loaded and indexed by language server
+    await sleep(2000); // Increase wait time
     return document;
 }
 

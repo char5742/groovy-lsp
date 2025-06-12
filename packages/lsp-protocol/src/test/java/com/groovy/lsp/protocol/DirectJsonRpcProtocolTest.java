@@ -57,13 +57,12 @@ class DirectJsonRpcProtocolTest {
         IServiceRouter serviceRouter = Mockito.mock(IServiceRouter.class);
         DocumentManager documentManager = new DocumentManager();
 
-        GroovyTextDocumentService textDocumentService = new GroovyTextDocumentService();
-        textDocumentService.setServiceRouter(serviceRouter);
-        textDocumentService.setDocumentManager(documentManager);
+        GroovyTextDocumentService textDocumentService =
+                new GroovyTextDocumentService(serviceRouter, documentManager);
 
         GroovyWorkspaceService workspaceService = new GroovyWorkspaceService();
 
-        server = new GroovyLanguageServer(textDocumentService, workspaceService);
+        server = new GroovyLanguageServer(textDocumentService, workspaceService, serviceRouter);
     }
 
     @UnitTest

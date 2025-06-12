@@ -61,7 +61,7 @@ Groovy LSPは、Apache GroovyのためのフルスペックのLanguage Server Pr
 └────────────┬────────────┘
              │
 ┌────────────▼────────────┐
-│   Service Router        │  ← Guice DI
+│   Service Router        │  ← Dagger DI
 │  (server-launcher)      │
 └────────────┬────────────┘
              │

@@ -4,7 +4,7 @@ This module provides the main entry point for the Groovy Language Server. It han
 
 - LSP4J launcher setup
 - JSON-RPC communication over stdio or socket
-- Server initialization with Guice dependency injection
+- Server initialization with Dagger dependency injection
 - Command-line argument parsing
 
 ## Usage
@@ -35,7 +35,7 @@ To run the server directly:
 
 The module uses:
 - **LSP4J** for Language Server Protocol implementation
-- **Guice** for dependency injection
+- **Dagger** for dependency injection
 - **Logback** for logging
 - **Shadow plugin** to create an executable fat JAR
 

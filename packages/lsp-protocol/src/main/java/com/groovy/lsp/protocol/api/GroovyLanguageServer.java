@@ -1,9 +1,10 @@
 package com.groovy.lsp.protocol.api;
 
-import com.google.inject.Inject;
 import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.util.concurrent.CompletableFuture;
+import javax.inject.Inject;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.InitializeParams;
@@ -32,20 +33,26 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
 
     private final GroovyTextDocumentService textDocumentService;
     private final GroovyWorkspaceService workspaceService;
+    private final IServiceRouter serviceRouter;
     private @Nullable LanguageClient client;
     private int errorCode = 1;
 
     @Inject
     public GroovyLanguageServer(
             GroovyTextDocumentService textDocumentService,
-            GroovyWorkspaceService workspaceService) {
+            GroovyWorkspaceService workspaceService,
+            IServiceRouter serviceRouter) {
         this.textDocumentService = textDocumentService;
         this.workspaceService = workspaceService;
+        this.serviceRouter = serviceRouter;
     }
 
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         logger.info("Initializing Groovy Language Server");
+
+        // Initialize workspace index service asynchronously
+        var unused = CompletableFuture.runAsync(this::initializeWorkspaceIndex);
 
         InitializeResult result = new InitializeResult(new ServerCapabilities());
 
@@ -144,5 +151,32 @@ public class GroovyLanguageServer implements LanguageServer, LanguageClientAware
      */
     public @Nullable LanguageClient getClient() {
         return client;
+    }
+
+    /**
+     * Initialize the workspace index service.
+     */
+    private void initializeWorkspaceIndex() {
+        try {
+            WorkspaceIndexService indexService = serviceRouter.getWorkspaceIndexService();
+            if (indexService == null) {
+                logger.warn("WorkspaceIndexService is not available");
+                return;
+            }
+
+            logger.info("Initializing workspace index service");
+
+            // Initialize the index (WorkspaceIndexService already has workspace root from DI)
+            indexService
+                    .initialize()
+                    .thenRun(() -> logger.info("Workspace index initialized successfully"))
+                    .exceptionally(
+                            ex -> {
+                                logger.error("Failed to initialize workspace index", ex);
+                                return null;
+                            });
+        } catch (Exception e) {
+            logger.error("Error initializing workspace index", e);
+        }
     }
 }

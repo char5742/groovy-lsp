@@ -1,6 +1,5 @@
 package com.groovy.lsp.protocol.internal.impl;
 
-import com.google.inject.Inject;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.handler.DefinitionHandler;
@@ -10,6 +9,7 @@ import com.groovy.lsp.protocol.internal.handler.ReferencesHandler;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import javax.inject.Inject;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -62,19 +62,15 @@ public class GroovyTextDocumentService implements TextDocumentService, LanguageC
     private static final Logger logger = LoggerFactory.getLogger(GroovyTextDocumentService.class);
 
     private @Nullable LanguageClient client;
-    private @Nullable IServiceRouter serviceRouter;
-    private @Nullable DocumentManager documentManager;
+    private final IServiceRouter serviceRouter;
+    private final DocumentManager documentManager;
     private @Nullable DiagnosticsHandler diagnosticsHandler;
     private final Object diagnosticsHandlerLock = new Object();
 
     @Inject
-    public void setServiceRouter(IServiceRouter serviceRouter) {
+    public GroovyTextDocumentService(
+            IServiceRouter serviceRouter, DocumentManager documentManager) {
         this.serviceRouter = serviceRouter;
-        initializeDiagnosticsHandler();
-    }
-
-    @Inject
-    public void setDocumentManager(DocumentManager documentManager) {
         this.documentManager = documentManager;
         initializeDiagnosticsHandler();
     }

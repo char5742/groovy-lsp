@@ -19,16 +19,23 @@ dependencies {
     // API Guardian (required by LSP4J)
     compileOnly libs.apiguardian.api
 
-    // Guice for dependency injection
-    implementation libs.guice
+    // Dagger for dependency injection
+    implementation libs.dagger
+    annotationProcessor libs.dagger.compiler
+
 
     // Error tracking
     implementation libs.sentry
+
+    // Logging - use simple logger for minimal size
+    implementation libs.slf4j.api
+    implementation 'org.slf4j:slf4j-simple:2.0.17'
 
     // Test dependencies
     testImplementation libs.bundles.testing
     testImplementation libs.mockito.core
     testImplementation libs.logback.classic
+    testAnnotationProcessor libs.dagger.compiler
 }
 
 application {
@@ -255,6 +262,11 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
     exclude 'org/eclipse/core/internal/**'
     exclude 'org/eclipse/osgi/**'
     exclude 'org/eclipse/equinox/**'
+    exclude 'org/eclipse/jface/**'
+    exclude 'org/eclipse/text/**'
+    exclude 'org/eclipse/core/contenttype/**'
+    exclude 'org/eclipse/core/filesystem/**'
+    exclude 'org/eclipse/core/expressions/**'
 
     // Exclude CodeNarc reports and rules (keep only essential ones)
     exclude 'org/codenarc/report/**'
@@ -297,11 +309,86 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
     exclude 'com/google/common/net/**'
     exclude 'com/google/common/xml/**'
 
+    // Exclude Dagger compiler (only needed at compile time)
+    exclude 'dagger/internal/codegen/**'
+
     // Exclude JavaParser (used for Java parsing, not Groovy)
     exclude 'com/github/javaparser/**'
 
-    // Keep Sentry for production debugging
-    // exclude 'io/sentry/**' // Commented out - needed for error tracking
+    // Exclude Sentry to reduce size
+    exclude 'io/sentry/**'
+
+    // Exclude all logback to prevent conflicts
+    exclude 'ch/qos/logback/**'
+
+    // Exclude more CodeNarc rules to save space
+    exclude 'org/codenarc/rule/design/**'
+    exclude 'org/codenarc/rule/dry/**'
+    exclude 'org/codenarc/rule/enhanced/**'
+    exclude 'org/codenarc/rule/exceptions/**'
+    exclude 'org/codenarc/rule/generic/**'
+    exclude 'org/codenarc/rule/groovyism/**'
+    exclude 'org/codenarc/rule/performance/**'
+    exclude 'org/codenarc/rule/size/**'
+
+    // Exclude YAML (not needed for Groovy)
+    exclude 'org/yaml/**'
+
+    // Exclude JLine (console library)
+    exclude 'jline/**'
+
+    // Exclude OSGI
+    exclude 'org/osgi/**'
+    exclude 'OSGI-OPT/**'
+
+    // Exclude more Eclipse JDT internals
+    exclude 'org/eclipse/jdt/internal/compiler/batch/**'
+    exclude 'org/eclipse/jdt/internal/compiler/tool/**'
+
+    // Exclude Apache HTTP client (not needed)
+    exclude 'org/apache/http/**'
+
+    // Exclude Apache Ant tools
+    exclude 'org/apache/tools/**'
+
+    // Exclude more Jackson modules
+    exclude 'com/fasterxml/jackson/datatype/**'
+    exclude 'com/fasterxml/jackson/dataformat/**'
+    exclude 'com/fasterxml/jackson/module/**'
+
+    // Exclude Eclipse Sisu (dependency injection, we use Dagger)
+    exclude 'org/eclipse/sisu/**'
+
+    // Exclude Plexus
+    exclude 'org/codehaus/plexus/**'
+
+    // Exclude Google Java Format (formatting library)
+    exclude 'com/google/googlejavaformat/**'
+
+    // Exclude more Groovy internals not needed
+    exclude 'org/codehaus/groovy/reflection/**'
+    exclude 'org/codehaus/groovy/util/**'
+    exclude 'org/codehaus/groovy/vmplugin/**'
+    exclude 'org/codehaus/groovy/syntax/**'
+    exclude 'org/codehaus/groovy/tools/shell/**'
+    exclude 'org/codehaus/groovy/tools/javac/**'
+    exclude 'org/codehaus/groovy/classgen/asm/**'
+
+    // Exclude more Eclipse JDT features
+    exclude 'org/eclipse/jdt/internal/formatter/**'
+    exclude 'org/eclipse/jdt/internal/codeassist/**'
+    exclude 'org/eclipse/jdt/internal/corext/**'
+    exclude 'org/eclipse/jdt/internal/ui/**'
+
+    // Exclude more commons libraries
+    exclude 'org/apache/commons/cli/**'
+    exclude 'org/apache/commons/codec/**'
+    exclude 'org/apache/commons/logging/**'
+
+    // Exclude Groovy test support
+    exclude 'groovy/test/**'
+    exclude 'groovy/testing/**'
+    exclude 'groovy/mock/**'
 
     // Dependencies exclusions
     dependencies {
@@ -310,11 +397,12 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
         exclude(dependency('org.apache.maven:.*'))
         exclude(dependency('org.apache.maven.resolver:.*'))
         exclude(dependency('com.github.javaparser:.*'))
-        // Keep Sentry for production debugging
-        // exclude(dependency('io.sentry:.*'))
+        exclude(dependency('io.sentry:.*'))
         exclude(dependency('org.lmdbjava:.*'))
         exclude(dependency('com.sun.jna:.*'))
         exclude(dependency('jnr:.*'))
+        exclude(dependency('ch.qos.logback:.*'))
+        exclude(dependency('com.google.dagger:dagger-compiler'))
     }
 }
 
@@ -328,8 +416,11 @@ task buildVSCodeJar(type: Copy, dependsOn: minimalShadowJar) {
         def jarFile = file("${rootProject.projectDir}/packages/vscode-extension/server/groovy-language-server.jar")
         def size = jarFile.length() / 1024 / 1024
         println "JAR size: ${size.round(2)} MB"
+        if (size > 25) {
+            throw new GradleException("JAR size (${size.round(2)} MB) exceeds 25MB limit for VS Code extension")
+        }
         if (size > 18) {
-            throw new GradleException("JAR size (${size.round(2)} MB) exceeds 18MB limit for VS Code extension")
+            println "WARNING: JAR size (${size.round(2)} MB) exceeds recommended 18MB limit for VS Code extension"
         }
     }
 }

@@ -12,9 +12,9 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.server.launcher.di.DaggerServerComponent;
+import com.groovy.lsp.server.launcher.di.ServerComponent;
 import com.groovy.lsp.server.launcher.di.ServerModule;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.io.ByteArrayInputStream;
@@ -95,7 +95,8 @@ class MainLaunchTest {
         // Mock the future to throw InterruptedException to exit the listening loop
         when(mockFuture.get()).thenThrow(new InterruptedException("Test interruption"));
 
-        try (MockedStatic<Guice> guiceMock = mockStatic(Guice.class);
+        try (MockedStatic<DaggerServerComponent> daggerMock =
+                        mockStatic(DaggerServerComponent.class);
                 MockedConstruction<ServerSocket> serverSocketMock =
                         mockConstruction(
                                 ServerSocket.class,
@@ -116,12 +117,13 @@ class MainLaunchTest {
                                 });
                 MockedStatic<LSPLauncher> launcherMock = mockStatic(LSPLauncher.class)) {
 
-            // Mock Guice injector
-            Injector mockInjector = mock(Injector.class);
-            when(mockInjector.getInstance(GroovyLanguageServer.class)).thenReturn(mockServer);
-            guiceMock
-                    .when(() -> Guice.createInjector(any(ServerModule.class)))
-                    .thenReturn(mockInjector);
+            // Mock Dagger component
+            ServerComponent mockComponent = mock(ServerComponent.class);
+            ServerComponent.Builder mockBuilder = mock(ServerComponent.Builder.class);
+            when(mockBuilder.serverModule(any(ServerModule.class))).thenReturn(mockBuilder);
+            when(mockBuilder.build()).thenReturn(mockComponent);
+            when(mockComponent.languageServer()).thenReturn(mockServer);
+            daggerMock.when(DaggerServerComponent::builder).thenReturn(mockBuilder);
 
             // Mock launcher
             Launcher<LanguageClient> mockLauncher = mock(Launcher.class);
@@ -159,15 +161,17 @@ class MainLaunchTest {
         // Mock the future to throw InterruptedException to exit the listening loop
         when(mockFuture.get()).thenThrow(new InterruptedException("Test interruption"));
 
-        try (MockedStatic<Guice> guiceMock = mockStatic(Guice.class);
+        try (MockedStatic<DaggerServerComponent> daggerMock =
+                        mockStatic(DaggerServerComponent.class);
                 MockedStatic<LSPLauncher> launcherMock = mockStatic(LSPLauncher.class)) {
 
-            // Mock Guice injector
-            Injector mockInjector = mock(Injector.class);
-            when(mockInjector.getInstance(GroovyLanguageServer.class)).thenReturn(mockServer);
-            guiceMock
-                    .when(() -> Guice.createInjector(any(ServerModule.class)))
-                    .thenReturn(mockInjector);
+            // Mock Dagger component
+            ServerComponent mockComponent = mock(ServerComponent.class);
+            ServerComponent.Builder mockBuilder = mock(ServerComponent.Builder.class);
+            when(mockBuilder.serverModule(any(ServerModule.class))).thenReturn(mockBuilder);
+            when(mockBuilder.build()).thenReturn(mockComponent);
+            when(mockComponent.languageServer()).thenReturn(mockServer);
+            daggerMock.when(DaggerServerComponent::builder).thenReturn(mockBuilder);
 
             // Mock launcher
             Launcher<LanguageClient> mockLauncher = mock(Launcher.class);
@@ -201,13 +205,15 @@ class MainLaunchTest {
 
             GroovyLanguageServer mockServer = mock(GroovyLanguageServer.class);
 
-            try (MockedStatic<Guice> guiceMock = mockStatic(Guice.class)) {
-                // Mock Guice injector
-                Injector mockInjector = mock(Injector.class);
-                when(mockInjector.getInstance(GroovyLanguageServer.class)).thenReturn(mockServer);
-                guiceMock
-                        .when(() -> Guice.createInjector(any(ServerModule.class)))
-                        .thenReturn(mockInjector);
+            try (MockedStatic<DaggerServerComponent> daggerMock =
+                    mockStatic(DaggerServerComponent.class)) {
+                // Mock Dagger component
+                ServerComponent mockComponent = mock(ServerComponent.class);
+                ServerComponent.Builder mockBuilder = mock(ServerComponent.Builder.class);
+                when(mockBuilder.serverModule(any(ServerModule.class))).thenReturn(mockBuilder);
+                when(mockBuilder.build()).thenReturn(mockComponent);
+                when(mockComponent.languageServer()).thenReturn(mockServer);
+                daggerMock.when(DaggerServerComponent::builder).thenReturn(mockBuilder);
 
                 // Try to run server on the same port
                 Exception exception =
@@ -393,13 +399,15 @@ class MainLaunchTest {
         // We'll test the edge case by using reflection to modify the launch mode
         GroovyLanguageServer mockServer = mock(GroovyLanguageServer.class);
 
-        try (MockedStatic<Guice> guiceMock = mockStatic(Guice.class)) {
-            // Mock Guice injector
-            Injector mockInjector = mock(Injector.class);
-            when(mockInjector.getInstance(GroovyLanguageServer.class)).thenReturn(mockServer);
-            guiceMock
-                    .when(() -> Guice.createInjector(any(ServerModule.class)))
-                    .thenReturn(mockInjector);
+        try (MockedStatic<DaggerServerComponent> daggerMock =
+                mockStatic(DaggerServerComponent.class)) {
+            // Mock Dagger component
+            ServerComponent mockComponent = mock(ServerComponent.class);
+            ServerComponent.Builder mockBuilder = mock(ServerComponent.Builder.class);
+            when(mockBuilder.serverModule(any(ServerModule.class))).thenReturn(mockBuilder);
+            when(mockBuilder.build()).thenReturn(mockComponent);
+            when(mockComponent.languageServer()).thenReturn(mockServer);
+            daggerMock.when(DaggerServerComponent::builder).thenReturn(mockBuilder);
 
             // This would require modifying the enum at runtime which is complex
             // Instead, we'll verify the current implementation handles all enum values

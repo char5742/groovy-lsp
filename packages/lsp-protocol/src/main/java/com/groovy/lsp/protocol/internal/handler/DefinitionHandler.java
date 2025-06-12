@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol.internal.handler;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
 import com.groovy.lsp.protocol.internal.util.LocationUtils;
@@ -81,22 +82,42 @@ public class DefinitionHandler {
 
                         // Get services
                         ASTService astService = serviceRouter.getAstService();
+                        CompilerConfigurationService configService =
+                                serviceRouter.getCompilerConfigurationService();
                         WorkspaceIndexService indexService =
                                 serviceRouter.getWorkspaceIndexService();
+
+                        logger.debug("ASTService available: {}", astService != null);
+                        logger.debug(
+                                "CompilerConfigurationService available: {}",
+                                configService != null);
+                        logger.debug("WorkspaceIndexService available: {}", indexService != null);
 
                         // Get document content
                         String sourceCode = documentManager.getDocumentContent(uri);
                         if (sourceCode == null) {
-                            logger.debug("Document not found in document manager: {}", uri);
+                            logger.warn("Document not found in document manager: {}", uri);
                             return Either.forLeft(Collections.emptyList());
                         }
 
-                        // Parse the document
-                        ModuleNode moduleNode = astService.parseSource(sourceCode, uri);
+                        logger.debug("Document content length: {}", sourceCode.length());
+
+                        // Parse the document with workspace-aware compiler configuration
+                        ModuleNode moduleNode =
+                                astService.parseSource(
+                                        sourceCode,
+                                        uri,
+                                        configService.createDefaultConfiguration());
                         if (moduleNode == null) {
-                            logger.debug("Failed to parse module for {}", uri);
+                            logger.warn("Failed to parse module for {}", uri);
                             return Either.forLeft(Collections.emptyList());
                         }
+
+                        logger.debug(
+                                "Module parsed successfully, classes count: {}",
+                                moduleNode.getClasses() != null
+                                        ? moduleNode.getClasses().size()
+                                        : 0);
 
                         // Find node at position
                         ASTNode node =
@@ -106,16 +127,26 @@ public class DefinitionHandler {
                                         position.getCharacter() + 1);
 
                         if (node == null) {
-                            logger.debug(
-                                    "No node found at position {}:{}",
+                            logger.warn(
+                                    "No node found at position {}:{} (1-based: {}:{})",
                                     position.getLine(),
-                                    position.getCharacter());
+                                    position.getCharacter(),
+                                    position.getLine() + 1,
+                                    position.getCharacter() + 1);
                             return Either.forLeft(Collections.emptyList());
                         }
+
+                        logger.debug(
+                                "Found node: {} of type {}", node, node.getClass().getSimpleName());
 
                         // Find definition locations
                         List<Location> locations =
                                 findDefinitions(node, moduleNode, uri, indexService);
+
+                        logger.debug("Found {} definition locations", locations.size());
+                        for (Location loc : locations) {
+                            logger.debug("  Location: {} at {}", loc.getUri(), loc.getRange());
+                        }
 
                         return Either.forLeft(locations);
 

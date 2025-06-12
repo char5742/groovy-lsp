@@ -8,7 +8,7 @@ async function main() {
         
         // The folder containing the Extension Manifest package.json
         // Passed to `--extensionDevelopmentPath`
-        const workspaceFolder = path.resolve(__dirname, './fixtures/sample-java-groovy-project');
+        const workspaceFolder = path.resolve(__dirname, '../../src/test/fixtures/sample-java-groovy-project');
 
         // Download VS Code, unzip it and run the integration test
         await runTests({

@@ -1,7 +1,8 @@
 package com.groovy.lsp.protocol.internal.document;
 
-import com.google.inject.Singleton;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -19,6 +20,11 @@ public class DocumentManager {
     private static final Logger logger = LoggerFactory.getLogger(DocumentManager.class);
 
     private final ConcurrentHashMap<String, TextDocumentItem> documents = new ConcurrentHashMap<>();
+
+    @Inject
+    public DocumentManager() {
+        // Default constructor for dependency injection
+    }
 
     /**
      * Opens a document and stores its content.

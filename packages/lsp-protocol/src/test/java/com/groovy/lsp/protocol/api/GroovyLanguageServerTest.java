@@ -32,10 +32,13 @@ class GroovyLanguageServerTest {
     @Mock private LanguageClient mockClient;
     @Mock private GroovyTextDocumentService mockTextDocumentService;
     @Mock private GroovyWorkspaceService mockWorkspaceService;
+    @Mock private IServiceRouter mockServiceRouter;
 
     @BeforeEach
     void setUp() {
-        server = new GroovyLanguageServer(mockTextDocumentService, mockWorkspaceService);
+        server =
+                new GroovyLanguageServer(
+                        mockTextDocumentService, mockWorkspaceService, mockServiceRouter);
     }
 
     @UnitTest
@@ -139,8 +142,9 @@ class GroovyLanguageServerTest {
         // given
         GroovyTextDocumentService textDocumentService = mock(GroovyTextDocumentService.class);
         GroovyWorkspaceService workspaceService = mock(GroovyWorkspaceService.class);
+        IServiceRouter serviceRouter = mock(IServiceRouter.class);
         GroovyLanguageServer testServer =
-                new GroovyLanguageServer(textDocumentService, workspaceService);
+                new GroovyLanguageServer(textDocumentService, workspaceService, serviceRouter);
 
         // when
         testServer.connect(mockClient);

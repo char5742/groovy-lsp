@@ -45,27 +45,44 @@ export async function activate(context: vscode.ExtensionContext) {
     console.log(`Java executable: ${javaExecutable}`);
     console.log(`JAR exists: ${fs.existsSync(jarPath)}`);
     
+    // Get workspace folder path - ensure it's absolute
+    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const workspaceArgs = workspacePath ? ['--workspace', workspacePath] : [];
+    
+    console.log(`Workspace folder: ${workspacePath || 'none'}`);
+    
     const serverOptions: ServerOptions = {
         run: {
             command: javaExecutable,
-            args: ['-jar', jarPath],
+            args: [
+                '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+                '-jar', jarPath, 
+                ...workspaceArgs
+            ],
             transport: TransportKind.stdio,
             options: {
                 env: {
                     ...process.env,
                     'groovy.lsp.debug': 'true',
+                    'groovy.lsp.log.level': 'DEBUG',
                     'groovy.lsp.client.version': context.extension.packageJSON.version
                 }
             }
         },
         debug: {
             command: javaExecutable,
-            args: ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005', '-jar', jarPath],
+            args: [
+                '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+                '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005', 
+                '-jar', jarPath, 
+                ...workspaceArgs
+            ],
             transport: TransportKind.stdio,
             options: {
                 env: {
                     ...process.env,
                     'groovy.lsp.debug': 'true',
+                    'groovy.lsp.log.level': 'DEBUG',
                     'groovy.lsp.client.version': context.extension.packageJSON.version
                 }
             }

@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol.api;
 
 import com.groovy.lsp.groovy.core.api.ASTService;
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
@@ -43,4 +44,12 @@ public interface IServiceRouter {
      * @throws IllegalStateException if the service is not available
      */
     WorkspaceIndexService getWorkspaceIndexService();
+
+    /**
+     * Get the compiler configuration service.
+     *
+     * @return the compiler configuration service
+     * @throws IllegalStateException if the service is not available
+     */
+    CompilerConfigurationService getCompilerConfigurationService();
 }

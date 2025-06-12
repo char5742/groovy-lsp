@@ -1,6 +1,7 @@
 package com.groovy.lsp.protocol.internal.handler;
 
 import com.groovy.lsp.groovy.core.api.CompilationResult;
+import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.IncrementalCompilationService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
@@ -117,9 +118,12 @@ public class DiagnosticsHandler {
             IncrementalCompilationService compilationService =
                     serviceRouter.getIncrementalCompilationService();
 
-            // Create compilation unit with default configuration
-            CompilerConfiguration config = new CompilerConfiguration();
-            config.setTargetBytecode(CompilerConfiguration.JDK8);
+            // Get compiler configuration service
+            CompilerConfigurationService configService =
+                    serviceRouter.getCompilerConfigurationService();
+
+            // Create compilation unit with workspace-aware configuration
+            CompilerConfiguration config = configService.createDefaultConfiguration();
             CompilationUnit unit = compilationService.createCompilationUnit(config);
 
             // Compile to SEMANTIC_ANALYSIS phase to get both syntax and type errors

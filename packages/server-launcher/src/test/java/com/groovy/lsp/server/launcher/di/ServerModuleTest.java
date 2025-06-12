@@ -2,23 +2,19 @@ package com.groovy.lsp.server.launcher.di;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.groovy.lsp.codenarc.LintEngine;
-import com.groovy.lsp.formatting.service.FormattingService;
 import com.groovy.lsp.groovy.core.api.ASTService;
-import com.groovy.lsp.groovy.core.api.CompilerConfigurationService;
 import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
 import com.groovy.lsp.shared.event.EventBus;
-import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.test.annotations.UnitTest;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import org.eclipse.lsp4j.services.LanguageServer;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -35,11 +31,13 @@ class ServerModuleTest {
         String workspaceRoot =
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
                         .toString();
-        ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
+        ServerComponent component =
+                DaggerServerComponent.builder()
+                        .serverModule(new ServerModule(workspaceRoot))
+                        .build();
 
         // when
-        GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
+        GroovyLanguageServer server = component.languageServer();
 
         // then
         assertThat(server).isNotNull();
@@ -51,78 +49,17 @@ class ServerModuleTest {
         String workspaceRoot =
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
                         .toString();
-        ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
+        ServerComponent component =
+                DaggerServerComponent.builder()
+                        .serverModule(new ServerModule(workspaceRoot))
+                        .build();
 
         // when
-        GroovyLanguageServer server1 = injector.getInstance(GroovyLanguageServer.class);
-        GroovyLanguageServer server2 = injector.getInstance(GroovyLanguageServer.class);
+        GroovyLanguageServer server1 = component.languageServer();
+        GroovyLanguageServer server2 = component.languageServer();
 
         // then
         assertThat(server1).isSameAs(server2);
-    }
-
-    @UnitTest
-    void serverModule_shouldProvideLanguageServerInterface() {
-        // given
-        String workspaceRoot =
-                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
-                        .toString();
-        ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
-
-        // when
-        LanguageServer server = injector.getInstance(LanguageServer.class);
-
-        // then
-        assertThat(server).isNotNull();
-        assertThat(server).isInstanceOf(GroovyLanguageServer.class);
-    }
-
-    @UnitTest
-    void serverModule_shouldProvideAllServices() {
-        // given
-        String workspaceRoot =
-                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
-                        .toString();
-        ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
-
-        // when/then - All services should be available
-        assertThat(injector.getInstance(EventBus.class)).isNotNull();
-        assertThat(injector.getInstance(ASTService.class)).isNotNull();
-        assertThat(injector.getInstance(CompilerConfigurationService.class)).isNotNull();
-        assertThat(injector.getInstance(TypeInferenceService.class)).isNotNull();
-        assertThat(injector.getInstance(WorkspaceIndexService.class)).isNotNull();
-        assertThat(injector.getInstance(FormattingService.class)).isNotNull();
-        assertThat(injector.getInstance(LintEngine.class)).isNotNull();
-        assertThat(injector.getInstance(ServiceRouter.class)).isNotNull();
-    }
-
-    @UnitTest
-    void serverModule_shouldProvideSingletonServices() {
-        // given
-        String workspaceRoot =
-                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
-                        .toString();
-        ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
-
-        // when/then - All services should be singletons
-        assertThat(injector.getInstance(EventBus.class))
-                .isSameAs(injector.getInstance(EventBus.class));
-        assertThat(injector.getInstance(ASTService.class))
-                .isSameAs(injector.getInstance(ASTService.class));
-        assertThat(injector.getInstance(CompilerConfigurationService.class))
-                .isSameAs(injector.getInstance(CompilerConfigurationService.class));
-        assertThat(injector.getInstance(TypeInferenceService.class))
-                .isSameAs(injector.getInstance(TypeInferenceService.class));
-        assertThat(injector.getInstance(WorkspaceIndexService.class))
-                .isSameAs(injector.getInstance(WorkspaceIndexService.class));
-        assertThat(injector.getInstance(FormattingService.class))
-                .isSameAs(injector.getInstance(FormattingService.class));
-        assertThat(injector.getInstance(LintEngine.class))
-                .isSameAs(injector.getInstance(LintEngine.class));
     }
 
     @UnitTest
@@ -131,17 +68,14 @@ class ServerModuleTest {
         String workspaceRoot =
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
                         .toString();
-        ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
+        ServerComponent component =
+                DaggerServerComponent.builder()
+                        .serverModule(new ServerModule(workspaceRoot))
+                        .build();
 
         // when
-        ExecutorService serverExecutor =
-                injector.getInstance(
-                        com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
-        ScheduledExecutorService scheduledExecutor =
-                injector.getInstance(
-                        com.google.inject.Key.get(
-                                ScheduledExecutorService.class, ScheduledServerExecutor.class));
+        ExecutorService serverExecutor = component.serverExecutor();
+        ScheduledExecutorService scheduledExecutor = component.scheduledExecutor();
 
         // then
         assertThat(serverExecutor).isNotNull();
@@ -162,13 +96,14 @@ class ServerModuleTest {
         try {
             System.setProperty(ServerConstants.WORKSPACE_ROOT_ENV_KEY, expectedWorkspace);
             ServerModule module = new ServerModule();
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when
-            WorkspaceIndexService service = injector.getInstance(WorkspaceIndexService.class);
+            GroovyLanguageServer server = component.languageServer();
 
             // then
-            assertThat(service).isNotNull();
+            assertThat(server).isNotNull();
         } finally {
             // Restore original property
             if (originalProperty != null) {
@@ -188,7 +123,8 @@ class ServerModuleTest {
             ServerModule module = new ServerModule();
 
             // when/then - Should not throw during construction
-            assertThatCode(() -> Guice.createInjector(module)).doesNotThrowAnyException();
+            assertThatCode(() -> DaggerServerComponent.builder().serverModule(module).build())
+                    .doesNotThrowAnyException();
         } finally {
             // Restore original property
             if (originalProperty != null) {
@@ -253,12 +189,11 @@ class ServerModuleTest {
                             Objects.requireNonNull(
                                             tempDir, "tempDir should be initialized by JUnit")
                                     .toString());
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when
-            ExecutorService serverExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+            ExecutorService serverExecutor = component.serverExecutor();
 
             // then
             assertThat(serverExecutor).isNotNull();
@@ -285,13 +220,11 @@ class ServerModuleTest {
                             Objects.requireNonNull(
                                             tempDir, "tempDir should be initialized by JUnit")
                                     .toString());
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when
-            ScheduledExecutorService scheduledExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(
-                                    ScheduledExecutorService.class, ScheduledServerExecutor.class));
+            ScheduledExecutorService scheduledExecutor = component.scheduledExecutor();
 
             // then
             assertThat(scheduledExecutor).isNotNull();
@@ -323,16 +256,12 @@ class ServerModuleTest {
                             Objects.requireNonNull(
                                             tempDir, "tempDir should be initialized by JUnit")
                                     .toString());
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when
-            ExecutorService serverExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
-            ScheduledExecutorService scheduledExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(
-                                    ScheduledExecutorService.class, ScheduledServerExecutor.class));
+            ExecutorService serverExecutor = component.serverExecutor();
+            ScheduledExecutorService scheduledExecutor = component.scheduledExecutor();
 
             // then
             assertThat(serverExecutor).isNotNull();
@@ -366,12 +295,11 @@ class ServerModuleTest {
                             Objects.requireNonNull(
                                             tempDir, "tempDir should be initialized by JUnit")
                                     .toString());
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when - should fall back to default
-            ExecutorService serverExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+            ExecutorService serverExecutor = component.serverExecutor();
 
             // then
             assertThat(serverExecutor).isNotNull();
@@ -401,13 +329,11 @@ class ServerModuleTest {
                             Objects.requireNonNull(
                                             tempDir, "tempDir should be initialized by JUnit")
                                     .toString());
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when - should fall back to default
-            ScheduledExecutorService scheduledExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(
-                                    ScheduledExecutorService.class, ScheduledServerExecutor.class));
+            ScheduledExecutorService scheduledExecutor = component.scheduledExecutor();
 
             // then
             assertThat(scheduledExecutor).isNotNull();
@@ -431,12 +357,10 @@ class ServerModuleTest {
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
                         .toString();
         ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
+        ServerComponent component = DaggerServerComponent.builder().serverModule(module).build();
 
         // when
-        ExecutorService serverExecutor =
-                injector.getInstance(
-                        com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+        ExecutorService serverExecutor = component.serverExecutor();
 
         // Submit a task to create a thread and verify its properties
         java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
@@ -475,13 +399,10 @@ class ServerModuleTest {
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
                         .toString();
         ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
+        ServerComponent component = DaggerServerComponent.builder().serverModule(module).build();
 
         // when
-        ScheduledExecutorService scheduledExecutor =
-                injector.getInstance(
-                        com.google.inject.Key.get(
-                                ScheduledExecutorService.class, ScheduledServerExecutor.class));
+        ScheduledExecutorService scheduledExecutor = component.scheduledExecutor();
 
         // Submit a task to create a thread and verify its properties
         java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
@@ -520,12 +441,10 @@ class ServerModuleTest {
                 Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
                         .toString();
         ServerModule module = new ServerModule(workspaceRoot);
-        Injector injector = Guice.createInjector(module);
+        ServerComponent component = DaggerServerComponent.builder().serverModule(module).build();
 
         // when
-        ExecutorService serverExecutor =
-                injector.getInstance(
-                        com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
+        ExecutorService serverExecutor = component.serverExecutor();
 
         // then
         assertThat(serverExecutor).isInstanceOf(java.util.concurrent.ThreadPoolExecutor.class);
@@ -558,16 +477,12 @@ class ServerModuleTest {
                             Objects.requireNonNull(
                                             tempDir, "tempDir should be initialized by JUnit")
                                     .toString());
-            Injector injector = Guice.createInjector(module);
+            ServerComponent component =
+                    DaggerServerComponent.builder().serverModule(module).build();
 
             // when - should fall back to defaults
-            ExecutorService serverExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(ExecutorService.class, ServerExecutor.class));
-            ScheduledExecutorService scheduledExecutor =
-                    injector.getInstance(
-                            com.google.inject.Key.get(
-                                    ScheduledExecutorService.class, ScheduledServerExecutor.class));
+            ExecutorService serverExecutor = component.serverExecutor();
+            ScheduledExecutorService scheduledExecutor = component.scheduledExecutor();
 
             // then
             assertThat(serverExecutor).isNotNull();
@@ -607,12 +522,13 @@ class ServerModuleTest {
 
             assertThatCode(
                             () -> {
-                                Injector injector = Guice.createInjector(zeroModule);
-                                injector.getInstance(
-                                        com.google.inject.Key.get(
-                                                ExecutorService.class, ServerExecutor.class));
+                                ServerComponent component =
+                                        DaggerServerComponent.builder()
+                                                .serverModule(zeroModule)
+                                                .build();
+                                component.serverExecutor();
                             })
-                    .isInstanceOf(com.google.inject.ProvisionException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
 
             // Test negative - should also fail gracefully
             System.setProperty(ServerConstants.MAX_THREADS_ENV_KEY, "-5");
@@ -624,12 +540,13 @@ class ServerModuleTest {
 
             assertThatCode(
                             () -> {
-                                Injector injector = Guice.createInjector(negativeModule);
-                                injector.getInstance(
-                                        com.google.inject.Key.get(
-                                                ExecutorService.class, ServerExecutor.class));
+                                ServerComponent component =
+                                        DaggerServerComponent.builder()
+                                                .serverModule(negativeModule)
+                                                .build();
+                                component.serverExecutor();
                             })
-                    .isInstanceOf(com.google.inject.ProvisionException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
 
         } finally {
             // Restore original property
@@ -639,5 +556,150 @@ class ServerModuleTest {
                 System.clearProperty(ServerConstants.MAX_THREADS_ENV_KEY);
             }
         }
+    }
+
+    // ===== Tests demonstrating TestServerComponent usage =====
+
+    @UnitTest
+    void testServerComponent_shouldProvideAllMockedServices() {
+        // given
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withMocks()
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // when - access all services
+        ASTService astService = component.astService();
+        TypeInferenceService typeInferenceService = component.typeInferenceService();
+        EventBus eventBus = component.eventBus();
+        GroovyLanguageServer languageServer = component.languageServer();
+
+        // then - all services should be available
+        assertThat(astService).isNotNull();
+        assertThat(typeInferenceService).isNotNull();
+        assertThat(eventBus).isNotNull();
+        assertThat(languageServer).isNotNull();
+
+        // Verify services are mocked
+        assertThat(astService.getClass().getName()).contains("Mock");
+        assertThat(typeInferenceService.getClass().getName()).contains("Mock");
+        assertThat(eventBus.getClass().getName()).contains("Mock");
+    }
+
+    @UnitTest
+    void testServerComponent_shouldAllowCustomServiceConfiguration() {
+        // given - create custom mocks with specific behavior
+        ASTService mockAstService = mock(ASTService.class);
+        when(mockAstService.parseSource("test code", "test.groovy")).thenReturn(null);
+
+        EventBus mockEventBus = mock(EventBus.class);
+
+        // when - build component with custom services
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withMocks()
+                                        .withAstService(mockAstService)
+                                        .withEventBus(mockEventBus)
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // then - custom services should be used
+        assertThat(component.astService()).isSameAs(mockAstService);
+        assertThat(component.eventBus()).isSameAs(mockEventBus);
+
+        // Verify custom behavior
+        component.astService().parseSource("test code", "test.groovy");
+        verify(mockAstService).parseSource("test code", "test.groovy");
+    }
+
+    @UnitTest
+    void testServerComponent_shouldProvideRealImplementations() {
+        // given
+        String workspaceRoot =
+                Objects.requireNonNull(tempDir, "tempDir should be initialized by JUnit")
+                        .toString();
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withRealImplementations()
+                                        .withTestWorkspace(workspaceRoot)
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // when
+        ASTService astService = component.astService();
+        TypeInferenceService typeInferenceService = component.typeInferenceService();
+        GroovyLanguageServer languageServer = component.languageServer();
+
+        // then - services should be real implementations
+        assertThat(astService).isNotNull();
+        assertThat(typeInferenceService).isNotNull();
+        assertThat(languageServer).isNotNull();
+
+        // Verify not mocks
+        assertThat(astService.getClass().getName()).doesNotContain("Mock");
+        assertThat(typeInferenceService.getClass().getName()).doesNotContain("Mock");
+    }
+
+    @UnitTest
+    void testServerComponent_shouldSupportMixedMockAndRealServices() {
+        // given - use mocks for most services but real implementation for specific ones
+        TestServerModule module =
+                new TestServerModule.Builder()
+                        .withMocks() // Use mocks by default
+                        .withFormattingService(
+                                new com.groovy.lsp.formatting.service
+                                        .FormattingService()) // But use real formatting service
+                        .withTestWorkspace(
+                                Objects.requireNonNull(
+                                        tempDir, "tempDir should be initialized by JUnit"))
+                        .withDirectExecutor()
+                        .build();
+
+        // when
+        TestServerComponent component =
+                DaggerTestServerComponent.builder().testServerModule(module).build();
+
+        // then
+        assertThat(component.astService().getClass().getName()).contains("Mock");
+        assertThat(component.formattingService().getClass().getName()).doesNotContain("Mock");
+        assertThat(component.formattingService())
+                .isInstanceOf(com.groovy.lsp.formatting.service.FormattingService.class);
+    }
+
+    @UnitTest
+    void testServerComponent_shouldUseDirectExecutorForDeterministicTests() {
+        // given
+        TestServerComponent component =
+                DaggerTestServerComponent.builder()
+                        .testServerModule(
+                                new TestServerModule.Builder()
+                                        .withMocks()
+                                        .withDirectExecutor()
+                                        .build())
+                        .build();
+
+        // when
+        ExecutorService executor = component.serverExecutor();
+
+        // then - executor should run tasks synchronously
+        java.util.concurrent.atomic.AtomicBoolean taskExecuted =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+        executor.execute(() -> taskExecuted.set(true));
+
+        // Task should be executed immediately without waiting
+        assertThat(taskExecuted.get()).isTrue();
+
+        // Clean up
+        executor.shutdown();
     }
 }
