@@ -11,9 +11,6 @@ import static com.groovy.lsp.server.launcher.di.ServerConstants.SERVER_THREAD_PR
 import static com.groovy.lsp.server.launcher.di.ServerConstants.THREAD_KEEP_ALIVE_TIME;
 import static com.groovy.lsp.server.launcher.di.ServerConstants.WORKSPACE_ROOT_ENV_KEY;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.groovy.lsp.codenarc.LintEngine;
 import com.groovy.lsp.codenarc.QuickFixMapper;
 import com.groovy.lsp.codenarc.RuleSetProvider;
@@ -32,6 +29,8 @@ import com.groovy.lsp.shared.event.EventBus;
 import com.groovy.lsp.shared.event.EventBusFactory;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import com.groovy.lsp.workspace.api.WorkspaceIndexFactory;
+import dagger.Module;
+import dagger.Provides;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -40,17 +39,19 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.eclipse.lsp4j.services.LanguageServer;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Guice module for configuring the Language Server dependencies.
+ * Dagger module for configuring the Language Server dependencies.
  *
  * This module sets up all the necessary bindings for the server components,
  * including services, executors, and event handling.
  */
-public class ServerModule extends AbstractModule {
+@Module
+public class ServerModule {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
 
@@ -62,28 +63,6 @@ public class ServerModule extends AbstractModule {
 
     public ServerModule(String workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
-    }
-
-    @Override
-    protected void configure() {
-        // Bind GroovyLanguageServer as singleton
-        bind(GroovyLanguageServer.class).in(Singleton.class);
-
-        // Bind LanguageServer interface to our implementation
-        bind(LanguageServer.class).to(GroovyLanguageServer.class);
-
-        // Bind text document and workspace services
-        bind(GroovyTextDocumentService.class).in(Singleton.class);
-        bind(GroovyWorkspaceService.class).in(Singleton.class);
-
-        // Bind document manager
-        bind(DocumentManager.class).in(Singleton.class);
-
-        // Bind service router
-        bind(ServiceRouter.class).in(Singleton.class);
-        bind(IServiceRouter.class).to(ServiceRouter.class);
-
-        logger.info("Server module configured");
     }
 
     @Provides
@@ -140,7 +119,7 @@ public class ServerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @ServerExecutor
+    @Named("serverExecutor")
     ExecutorService provideServerExecutor() {
         int maxThreads = Integer.getInteger(MAX_THREADS_ENV_KEY, MAX_THREAD_POOL_SIZE);
         logger.info("Creating thread pool with max {} threads", maxThreads);
@@ -156,12 +135,60 @@ public class ServerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @ScheduledServerExecutor
+    @Named("scheduledExecutor")
     ScheduledExecutorService provideScheduledExecutor() {
         int poolSize = Integer.getInteger(SCHEDULER_THREADS_ENV_KEY, DEFAULT_SCHEDULER_THREADS);
         logger.info("Creating scheduled thread pool with {} threads", poolSize);
         return Executors.newScheduledThreadPool(
                 poolSize, new NamedThreadFactory(SCHEDULER_THREAD_PREFIX));
+    }
+
+    @Provides
+    @Singleton
+    IServiceRouter provideServiceRouter(
+            ASTService astService,
+            CompilerConfigurationService compilerConfigurationService,
+            IncrementalCompilationService incrementalCompilationService,
+            TypeInferenceService typeInferenceService,
+            WorkspaceIndexService workspaceIndexService,
+            FormattingService formattingService,
+            LintEngine lintEngine) {
+        return new ServiceRouter(
+                astService,
+                compilerConfigurationService,
+                incrementalCompilationService,
+                typeInferenceService,
+                workspaceIndexService,
+                formattingService,
+                lintEngine);
+    }
+
+    @Provides
+    @Singleton
+    DocumentManager provideDocumentManager() {
+        return new DocumentManager();
+    }
+
+    @Provides
+    @Singleton
+    GroovyTextDocumentService provideTextDocumentService(
+            IServiceRouter serviceRouter, DocumentManager documentManager) {
+        return new GroovyTextDocumentService(serviceRouter, documentManager);
+    }
+
+    @Provides
+    @Singleton
+    GroovyWorkspaceService provideWorkspaceService() {
+        return new GroovyWorkspaceService();
+    }
+
+    @Provides
+    @Singleton
+    GroovyLanguageServer provideLanguageServer(
+            GroovyTextDocumentService textDocumentService,
+            GroovyWorkspaceService workspaceService,
+            IServiceRouter serviceRouter) {
+        return new GroovyLanguageServer(textDocumentService, workspaceService, serviceRouter);
     }
 
     /**

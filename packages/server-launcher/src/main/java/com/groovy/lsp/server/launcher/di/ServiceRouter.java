@@ -1,7 +1,5 @@
 package com.groovy.lsp.server.launcher.di;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.groovy.lsp.codenarc.LintEngine;
 import com.groovy.lsp.formatting.service.FormattingService;
 import com.groovy.lsp.groovy.core.api.ASTService;
@@ -11,6 +9,8 @@ import com.groovy.lsp.groovy.core.api.TypeInferenceService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.util.Objects;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * Service router that provides centralized access to all LSP services.
  *
  * This class is responsible for routing requests to appropriate service implementations
- * and managing service lifecycle through Guice dependency injection.
+ * and managing service lifecycle.
  */
 @Singleton
 public class ServiceRouter implements IServiceRouter {

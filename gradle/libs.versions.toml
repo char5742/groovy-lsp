@@ -15,7 +15,6 @@ gradle-shadow = "8.1.1"
 gradle-versions = "0.52.0"
 slf4j = "2.0.17"
 logback = "1.5.18"
-guice = "7.0.0"  # Note: Consider upgrading to newer version for Java 23 support
 lmdb = "0.9.1"
 sentry = "8.13.2"
 jmh = "1.37"
@@ -38,6 +37,7 @@ jmh-plugin = "0.7.3"
 spotless-plugin = "6.25.0"
 test-logger-plugin = "4.0.0"
 jacoco = "0.8.12"
+dagger = "2.51.1"
 awaitility = "4.3.0"
 wiremock = "3.0.1"
 asm = "9.8"
@@ -90,8 +90,10 @@ assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
+
 # Dependency Injection
-guice = { module = "com.google.inject:guice", version.ref = "guice" }
+dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
+dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
 
 # Database (for symbol indexing)
 lmdb-java = { module = "org.lmdbjava:lmdbjava", version.ref = "lmdb" }

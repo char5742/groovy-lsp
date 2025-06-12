@@ -1,10 +1,10 @@
 package com.groovy.lsp.protocol.api;
 
-import com.google.inject.Inject;
 import com.groovy.lsp.protocol.internal.impl.GroovyTextDocumentService;
 import com.groovy.lsp.protocol.internal.impl.GroovyWorkspaceService;
 import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
 import java.util.concurrent.CompletableFuture;
+import javax.inject.Inject;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.InitializeParams;

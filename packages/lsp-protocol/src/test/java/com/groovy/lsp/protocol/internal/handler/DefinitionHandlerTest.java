@@ -8,9 +8,15 @@ import static org.mockito.Mockito.when;
 import com.groovy.lsp.groovy.core.api.ASTService;
 import com.groovy.lsp.protocol.api.IServiceRouter;
 import com.groovy.lsp.protocol.internal.document.DocumentManager;
+import com.groovy.lsp.shared.workspace.api.WorkspaceIndexService;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolInfo;
+import com.groovy.lsp.shared.workspace.api.dto.SymbolKind;
 import com.groovy.lsp.test.annotations.UnitTest;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -34,9 +40,7 @@ class DefinitionHandlerTest {
 
     @Mock private ASTService astService;
 
-    // TODO: Enable when circular dependency is resolved
-    // @Mock
-    // private WorkspaceIndexService workspaceIndexService;
+    @Mock private WorkspaceIndexService workspaceIndexService;
 
     @Mock private ModuleNode moduleNode;
 
@@ -45,8 +49,7 @@ class DefinitionHandlerTest {
     @BeforeEach
     void setUp() {
         when(serviceRouter.getAstService()).thenReturn(astService);
-        // TODO: Enable when circular dependency is resolved
-        // when(serviceRouter.getWorkspaceIndexService()).thenReturn(workspaceIndexService);
+        when(serviceRouter.getWorkspaceIndexService()).thenReturn(workspaceIndexService);
 
         handler = new DefinitionHandler(serviceRouter, documentManager);
     }
@@ -250,52 +253,48 @@ class DefinitionHandlerTest {
         assertEquals(13, location.getRange().getStart().getCharacter());
     }
 
-    // TODO: Enable when circular dependency is resolved
-    // @UnitTest
-    // void testHandleDefinition_MethodCall_WorkspaceSearch() {
-    //     // Arrange
-    //     String uri = "file:///test.groovy";
-    //     String content = "class Test { def bar() { someMethod() } }";
-    //     Position position = new Position(0, 30); // position on 'someMethod()'
-    //     DefinitionParams params = new DefinitionParams(
-    //             new TextDocumentIdentifier(uri),
-    //             position
-    //     );
-    //
-    //     // Mock AST structure
-    //     MethodCallExpression methodCall = mock(MethodCallExpression.class);
-    //     when(methodCall.getMethodAsString()).thenReturn("someMethod");
-    //
-    //     ClassNode classNode = mock(ClassNode.class);
-    //     when(classNode.getMethods()).thenReturn(List.of()); // No local methods
-    //     when(moduleNode.getClasses()).thenReturn(List.of(classNode));
-    //
-    //     // Mock workspace index search
-    //     Path symbolPath = Paths.get("/another/file.groovy");
-    //     SymbolInfo symbolInfo = new SymbolInfo("someMethod", SymbolKind.METHOD, symbolPath, 10,
-    // 5);
-    //     when(workspaceIndexService.searchSymbols("someMethod"))
-    //             .thenReturn(CompletableFuture.completedFuture(Stream.of(symbolInfo)));
-    //
-    //     when(documentManager.getDocumentContent(uri)).thenReturn(content);
-    //     when(astService.parseSource(content, uri)).thenReturn(moduleNode);
-    //     when(astService.findNodeAtPosition(moduleNode, 1, 31)).thenReturn(methodCall);
-    //
-    //     // Act
-    //     CompletableFuture<Either<List<? extends Location>, List<? extends
-    // org.eclipse.lsp4j.LocationLink>>>
-    //             result = handler.handleDefinition(params);
-    //
-    //     // Assert
-    //     Either<List<? extends Location>, List<? extends org.eclipse.lsp4j.LocationLink>>
-    //             either = result.join();
-    //     assertTrue(either.isLeft());
-    //     List<? extends Location> locations = either.getLeft();
-    //     assertEquals(1, locations.size());
-    //
-    //     Location location = locations.get(0);
-    //     assertEquals(symbolPath.toUri().toString(), location.getUri());
-    //     assertEquals(9, location.getRange().getStart().getLine()); // 10 - 1 (0-based)
-    //     assertEquals(4, location.getRange().getStart().getCharacter()); // 5 - 1 (0-based)
-    // }
+    @UnitTest
+    void testHandleDefinition_MethodCall_WorkspaceSearch() {
+        // Arrange
+        String uri = "file:///test.groovy";
+        String content = "class Test { def bar() { someMethod() } }";
+        Position position = new Position(0, 30); // position on 'someMethod()'
+        DefinitionParams params = new DefinitionParams(new TextDocumentIdentifier(uri), position);
+
+        // Mock AST structure
+        MethodCallExpression methodCall = mock(MethodCallExpression.class);
+        when(methodCall.getMethodAsString()).thenReturn("someMethod");
+
+        ClassNode classNode = mock(ClassNode.class);
+        when(classNode.getMethods()).thenReturn(List.of()); // No local methods
+        when(moduleNode.getClasses()).thenReturn(List.of(classNode));
+
+        // Mock workspace index search
+        Path symbolPath = Paths.get("/another/file.groovy");
+        SymbolInfo symbolInfo = new SymbolInfo("someMethod", SymbolKind.METHOD, symbolPath, 10, 5);
+        when(workspaceIndexService.searchSymbols("someMethod"))
+                .thenReturn(CompletableFuture.completedFuture(Stream.of(symbolInfo)));
+        when(documentManager.getDocumentContent(uri)).thenReturn(content);
+        when(astService.parseSource(content, uri)).thenReturn(moduleNode);
+        when(astService.findNodeAtPosition(moduleNode, 1, 31)).thenReturn(methodCall);
+
+        // Act
+        CompletableFuture<
+                        Either<
+                                List<? extends Location>,
+                                List<? extends org.eclipse.lsp4j.LocationLink>>>
+                result = handler.handleDefinition(params);
+
+        // Assert
+        Either<List<? extends Location>, List<? extends org.eclipse.lsp4j.LocationLink>> either =
+                result.join();
+        assertTrue(either.isLeft());
+        List<? extends Location> locations = either.getLeft();
+        assertEquals(1, locations.size());
+
+        Location location = locations.get(0);
+        assertEquals(symbolPath.toUri().toString(), location.getUri());
+        assertEquals(9, location.getRange().getStart().getLine()); // 10 - 1 (0-based)
+        assertEquals(4, location.getRange().getStart().getCharacter()); // 5 - 1 (0-based)
+    }
 }

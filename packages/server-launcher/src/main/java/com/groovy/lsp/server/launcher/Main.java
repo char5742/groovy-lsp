@@ -3,9 +3,9 @@ package com.groovy.lsp.server.launcher;
 import static com.groovy.lsp.server.launcher.di.ServerConstants.DEFAULT_SOCKET_HOST;
 import static com.groovy.lsp.server.launcher.di.ServerConstants.DEFAULT_SOCKET_PORT;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.server.launcher.di.DaggerServerComponent;
+import com.groovy.lsp.server.launcher.di.ServerComponent;
 import com.groovy.lsp.server.launcher.di.ServerModule;
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Main entry point for the Groovy Language Server.
  *
- * This class sets up the LSP4J launcher and initializes the server with Guice DI container.
+ * This class sets up the LSP4J launcher and initializes the server with Dagger DI.
  * It supports both stdio and socket communication modes.
  */
 public class Main {
@@ -83,12 +83,15 @@ public class Main {
                 mode.workspaceRoot != null ? mode.workspaceRoot : System.getProperty("user.dir");
         logger.info("Using workspace root: {}", workspaceRoot);
 
-        // Create Guice injector with workspace root
-        Injector injector = Guice.createInjector(new ServerModule(workspaceRoot));
+        // Create Dagger component with workspace root
+        ServerComponent component =
+                DaggerServerComponent.builder()
+                        .serverModule(new ServerModule(workspaceRoot))
+                        .build();
         logger.info("Dependency injection container initialized");
 
-        // Create the server instance through DI
-        GroovyLanguageServer server = injector.getInstance(GroovyLanguageServer.class);
+        // Get the server instance
+        GroovyLanguageServer server = component.languageServer();
 
         // Launch the server based on the mode
         switch (mode.type) {

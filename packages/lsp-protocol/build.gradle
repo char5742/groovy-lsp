@@ -10,14 +10,15 @@ dependencies {
     // LSP4J - Language Server Protocol for Java
     api libs.bundles.lsp4j
 
-    // Google Guice for dependency injection
-    implementation libs.guice
 
     // Groovy AST
     implementation libs.groovy.all
 
     // API Guardian for package visibility annotations
     compileOnly libs.apiguardian.api
+
+    // Dagger for dependency injection annotations
+    compileOnly libs.dagger
 
     // Test dependencies
     testImplementation project(':shared')

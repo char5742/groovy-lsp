@@ -19,8 +19,10 @@ dependencies {
     // API Guardian (required by LSP4J)
     compileOnly libs.apiguardian.api
 
-    // Guice for dependency injection
-    implementation libs.guice
+    // Dagger for dependency injection
+    implementation libs.dagger
+    annotationProcessor libs.dagger.compiler
+
 
     // Error tracking
     implementation libs.sentry
@@ -306,6 +308,9 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
     exclude 'com/google/common/net/**'
     exclude 'com/google/common/xml/**'
 
+    // Exclude Dagger compiler (only needed at compile time)
+    exclude 'dagger/internal/codegen/**'
+
     // Exclude JavaParser (used for Java parsing, not Groovy)
     exclude 'com/github/javaparser/**'
 
@@ -396,6 +401,7 @@ task minimalShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Sha
         exclude(dependency('com.sun.jna:.*'))
         exclude(dependency('jnr:.*'))
         exclude(dependency('ch.qos.logback:.*'))
+        exclude(dependency('com.google.dagger:dagger-compiler'))
     }
 }
 

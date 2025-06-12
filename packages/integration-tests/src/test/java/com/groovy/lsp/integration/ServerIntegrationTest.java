@@ -3,9 +3,9 @@ package com.groovy.lsp.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.groovy.lsp.protocol.api.GroovyLanguageServer;
+import com.groovy.lsp.server.launcher.di.DaggerServerComponent;
+import com.groovy.lsp.server.launcher.di.ServerComponent;
 import com.groovy.lsp.server.launcher.di.ServerModule;
 import com.groovy.lsp.test.annotations.IntegrationTest;
 import java.net.URI;
@@ -55,8 +55,9 @@ class ServerIntegrationTest {
     @BeforeAll
     void setUp() {
         client = new TestLanguageClient();
-        Injector injector = Guice.createInjector(new ServerModule());
-        server = injector.getInstance(GroovyLanguageServer.class);
+        ServerComponent component =
+                DaggerServerComponent.builder().serverModule(new ServerModule()).build();
+        server = component.languageServer();
         ((GroovyLanguageServer) server).connect(client);
     }
 

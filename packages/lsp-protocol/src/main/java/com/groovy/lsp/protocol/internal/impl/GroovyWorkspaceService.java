@@ -3,6 +3,7 @@ package com.groovy.lsp.protocol.internal.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import javax.inject.Inject;
 import org.eclipse.lsp4j.CreateFilesParams;
 import org.eclipse.lsp4j.DeleteFilesParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
@@ -38,6 +39,11 @@ public class GroovyWorkspaceService implements WorkspaceService, LanguageClientA
     private static final Logger logger = LoggerFactory.getLogger(GroovyWorkspaceService.class);
 
     private @Nullable LanguageClient client;
+
+    @Inject
+    public GroovyWorkspaceService() {
+        // Default constructor for dependency injection
+    }
 
     @Override
     public void connect(LanguageClient client) {
