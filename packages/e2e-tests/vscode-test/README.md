@@ -75,17 +75,27 @@ xvfb-run -a npm test
 
 ## テスト構成
 
+### 基本テスト
 - `test/runTest.js` - VS Codeテスト環境のセットアップ
 - `test/suite/index.js` - テストスイートのエントリーポイント
 - `test/suite/minimal.test.js` - 基本的な拡張機能のテスト
 - `test/suite/activation.test.js` - 拡張機能のアクティベーションテスト
 - `test/suite/language-features.test.js` - 基本的なGroovy言語機能のテスト
+
+### 言語機能テスト
 - `test/suite/completion.test.js` - コード補完機能のテスト
 - `test/suite/definition.test.js` - 定義ジャンプ機能のテスト
 - `test/suite/symbols.test.js` - シンボル検索機能のテスト
 - `test/suite/diagnostics-advanced.test.js` - 診断機能のテスト
 - `test/suite/hover-advanced.test.js` - ホバー情報表示のテスト
 - `test/suite/formatting.test.js` - コードフォーマット機能のテスト
+
+### 高度な機能テスト（新規追加）
+- `test/suite/cross-file.test.js` - クロスファイル機能のテスト
+- `test/suite/refactoring.test.js` - リファクタリング機能のテスト
+
+### テストフィクスチャ
+- `test/fixtures/cross-file-project/` - マルチファイルプロジェクトのサンプル
 
 ## トラブルシューティング
 
