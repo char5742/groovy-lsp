@@ -1,4 +1,0 @@
---disable-gpu
---disable-software-rasterizer
---disable-dev-shm-usage
---no-sandbox
