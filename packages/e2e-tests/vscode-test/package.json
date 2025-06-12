@@ -4,9 +4,7 @@
   "description": "VS Code integration tests for Groovy Language Server",
   "type": "module",
   "scripts": {
-    "test": "node ./test/runTest.js",
-    "test:mock": "node ./test/mock-test.js",
-    "test:minimal": "node ./test/minimal/runTest.js"
+    "test": "node ./test/runTest.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",

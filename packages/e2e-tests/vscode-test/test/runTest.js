@@ -1,3 +1,4 @@
+// 最小限のテストランナー
 import path from 'path';
 import { runTests } from '@vscode/test-electron';
 import { fileURLToPath } from 'url';
@@ -22,39 +23,43 @@ process.on('unhandledRejection', (reason, promise) => {
 
 async function main() {
     try {
-        // The folder containing the Extension Manifest package.json
-        const extensionDevelopmentPath = path.resolve(__dirname, '../../../vscode-extension');
-
-        // The path to test runner
-        const extensionTestsPath = path.resolve(__dirname, './suite/index');
-
-        // Set JAVA_HOME for the test environment
-        process.env.JAVA_HOME = '/usr/lib/jvm/java-23-amazon-corretto';
+        console.log('=== E2E Test Runner ===');
+        console.log('Starting E2E tests...');
         
-        // Download VS Code, unzip it and run the integration test
+        // 拡張機能のパス（3階層上）
+        const extensionDevelopmentPath = path.resolve(__dirname, '../../../vscode-extension');
+        
+        // テストスイートのパス
+        const extensionTestsPath = path.resolve(__dirname, './suite');
+        
+        console.log('Extension path:', extensionDevelopmentPath);
+        console.log('Test suite path:', extensionTestsPath);
+        
+        // JAVA_HOMEを設定
+        const javaHome = '/usr/lib/jvm/java-23-amazon-corretto';
+        console.log('Setting JAVA_HOME:', javaHome);
+        
+        // 最小限の設定でテストを実行
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath,
             extensionTestsEnv: {
-                JAVA_HOME: process.env.JAVA_HOME,
+                JAVA_HOME: javaHome,
                 ELECTRON_NO_ATTACH_CONSOLE: '1',
                 VSCODE_SKIP_PRELAUNCH: '1',
-                NODE_NO_WARNINGS: '1',
-                VSCODE_LOG_LEVEL: 'error',
-                ELECTRON_ENABLE_LOGGING: '0'
+                NODE_NO_WARNINGS: '1'
             },
             launchArgs: [
-                '--disable-extensions',
                 '--disable-gpu',
-                '--no-sandbox',
-                '--disable-dev-shm-usage',
                 '--disable-gpu-sandbox',
-                '--silent'
-            ],
-            version: 'stable'
+                '--disable-dev-shm-usage',
+                '--no-sandbox'
+            ]
         });
+        
+        console.log('Test completed successfully!');
     } catch (err) {
-        console.error('Failed to run tests', err);
+        console.error('Failed to run tests:', err);
         process.exit(1);
     }
 }

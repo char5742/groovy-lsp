@@ -71,20 +71,21 @@ npm test
 
 # ヘッドレス実行（CI環境やSSH接続時）
 xvfb-run -a npm test
-
-# 軽量モックテスト（依存関係不要）
-npm run test:mock
-
-# 最小限のテスト実行
-npm run test:minimal
 ```
 
 ## テスト構成
 
 - `test/runTest.js` - VS Codeテスト環境のセットアップ
 - `test/suite/index.js` - テストスイートのエントリーポイント
-- `test/suite/extension.test.js` - 基本的な拡張機能のテスト
-- `test/suite/languageFeatures.test.js` - Groovy言語機能のテスト
+- `test/suite/minimal.test.js` - 基本的な拡張機能のテスト
+- `test/suite/activation.test.js` - 拡張機能のアクティベーションテスト
+- `test/suite/language-features.test.js` - 基本的なGroovy言語機能のテスト
+- `test/suite/completion.test.js` - コード補完機能のテスト
+- `test/suite/definition.test.js` - 定義ジャンプ機能のテスト
+- `test/suite/symbols.test.js` - シンボル検索機能のテスト
+- `test/suite/diagnostics-advanced.test.js` - 診断機能のテスト
+- `test/suite/hover-advanced.test.js` - ホバー情報表示のテスト
+- `test/suite/formatting.test.js` - コードフォーマット機能のテスト
 
 ## トラブルシューティング
 
