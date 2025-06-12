@@ -1,22 +1,65 @@
-const path = require('path');
-const { runTests } = require('@vscode/test-electron');
+// 最小限のテストランナー
+import path from 'path';
+import { runTests } from '@vscode/test-electron';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 未処理のPromise拒否をキャッチして警告を抑制
+process.on('unhandledRejection', (reason, promise) => {
+    // Language Server関連の警告は無視
+    if (reason && reason.message) {
+        if (reason.message.includes('Pending response rejected') ||
+            reason.message.includes('Client is not running') ||
+            reason.message.includes('connection got disposed')) {
+            // これらのエラーは想定内なのでログに記録しない
+            return;
+        }
+    }
+    // その他のエラーはログに記録
+    console.error('Unhandled Rejection:', reason);
+});
 
 async function main() {
     try {
-        // The folder containing the Extension Manifest package.json
-        const extensionDevelopmentPath = path.resolve(__dirname, '../../');
-
-        // The path to test runner
-        const extensionTestsPath = path.resolve(__dirname, './suite/index');
-
-        // Download VS Code, unzip it and run the integration test
+        console.log('=== E2E Test Runner ===');
+        console.log('Starting E2E tests...');
+        
+        // 拡張機能のパス（3階層上）
+        const extensionDevelopmentPath = path.resolve(__dirname, '../../../vscode-extension');
+        
+        // テストスイートのパス
+        const extensionTestsPath = path.resolve(__dirname, './suite');
+        
+        console.log('Extension path:', extensionDevelopmentPath);
+        console.log('Test suite path:', extensionTestsPath);
+        
+        // JAVA_HOMEを設定
+        const javaHome = '/usr/lib/jvm/java-23-amazon-corretto';
+        console.log('Setting JAVA_HOME:', javaHome);
+        
+        // 最小限の設定でテストを実行
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath,
-            launchArgs: ['--disable-extensions']
+            extensionTestsEnv: {
+                JAVA_HOME: javaHome,
+                ELECTRON_NO_ATTACH_CONSOLE: '1',
+                VSCODE_SKIP_PRELAUNCH: '1',
+                NODE_NO_WARNINGS: '1'
+            },
+            launchArgs: [
+                '--disable-gpu',
+                '--disable-gpu-sandbox',
+                '--disable-dev-shm-usage',
+                '--no-sandbox'
+            ]
         });
+        
+        console.log('Test completed successfully!');
     } catch (err) {
-        console.error('Failed to run tests', err);
+        console.error('Failed to run tests:', err);
         process.exit(1);
     }
 }

@@ -1,0 +1,43 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:3.0.19'
+    implementation 'com.google.guava:guava:32.1.3-jre'
+
+    testImplementation 'org.spockframework:spock-core:2.4-groovy-3.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task hello {
+    doLast {
+        println 'Hello from Gradle'
+    }
+}
+
+task customTask(type: Copy) {
+    from 'src/main/groovy'
+    into 'build/groovy'
+}
+
+// Custom configuration
+configurations {
+    customConfig
+}
+
+dependencies {
+    customConfig 'org.apache.commons:commons-lang3:3.12.0'
+}

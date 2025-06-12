@@ -1,0 +1,14 @@
+# VS Code test artifacts
+.vscode-test/
+out/
+
+# Node modules
+node_modules/
+
+# Test outputs
+*.log
+test-results/
+
+# Temporary files
+*.tmp
+.tmp/

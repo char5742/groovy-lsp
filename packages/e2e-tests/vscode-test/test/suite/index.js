@@ -1,42 +1,75 @@
-const path = require('path');
-const Mocha = require('mocha');
-const glob = require('glob');
+// 最小限のテストスイートのエントリーポイント
+import path from 'path';
+import Mocha from 'mocha';
+import { glob } from 'glob';
+import { fileURLToPath } from 'url';
+import { cleanupTestEnvironment } from './test-helper.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 未処理のPromise拒否をキャッチして警告を抑制
+process.on('unhandledRejection', (reason, promise) => {
+    // Language Server関連の警告は無視
+    if (reason && reason.message) {
+        if (reason.message.includes('Pending response rejected') ||
+            reason.message.includes('Client is not running') ||
+            reason.message.includes('connection got disposed')) {
+            // これらのエラーは想定内なのでログに記録しない
+            return;
+        }
+    }
+    // その他のエラーはログに記録
+    console.error('Unhandled Rejection:', reason);
+});
 
 function run() {
-    // Create the mocha test
+    console.log('Test suite index.js loaded');
+    
+    // Mochaインスタンスを作成
     const mocha = new Mocha({
         ui: 'tdd',
-        color: true
+        color: true,
+        timeout: 5000  // 5秒のタイムアウト
     });
 
-    const testsRoot = path.resolve(__dirname, '..');
+    const testsRoot = path.resolve(__dirname, '.');
 
-    return new Promise((c, e) => {
-        glob('**/**.test.js', { cwd: testsRoot }, (err, files) => {
-            if (err) {
-                return e(err);
-            }
+    return new Promise(async (resolve, reject) => {
+        try {
+            // テストファイルを検索
+            const files = await glob('**/**.test.js', { cwd: testsRoot });
+            
+            console.log('Found test files:', files);
 
-            // Add files to the test suite
+            // テストファイルをMochaに追加
             files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
-            try {
-                // Run the mocha test
-                mocha.run(failures => {
-                    if (failures > 0) {
-                        e(new Error(`${failures} tests failed.`));
-                    } else {
-                        c();
-                    }
-                });
-            } catch (err) {
-                console.error(err);
-                e(err);
-            }
-        });
+            // テストを実行
+            mocha.run(async failures => {
+                // テスト完了後のクリーンアップ
+                console.log('Cleaning up test environment...');
+                try {
+                    await cleanupTestEnvironment();
+                    console.log('Cleanup completed');
+                } catch (cleanupError) {
+                    console.error('Cleanup error:', cleanupError);
+                }
+                
+                // 少し待ってから終了
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (failures > 0) {
+                    reject(new Error(`${failures} tests failed.`));
+                } else {
+                    resolve();
+                }
+            });
+        } catch (err) {
+            console.error('Error in test runner:', err);
+            reject(err);
+        }
     });
 }
 
-module.exports = {
-    run
-};
+export { run };

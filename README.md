@@ -165,6 +165,10 @@ server-launcher
 # 統合テスト
 ./gradlew integrationTest
 
+# VSCode拡張機能E2Eテスト
+cd packages/vscode-extension
+npm run test:e2e
+
 # カバレッジレポート生成
 ./gradlew jacocoTestReport
 
@@ -178,6 +182,9 @@ server-launcher
 - 単体テスト（JUnit 5 + AssertJ）
 - 統合テスト（実際のLSPプロトコル通信）
 - E2Eテスト（VS Code環境での動作確認）
+  - VSCode拡張機能E2Eテスト（@vscode/test-electron）
+  - 補完、診断、ホバー、フォーマット機能の統合テスト
+  - クロスプラットフォーム対応（Linux/Windows/macOS）
 - パフォーマンスベンチマーク（JMH）
 
 ### テストピラミッド戦略
