@@ -1,43 +1,4 @@
-plugins {
-    id 'java'
-}
-
-// E2Eテスト専用のモジュールのため、JARは作成しない
-jar {
-    enabled = false
-}
-
-dependencies {
-    // Server launcher for running the actual server
-    testImplementation project(':server-launcher')
-
-    // Test framework dependencies
-    testImplementation libs.bundles.testing
-    testImplementation libs.awaitility
-
-    // Process management
-    testImplementation 'org.zeroturnaround:zt-exec:1.12'
-}
-
-test {
-    useJUnitPlatform()
-
-    // E2Eテストの設定
-    systemProperty 'e2e.test', 'true'
-    systemProperty 'groovy.lsp.server.jar', project(':server-launcher').jar.archiveFile.get().asFile.absolutePath
-
-    // テストのタイムアウト設定
-    timeout = Duration.ofMinutes(15)
-
-    // 並列実行を無効化
-    maxParallelForks = 1
-
-    testLogging {
-        events 'started', 'passed', 'failed', 'skipped'
-        exceptionFormat 'full'
-        showStandardStreams = true
-    }
-}
+// E2Eテストモジュール - VSCode拡張機能のE2Eテストのみを管理
 
 // VS Code E2Eテストタスク
 task vscodeE2ETest(type: Exec) {
@@ -46,15 +7,15 @@ task vscodeE2ETest(type: Exec) {
 
     // Node.jsとnpmが必要
     commandLine 'npm', 'test'
-    workingDir file('vscode-test')
+    workingDir projectDir
 
     // 環境変数の設定
     environment 'GROOVY_LSP_JAR', project(':server-launcher').jar.archiveFile.get().asFile.absolutePath
 
     doFirst {
         // VS Codeテスト環境のセットアップを確認
-        if (!file('vscode-test/node_modules').exists()) {
-            throw new GradleException("VS Code test environment not set up. Run 'npm install' in vscode-test directory.")
+        if (!file('node_modules').exists()) {
+            throw new GradleException("VS Code test environment not set up. Run 'npm install' in e2e-tests directory.")
         }
     }
 }
@@ -66,7 +27,7 @@ task headlessE2ETest(type: Exec) {
 
     // xvfb-runを使用してヘッドレスモードで実行
     commandLine 'xvfb-run', '-a', 'npm', 'test'
-    workingDir file('vscode-test')
+    workingDir projectDir
 
     environment 'GROOVY_LSP_JAR', project(':server-launcher').jar.archiveFile.get().asFile.absolutePath
     environment 'CI', 'true'
