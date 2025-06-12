@@ -88,7 +88,7 @@ jobs:
             libxrandr2 \
             libgbm1 \
             libxkbcommon0 \
-            libasound2 \
+            libasound2t64 \
             xvfb
 
       - name: Install E2E test dependencies
