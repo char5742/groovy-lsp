@@ -63,7 +63,7 @@ class DirectJsonRpcProtocolTest {
 
         GroovyWorkspaceService workspaceService = new GroovyWorkspaceService();
 
-        server = new GroovyLanguageServer(textDocumentService, workspaceService);
+        server = new GroovyLanguageServer(textDocumentService, workspaceService, serviceRouter);
     }
 
     @UnitTest
