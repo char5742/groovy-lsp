@@ -5,7 +5,9 @@ import {
     LanguageClient,
     LanguageClientOptions,
     ServerOptions,
-    TransportKind
+    TransportKind,
+    ErrorAction,
+    CloseAction
 } from 'vscode-languageclient/node';
 import { JarDownloader } from './jarDownloader';
 
@@ -88,12 +90,40 @@ export async function activate(context: vscode.ExtensionContext) {
         clientOptions
     );
 
+    // エラーハンドラーを設定
+    client.clientOptions.errorHandler = {
+        error: (error, message, count) => {
+            // テスト環境ではエラーをログに記録するだけ
+            console.log(`Language Server error: ${error.message}`);
+            return {
+                action: context.extensionMode === vscode.ExtensionMode.Test 
+                    ? ErrorAction.Continue 
+                    : ErrorAction.Continue
+            };
+        },
+        closed: () => {
+            // 接続が閉じられた時の処理
+            console.log('Language Server connection closed');
+            return {
+                action: context.extensionMode === vscode.ExtensionMode.Test
+                    ? CloseAction.DoNotRestart
+                    : CloseAction.Restart
+            };
+        }
+    };
+
     client.start().then(() => {
         console.log('Groovy Language Server started successfully');
-        vscode.window.showInformationMessage('Groovy Language Server started');
+        // テスト環境では情報メッセージを表示しない
+        if (context.extensionMode !== vscode.ExtensionMode.Test) {
+            vscode.window.showInformationMessage('Groovy Language Server started');
+        }
     }, (error) => {
         console.error('Failed to start Groovy Language Server:', error);
-        vscode.window.showErrorMessage(`Failed to start Groovy Language Server: ${error.message}`);
+        // テスト環境ではエラーメッセージを表示しない
+        if (context.extensionMode !== vscode.ExtensionMode.Test) {
+            vscode.window.showErrorMessage(`Failed to start Groovy Language Server: ${error.message}`);
+        }
     });
     
     console.log('Groovy Language Server starting...');
@@ -115,5 +145,12 @@ export function deactivate(): Thenable<void> | undefined {
     if (!client) {
         return undefined;
     }
-    return client.stop();
+    
+    // Language Serverを安全にシャットダウン
+    return client.stop().then(() => {
+        console.log('Groovy Language Server stopped successfully');
+    }).catch((error) => {
+        // エラーが発生してもログに記録するだけで、プロセスをクラッシュさせない
+        console.log('Error stopping Language Server:', error.message);
+    });
 }

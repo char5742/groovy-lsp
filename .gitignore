@@ -44,3 +44,16 @@ target/
 # Build output files
 build_output.txt
 build.log
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# VS Code Extension
+packages/vscode-extension/out/
+packages/vscode-extension/*.vsix
+packages/e2e-tests/vscode-test/out/
+.vscode-test/

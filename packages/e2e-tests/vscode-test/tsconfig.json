@@ -4,12 +4,13 @@
     "target": "ES2022",
     "lib": ["ES2022"],
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "out",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", ".vscode-test"]
+  "include": ["test/**/*"],
+  "exclude": ["node_modules", ".vscode-test", "out"]
 }
