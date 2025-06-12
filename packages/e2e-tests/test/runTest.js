@@ -26,14 +26,18 @@ async function main() {
         console.log('=== E2E Test Runner ===');
         console.log('Starting E2E tests...');
         
-        // 拡張機能のパス（3階層上）
-        const extensionDevelopmentPath = path.resolve(__dirname, '../../../vscode-extension');
+        // 拡張機能のパス（packages/vscode-extension）
+        const extensionDevelopmentPath = path.resolve(__dirname, '../../vscode-extension');
         
         // テストスイートのパス
         const extensionTestsPath = path.resolve(__dirname, './suite');
         
+        // テスト用のワークスペースフォルダ
+        const workspacePath = path.resolve(__dirname, './fixtures/cross-file-project');
+        
         console.log('Extension path:', extensionDevelopmentPath);
         console.log('Test suite path:', extensionTestsPath);
+        console.log('Workspace path:', workspacePath);
         
         // JAVA_HOMEを設定
         const javaHome = '/usr/lib/jvm/java-23-amazon-corretto';
@@ -53,7 +57,8 @@ async function main() {
                 '--disable-gpu',
                 '--disable-gpu-sandbox',
                 '--disable-dev-shm-usage',
-                '--no-sandbox'
+                '--no-sandbox',
+                workspacePath  // ワークスペースフォルダを開く
             ]
         });
         

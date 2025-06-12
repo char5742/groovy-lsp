@@ -1,0 +1,19 @@
+JarIndex-Version: 1.0
+
+groovy-groovysh-4.0.27.jar
+org
+org/apache
+org/apache/groovy
+org/apache/groovy/groovysh
+org/apache/groovy/groovysh/antlr4
+org/apache/groovy/groovysh/commands
+org/apache/groovy/groovysh/completion
+org/apache/groovy/groovysh/completion/antlr4
+org/apache/groovy/groovysh/util
+org/apache/groovy/groovysh/util/antlr4
+org/codehaus
+org/codehaus/groovy
+org/codehaus/groovy/tools
+org/codehaus/groovy/tools/shell
+org/codehaus/groovy/tools/shell/commands
+
