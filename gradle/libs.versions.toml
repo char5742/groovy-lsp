@@ -2,7 +2,7 @@
 java = "21"
 groovy = "4.0.27"
 lsp4j = "0.24.0"
-jdt-core = "3.41.0"
+jdt-core = "3.42.0"
 eclipse-core-runtime = "3.33.100"
 eclipse-core-resources = "3.22.100"
 eclipse-text = "3.14.300"
