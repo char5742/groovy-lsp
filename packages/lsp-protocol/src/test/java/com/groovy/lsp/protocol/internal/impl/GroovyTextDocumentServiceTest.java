@@ -92,16 +92,13 @@ class GroovyTextDocumentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GroovyTextDocumentService();
-
         // Setup service router mocks
         when(serviceRouter.getIncrementalCompilationService()).thenReturn(compilationService);
         when(serviceRouter.getAstService()).thenReturn(astService);
         when(serviceRouter.getTypeInferenceService()).thenReturn(typeInferenceService);
 
-        // Inject dependencies
-        service.setServiceRouter(serviceRouter);
-        service.setDocumentManager(documentManager);
+        // Create service with dependencies
+        service = new GroovyTextDocumentService(serviceRouter, documentManager);
     }
 
     @UnitTest
@@ -468,9 +465,7 @@ class GroovyTextDocumentServiceTest {
 
     @UnitTest
     void isDiagnosticsReady_shouldCheckAllDependencies() {
-        // given - service without client
-        service.setServiceRouter(serviceRouter);
-        service.setDocumentManager(documentManager);
+        // given - service with dependencies already injected via constructor
 
         // when - open document without client
         TextDocumentItem textDocument =
@@ -534,9 +529,13 @@ class GroovyTextDocumentServiceTest {
     @UnitTest
     void hover_shouldHandleNullServiceRouter() throws Exception {
         // given
-        service = new GroovyTextDocumentService();
-        service.setDocumentManager(documentManager);
-        // serviceRouter is null
+        // We can't pass null to constructor due to @NonNull constraints
+        // Instead, test the behavior when serviceRouter methods return null
+        IServiceRouter nullServiceRouter = mock(IServiceRouter.class);
+        when(nullServiceRouter.getIncrementalCompilationService()).thenReturn(null);
+        when(nullServiceRouter.getAstService()).thenReturn(null);
+        when(nullServiceRouter.getTypeInferenceService()).thenReturn(null);
+        service = new GroovyTextDocumentService(nullServiceRouter, documentManager);
 
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
         Position position = new Position(1, 5);
@@ -552,9 +551,11 @@ class GroovyTextDocumentServiceTest {
     @UnitTest
     void hover_shouldHandleNullDocumentManager() throws Exception {
         // given
-        service = new GroovyTextDocumentService();
-        service.setServiceRouter(serviceRouter);
-        // documentManager is null
+        // We can't pass null to constructor due to @NonNull constraints
+        // Create a mock that returns null for all methods
+        DocumentManager nullDocumentManager = mock(DocumentManager.class);
+        when(nullDocumentManager.getDocumentContent(any())).thenReturn(null);
+        service = new GroovyTextDocumentService(serviceRouter, nullDocumentManager);
 
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
         Position position = new Position(1, 5);
@@ -570,9 +571,10 @@ class GroovyTextDocumentServiceTest {
     @UnitTest
     void didOpen_shouldHandleNullDocumentManager() {
         // given
-        service = new GroovyTextDocumentService();
-        service.setServiceRouter(serviceRouter);
-        // documentManager is null
+        // We can't pass null to constructor due to @NonNull constraints
+        // Create a mock that returns null for all methods
+        DocumentManager nullDocumentManager = mock(DocumentManager.class);
+        service = new GroovyTextDocumentService(serviceRouter, nullDocumentManager);
 
         TextDocumentItem textDocument =
                 new TextDocumentItem("file:///test.groovy", "groovy", 1, "class Test {}");
@@ -597,10 +599,11 @@ class GroovyTextDocumentServiceTest {
     @UnitTest
     void didClose_shouldHandleNullDocumentManager() {
         // given
-        service = new GroovyTextDocumentService();
+        // We can't pass null to constructor due to @NonNull constraints
+        // Create a mock that returns null for all methods
+        DocumentManager nullDocumentManager = mock(DocumentManager.class);
+        service = new GroovyTextDocumentService(serviceRouter, nullDocumentManager);
         service.connect(mockClient);
-        service.setServiceRouter(serviceRouter);
-        // documentManager is null
 
         TextDocumentIdentifier textDocument = new TextDocumentIdentifier("file:///test.groovy");
         DidCloseTextDocumentParams params = new DidCloseTextDocumentParams(textDocument);

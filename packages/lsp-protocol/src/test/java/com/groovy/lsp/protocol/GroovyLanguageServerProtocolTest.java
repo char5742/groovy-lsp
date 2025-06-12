@@ -244,9 +244,7 @@ class GroovyLanguageServerProtocolTest extends AbstractProtocolTest {
                     .thenReturn(CompilationResult.success(mock(ModuleNode.class)));
 
             // Create text document service with dependencies
-            textDocumentService = new GroovyTextDocumentService();
-            textDocumentService.setServiceRouter(serviceRouter);
-            textDocumentService.setDocumentManager(documentManager);
+            textDocumentService = new GroovyTextDocumentService(serviceRouter, documentManager);
         }
 
         @Override
